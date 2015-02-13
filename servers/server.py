@@ -32,6 +32,27 @@ class Server(object):
 
     def marshal(self):
 
+        if self.dry is None:
+            self.dry = False
+
+        if self.verbose is None:
+            self.verbose = False
+
+        if self.size is None:
+            self.size = 'm3.medium'
+
+        if self.cluster is None:
+            raise InvalidCluster('A cluster must be specified.')
+
+        if self.environment is None:
+            self.environment = 'test'
+
+        if self.ami is None:
+            self.ami = 'ami-146e2a7c'
+
+        if self.region is None:
+            self.region = 'us-east-1'
+
         valid = lambda r: r in [region.name for region in boto.ec2.regions()]
 
         if not valid(self.region):
@@ -39,6 +60,17 @@ class Server(object):
             error = '\'{region}\' is not a valid EC2 region'.format(
                         region=self.region)
             raise RegionDoesNotExist(error)
+
+        if self.role is None:
+            raise InvalidRole('An IAM role must be specified.')
+
+        if self.keypair is None:
+            self.keypair = 'stage-key'
+            if self.environment == 'prod':
+                self.keypair = 'bkaiserkey'
+
+        if self.availability_zone is None:
+            self.availability_zone = 'c'
 
     def establish_ec2_connection(self):
 
