@@ -30,7 +30,7 @@ class Server(object):
         self.keypair = keypair
         self.availability_zone = availability_zone
 
-    def marshal(self):
+    def configure(self):
 
         if self.dry is None:
             self.dry = False
@@ -61,6 +61,8 @@ class Server(object):
                         region=self.region)
             raise RegionDoesNotExist(error)
 
+        self.establish_ec2_connection()
+
         if self.role is None:
             raise InvalidRole('An IAM role must be specified.')
 
@@ -89,8 +91,7 @@ class Server(object):
     def autorun(self):
 
         try:
-            self.marshal()
-            self.establish_ec2_connection()
+            self.configure()
         except Exception, e:
             self.log.error('{exception} - {message}'.format(
                             exception = type(e).__name__,
