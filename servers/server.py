@@ -53,4 +53,13 @@ class Server(object):
         except Exception, e:
             raise e
 
+    def autorun(self):
 
+        try:
+            self.marshal()
+            self.establish_ec2_connection()
+        except Exception, e:
+            self.log.error('{exception} - {message}'.format(
+                            exception = type(e).__name__,
+                            message = str(e)))
+            sys.exit(1)
