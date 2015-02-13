@@ -15,8 +15,9 @@ class Server(object):
     ch.setFormatter(formatter)
     log.addHandler(ch)
 
-    def __init__(self, dry, verbose, size, cluster, environment, ami,
-                    region, role, keypair, availability_zone):
+    def __init__(self, dry=None, verbose=None, size=None, cluster=None,
+                    environment=None, ami=None, region=None, role=None,
+                    keypair=None, availability_zone=None):
 
         self.dry = dry
         self.verbose = verbose
