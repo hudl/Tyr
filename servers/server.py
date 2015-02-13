@@ -78,6 +78,14 @@ class Server(object):
             if self.environment == 'prod':
                 self.keypair = 'bkaiserkey'
 
+        valid = lambda k: k in [pair.name for pair in
+                self.ec2.get_all_key_pairs()]
+
+        if not valid(self.keypair):
+            error = '\'{keypair}\' is not a valid EC2 keypair'.format(
+                        keypair = self.keypair)
+            raise InvalidKeyPair(error)
+
         if self.availability_zone is None:
             self.availability_zone = 'c'
 
