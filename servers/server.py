@@ -63,6 +63,13 @@ class Server(object):
         if self.ami is None:
             self.ami = 'ami-146e2a7c'
 
+        try:
+            conn.get_all_images(image_ids=[self.ami])
+        except Exception, e:
+            if 'Invalid id' in str(e):
+                error = '\'{ami}\' is not a valid AMI'.format(ami = self.ami)
+                raise InvalidAMI(error)
+
         if self.role is None:
             raise InvalidRole('An IAM role must be specified.')
 
