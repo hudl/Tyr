@@ -89,6 +89,15 @@ class Server(object):
         if self.availability_zone is None:
             self.availability_zone = 'c'
 
+        self.availability_zone = self.region+self.availability_zone
+
+        valid = lambda z: z in [zone.name for zone in self.ec2.get_all_zones()]
+
+        if not valid(self.availability_zone):
+            error = '\'{zone}\' is not a valid EC2 availability zone'.format(
+                    zone = self.availability_zone)
+            raise InvalidAvailabilityZone(error)
+
     def establish_ec2_connection(self):
 
         self.log.info('Using EC2 Region \'{region}\''.format(
