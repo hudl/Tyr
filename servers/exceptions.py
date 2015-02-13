@@ -1,0 +1,2 @@
+class RegionDoesNotExist(Exception):
+    pass

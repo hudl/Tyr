@@ -1,3 +1,4 @@
+from exceptions import *
 import boto.ec2
 import sys
 
