@@ -39,4 +39,18 @@ class Server(object):
                         region=self.region)
             raise RegionDoesNotExist(error)
 
+    def establish_ec2_connection(self):
+
+        self.log.info('Using EC2 Region \'{region}\''.format(
+                        region=self.region))
+        self.log.info("Attempting to connect to EC2")
+
+        try:
+            self.ec2 = boto.ec2.connect_to_region(self.region)
+
+            if self.verbose:
+                self.log.info('Established connection to EC2')
+        except Exception, e:
+            raise e
+
 
