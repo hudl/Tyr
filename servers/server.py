@@ -47,9 +47,6 @@ class Server(object):
         if self.environment is None:
             self.environment = 'test'
 
-        if self.ami is None:
-            self.ami = 'ami-146e2a7c'
-
         if self.region is None:
             self.region = 'us-east-1'
 
@@ -62,6 +59,9 @@ class Server(object):
             raise RegionDoesNotExist(error)
 
         self.establish_ec2_connection()
+
+        if self.ami is None:
+            self.ami = 'ami-146e2a7c'
 
         if self.role is None:
             raise InvalidRole('An IAM role must be specified.')
