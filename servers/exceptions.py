@@ -6,3 +6,12 @@ class InvalidRole(Exception):
 
 class InvalidCluster(Exception):
     pass
+
+class InvalidKeyPair(Exception):
+    pass
+
+class InvalidAMI(Exception):
+    pass
+
+class InvalidAvailabilityZone(Exception):
+    pass
