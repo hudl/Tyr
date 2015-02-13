@@ -29,3 +29,14 @@ class Server(object):
         self.keypair = keypair
         self.availability_zone = availability_zone
 
+    def marshal(self):
+
+        valid = lambda r: r in [region.name for region in boto.ec2.regions()]
+
+        if not valid(self.region):
+
+            error = '\'{region}\' is not a valid EC2 region'.format(
+                        region=self.region)
+            raise RegionDoesNotExist(error)
+
+
