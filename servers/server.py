@@ -64,7 +64,7 @@ class Server(object):
             self.ami = 'ami-146e2a7c'
 
         try:
-            conn.get_all_images(image_ids=[self.ami])
+            self.ec2.get_all_images(image_ids=[self.ami])
         except Exception, e:
             if 'Invalid id' in str(e):
                 error = '\'{ami}\' is not a valid AMI'.format(ami = self.ami)
