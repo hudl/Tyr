@@ -35,17 +35,30 @@ class Server(object):
         if self.dry is None:
             self.dry = False
 
+        self.log.info('Using dry value \'{dry}\''.format(dry = self.dry))
+
         if self.verbose is None:
             self.verbose = False
+
+        self.log.info('Using verbose value \'{verbose}\''.format(
+                        verbose = self.verbose))
 
         if self.size is None:
             self.size = 'm3.medium'
 
+        self.log.info('Using Instance Type \'{size}\''.format(size = self.size))
+
         if self.cluster is None:
             raise InvalidCluster('A cluster must be specified.')
 
+        self.log.info('Using Cluster \'{cluster}\''.format(
+                        cluster = self.cluster))
+
         if self.environment is None:
             self.environment = 'test'
+
+        self.log.info('Using Environment \'{environment}\''.format(
+                        environment = self.environment))
 
         if self.region is None:
             self.region = 'us-east-1'
@@ -58,6 +71,9 @@ class Server(object):
                         region=self.region)
             raise RegionDoesNotExist(error)
 
+        self.log.info('Using EC2 Region \'{region}\''.format(
+                        region = self.region))
+
         self.establish_ec2_connection()
 
         if self.ami is None:
@@ -69,6 +85,8 @@ class Server(object):
             if 'Invalid id' in str(e):
                 error = '\'{ami}\' is not a valid AMI'.format(ami = self.ami)
                 raise InvalidAMI(error)
+
+        self.log.info('Using EC2 AMI \'{ami}\''.format(ami = self.ami))
 
         if self.role is None:
             raise InvalidRole('An IAM role must be specified.')
@@ -86,6 +104,9 @@ class Server(object):
                         keypair = self.keypair)
             raise InvalidKeyPair(error)
 
+        self.log.info('Using EC2 Key Pair \'{keypair}\''.format(
+                        keypair = self.keypair))
+
         if self.availability_zone is None:
             self.availability_zone = 'c'
 
@@ -97,6 +118,9 @@ class Server(object):
             error = '\'{zone}\' is not a valid EC2 availability zone'.format(
                     zone = self.availability_zone)
             raise InvalidAvailabilityZone(error)
+
+        self.log.info('Using EC2 Availability Zone \'{zone}\''.format(
+                        zone = self.availability_zone))
 
     def establish_ec2_connection(self):
 
