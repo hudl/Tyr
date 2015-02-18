@@ -86,6 +86,7 @@ class Server(object):
 
         self.establish_ec2_connection()
         self.establish_iam_connection()
+        self.establish_route53_connection()
 
         if self.ami is None:
             self.log.warn('No AMI provided')
@@ -314,6 +315,13 @@ chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}"""
 
         try:
             self.iam = boto.connect_iam()
+        except Exception, e:
+            raise e
+
+    def establish_route53_connection(self):
+
+        try:
+            self.route53 = boto.route53.connect_to_region(self.region)
         except Exception, e:
             raise e
 
