@@ -245,6 +245,25 @@ chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}"""
 
         return tags
 
+    @property
+    def blockdevicemapping(self):
+
+        bdm = boto.ec2.blockdevicemapping.BlockDeviceMapping()
+
+        for d in self.block_devices:
+
+            device = boto.ec2.blockdevicemapping.BlockDeviceType()
+
+            if 'size' in d.keys():
+                device.size = d['size']
+
+            if d['type'] == 'ephemeral':
+                device.ephemeral_name = d['name']
+
+            bdm['/dev/'+d['path']] = device
+
+        return bdm
+
     def establish_ec2_connection(self):
 
         self.log.info('Using EC2 Region \'{region}\''.format(
