@@ -106,6 +106,8 @@ class Server(object):
 
         self.log.info('Using IAM Role \'{role}\''.format(role = self.role))
 
+        self.resolve_iam_role()
+
         if self.keypair is None:
             self.log.warn('No EC2 Keypair provided')
             self.keypair = 'stage-key'
@@ -274,6 +276,25 @@ chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}"""
         for group in self.security_groups:
             if not exists(group):
                 self.ec2.create_security_group(group, group)
+
+    def resolve_iam_role(self):
+
+        try:
+            instance_profile = self.iam.create_instance_profile(self.role)
+        except Exception, e:
+            if 'EntityAlreadyExists' in str(e):
+                pass
+            else:
+                raise e
+
+        try:
+            role = self.iam.create_role(self.role)
+            self.iam.add_role_to_instance_profile(self.role, self.role)
+        except Exception, e:
+            if 'EntityAlreadyExists' in str(e):
+                pass
+            else:
+                raise e
 
     def establish_ec2_connection(self):
 
