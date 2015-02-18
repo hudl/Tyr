@@ -90,7 +90,9 @@ class Server(object):
         self.log.info('Using EC2 AMI \'{ami}\''.format(ami = self.ami))
 
         if self.role is None:
-            raise InvalidRole('An IAM role must be specified.')
+            self.role = self.environment[0] + '-' + self.cluster
+
+        self.log.info('Using IAM Role \'{role}\''.format(role = self.role))
 
         if self.keypair is None:
             self.keypair = 'stage-key'
