@@ -20,7 +20,8 @@ class Server(object):
 
     def __init__(self, dry=None, verbose=None, size=None, cluster=None,
                     environment=None, ami=None, region=None, role=None,
-                    keypair=None, availability_zone=None, security_groups=None):
+                    keypair=None, availability_zone=None, security_groups=None,
+                    block_devices=None):
 
         self.dry = dry
         self.verbose = verbose
@@ -33,6 +34,7 @@ class Server(object):
         self.keypair = keypair
         self.availability_zone = availability_zone
         self.security_groups = security_groups
+        self.block_devices = block_devices
 
     def configure(self):
 
@@ -146,6 +148,19 @@ class Server(object):
 
         self.log.info('Using security groups {groups}'.format(
                         groups=', '.join(self.security_groups)))
+
+
+        if self.block_devices is None:
+            self.log.warn('No block devices provided')
+
+            self.block_devices = [{
+                                    'type': 'ephemeral',
+                                    'name': 'ephemeral0',
+                                    'path': 'xvdc'
+                                  }]
+
+        self.log.info('Using EC2 block devices {devices}'.format(
+                        devices = self.block_devices))
 
     @property
     def envcl(self):
