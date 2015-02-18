@@ -45,23 +45,27 @@ class Server(object):
                         verbose = self.verbose))
 
         if self.size is None:
+            self.log.warn('No Instance Type provided')
             self.size = 'm3.medium'
 
         self.log.info('Using Instance Type \'{size}\''.format(size = self.size))
 
         if self.cluster is None:
+            self.log.warn('No cluster provided')
             raise InvalidCluster('A cluster must be specified.')
 
         self.log.info('Using Cluster \'{cluster}\''.format(
                         cluster = self.cluster))
 
         if self.environment is None:
+            self.log.warn('No environment provided')
             self.environment = 'test'
 
         self.log.info('Using Environment \'{environment}\''.format(
                         environment = self.environment))
 
         if self.region is None:
+            self.log.warn('No region provided')
             self.region = 'us-east-1'
 
         valid = lambda r: r in [region.name for region in boto.ec2.regions()]
@@ -78,6 +82,7 @@ class Server(object):
         self.establish_ec2_connection()
 
         if self.ami is None:
+            self.log.warn('No AMI provided')
             self.ami = 'ami-146e2a7c'
 
         try:
@@ -90,11 +95,13 @@ class Server(object):
         self.log.info('Using EC2 AMI \'{ami}\''.format(ami = self.ami))
 
         if self.role is None:
+            self.log.warn('No IAM Role provided')
             self.role = self.environment[0] + '-' + self.cluster
 
         self.log.info('Using IAM Role \'{role}\''.format(role = self.role))
 
         if self.keypair is None:
+            self.log.warn('No EC2 Keypair provided')
             self.keypair = 'stage-key'
             if self.environment == 'prod':
                 self.keypair = 'bkaiserkey'
@@ -111,6 +118,7 @@ class Server(object):
                         keypair = self.keypair))
 
         if self.availability_zone is None:
+            self.log.warn('No EC2 availability zone provided')
             self.availability_zone = 'c'
 
         if len(self.availability_zone) == 1:
@@ -127,6 +135,7 @@ class Server(object):
                         zone = self.availability_zone))
 
         if self.security_groups is None:
+            self.log.warn('No EC2 security groups provided')
             self.security_groups = ['management', 'chef-nodes']
 
         self.log.info('Using security groups {groups}'.format(
