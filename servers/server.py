@@ -2,6 +2,9 @@ from exceptions import *
 import boto.ec2
 import logging
 import sys
+import string
+import random
+import os.path
 
 class Server(object):
 
@@ -189,6 +192,33 @@ class Server(object):
             template = '{name}.app.hudl.com'
 
         return template.format(name = self.name)
+
+    @property
+    def user_data(self):
+
+        template = """#!/bin/bash
+sed -i '/requiretty/d' /etc/sudoers
+hostname {hostname}
+echo '127.0.0.1 {fqdn} {hostname}' > /etc/hosts
+mkdir /etc/chef
+touch /etc/chef/client.rb
+echo '{validation_key}' > /etc/chef/validation.pem
+echo 'chef_server_url "http://chef.app.hudl.com/"
+node_name "{name}"
+validation_client_name "chef-validator"' > /etc/chef/client.rb
+curl -L https://www.opscode.com/chef/install.sh | bash;
+yum install -y gcc
+chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}"""
+
+        validation_key_path = os.path.expanduser('~/.chef/chef-validator.pem')
+        validation_key_file = open(validation_key_path, 'r')
+        validation_key = validation_key_file.read()
+
+        return template.format(hostname = self.hostname,
+                                fqdn = self.hostname,
+                                validation_key = validation_key,
+                                name = self.name,
+                                logfile = '/var/log/chef-client.log')
 
     def establish_ec2_connection(self):
 
