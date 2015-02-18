@@ -278,6 +278,20 @@ chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}"""
         except Exception, e:
             raise e
 
+    def launch(self):
+
+        parameters = {
+                'image_id': self.ami,
+                'instance_profile_name': self.role,
+                'key_name': self.keypair,
+                'instance_type': self.size,
+                'security_groups': self.security_groups,
+                'block_device_map': self.blockdevicemapping,
+                'user_data': self.user_data,
+                'placement': self.availability_zone}
+
+        reservation = self.ec2.run_instances(**parameters)
+
     def autorun(self):
 
         self.configure()
