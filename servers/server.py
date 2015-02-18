@@ -17,7 +17,7 @@ class Server(object):
 
     def __init__(self, dry=None, verbose=None, size=None, cluster=None,
                     environment=None, ami=None, region=None, role=None,
-                    keypair=None, availability_zone=None):
+                    keypair=None, availability_zone=None, security_groups=None):
 
         self.dry = dry
         self.verbose = verbose
@@ -29,6 +29,7 @@ class Server(object):
         self.role = role
         self.keypair = keypair
         self.availability_zone = availability_zone
+        self.security_groups = security_groups
 
     def configure(self):
 
@@ -121,6 +122,12 @@ class Server(object):
 
         self.log.info('Using EC2 Availability Zone \'{zone}\''.format(
                         zone = self.availability_zone))
+
+        if self.security_groups is None:
+            self.security_groups = ['management', 'chef-nodes']
+
+        self.log.info('Using security groups {groups}'.format(
+                        groups=', '.join(self.security_groups)))
 
     def establish_ec2_connection(self):
 
