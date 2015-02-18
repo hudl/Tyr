@@ -220,6 +220,16 @@ chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}"""
                                 name = self.name,
                                 logfile = '/var/log/chef-client.log')
 
+    @property
+    def tags(self):
+
+        tags = {}
+        tags['Name'] = self.name
+        tags['Environment'] = self.environment
+        tags['Cluster'] = self.cluster
+
+        return tags
+
     def establish_ec2_connection(self):
 
         self.log.info('Using EC2 Region \'{region}\''.format(
