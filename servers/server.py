@@ -85,6 +85,7 @@ class Server(object):
                         region = self.region))
 
         self.establish_ec2_connection()
+        self.establish_iam_connection()
 
         if self.ami is None:
             self.log.warn('No AMI provided')
@@ -285,6 +286,13 @@ chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}"""
 
             if self.verbose:
                 self.log.info('Established connection to EC2')
+        except Exception, e:
+            raise e
+
+    def establish_iam_connection(self):
+
+        try:
+            self.iam = boto.connect_iam()
         except Exception, e:
             raise e
 
