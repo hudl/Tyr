@@ -150,6 +150,33 @@ class Server(object):
         template = '{environment}-{cluster}'
         return template.format(environment = self.environment[0],
                                cluster = self.cluster)
+    @property
+    def name(self):
+
+        try:
+            return self.unique_name
+        except Exception:
+            pass
+
+        def generate_id(length=4):
+            pool = string.ascii_lowercase + string.digits
+            return ''.join(random.choice(pool) for _ in range(length))
+
+        def build_name():
+            template = '{envcl}-{id}'
+            return template.format(envcl = self.envcl, id = generate_id())
+
+        exists = lambda n: len(self.ec2.get_all_instances(
+                                filters={'tag:Name': n})) > 0
+
+        name = build_name()
+
+        while exists(name):
+            name = build_name()
+
+        self.unique_name = name
+
+        return name
 
     def establish_ec2_connection(self):
 
