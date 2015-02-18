@@ -149,6 +149,7 @@ class Server(object):
         self.log.info('Using security groups {groups}'.format(
                         groups=', '.join(self.security_groups)))
 
+        self.resolve_security_groups()
 
         if self.block_devices is None:
             self.log.warn('No block devices provided')
@@ -263,6 +264,15 @@ chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}"""
             bdm['/dev/'+d['path']] = device
 
         return bdm
+
+    def resolve_security_groups(self):
+
+        exists = lambda s: s in [group.name for group in
+                self.ec2.get_all_security_groups()]
+
+        for group in self.security_groups:
+            if not exists(group):
+                self.ec2.create_security_group(group, group)
 
     def establish_ec2_connection(self):
 
