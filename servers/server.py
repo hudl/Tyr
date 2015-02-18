@@ -146,10 +146,4 @@ class Server(object):
 
     def autorun(self):
 
-        try:
-            self.configure()
-        except Exception, e:
-            self.log.error('{exception} - {message}'.format(
-                            exception = type(e).__name__,
-                            message = str(e)))
-            sys.exit(1)
+        self.configure()
