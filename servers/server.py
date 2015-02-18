@@ -178,6 +178,18 @@ class Server(object):
 
         return name
 
+    @property
+    def hostname(self):
+
+        template = '{name}.thorhudl.com'
+
+        if self.environment == 'stage':
+            template = '{name}.app.staghudl.com'
+        elif self.environment == 'prod':
+            template = '{name}.app.hudl.com'
+
+        return template.format(name = self.name)
+
     def establish_ec2_connection(self):
 
         self.log.info('Using EC2 Region \'{region}\''.format(
