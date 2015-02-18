@@ -345,7 +345,11 @@ chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}"""
 
             return
 
+    def tag(self):
+        self.ec2.create_tags([self.instance.id], self.tags)
+
     def autorun(self):
 
         self.configure()
         self.launch(wait=True)
+        self.tag()
