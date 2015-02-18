@@ -317,7 +317,7 @@ chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}"""
         except Exception, e:
             raise e
 
-    def launch(self):
+    def launch(self, wait=False):
 
         parameters = {
                 'image_id': self.ami,
@@ -332,6 +332,18 @@ chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}"""
         reservation = self.ec2.run_instances(**parameters)
 
         self.instance = reservation.instances[0]
+
+        if wait:
+            state = self.instance.state
+
+            while not(state == 'running'):
+                try:
+                    self.instance.update()
+                    state = self.instance.state
+                except Exception:
+                    pass
+
+            return
 
     def autorun(self):
 
