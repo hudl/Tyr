@@ -144,6 +144,13 @@ class Server(object):
         self.log.info('Using security groups {groups}'.format(
                         groups=', '.join(self.security_groups)))
 
+    @property
+    def envcl(self):
+
+        template = '{environment}-{cluster}'
+        return template.format(environment = self.environment[0],
+                               cluster = self.cluster)
+
     def establish_ec2_connection(self):
 
         self.log.info('Using EC2 Region \'{region}\''.format(
