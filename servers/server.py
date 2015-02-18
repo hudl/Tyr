@@ -348,3 +348,4 @@ chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}"""
     def autorun(self):
 
         self.configure()
+        self.launch(wait=True)
