@@ -111,7 +111,8 @@ class Server(object):
         if self.availability_zone is None:
             self.availability_zone = 'c'
 
-        self.availability_zone = self.region+self.availability_zone
+        if len(self.availability_zone) == 1:
+            self.availability_zone = self.region+self.availability_zone
 
         valid = lambda z: z in [zone.name for zone in self.ec2.get_all_zones()]
 
