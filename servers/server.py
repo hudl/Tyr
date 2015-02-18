@@ -331,6 +331,8 @@ chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}"""
 
         reservation = self.ec2.run_instances(**parameters)
 
+        self.instance = reservation.instances[0]
+
     def autorun(self):
 
         self.configure()
