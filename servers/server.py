@@ -309,7 +309,7 @@ named {name}""".format(path = d['path'], name = d['name']))
                                 group = group))
                 self.ec2.create_security_group(group, group)
                 self.log.info('Created security group {group}'.format(
-                                group = group)
+                                group = group))
             else:
                 self.log.info('Security Group {group} already exists'.format(
                                 group = group))
@@ -319,7 +319,7 @@ named {name}""".format(path = d['path'], name = d['name']))
         try:
             instance_profile = self.iam.create_instance_profile(self.role)
             self.log.info('Created IAM Profile {profile}'.format(
-                            profile = self.role)
+                            profile = self.role))
 
         except Exception, e:
             if 'EntityAlreadyExists' in str(e):
