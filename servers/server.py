@@ -386,9 +386,13 @@ named {name}""".format(path = d['path'], name = d['name']))
 
         reservation = self.ec2.run_instances(**parameters)
 
+        self.log.info('Successfully launched EC2 instance')
+
         self.instance = reservation.instances[0]
 
         if wait:
+            self.log.info('Waiting until the instance is running to return')
+
             state = self.instance.state
 
             while not(state == 'running'):
@@ -398,28 +402,41 @@ named {name}""".format(path = d['path'], name = d['name']))
                 except Exception:
                     pass
 
+            self.log.info('The instance is running')
             return
 
     def tag(self):
         self.ec2.create_tags([self.instance.id], self.tags)
+        self.log.info('Tagged instance with {tags}'.format(tags = self.tags))
 
     def route(self):
         zone_address = self.hostname[len(self.name)+1:]
 
+        self.log.info('Using Zone Address {address}'.format(
+                            address = zone_address))
+
         try:
             zone = self.route53.get_zone(zone_address)
+            self.log.info('Retrieved zone from Route53')
         except Exception, e:
             raise e
 
         name = self.hostname + '.'
+        self.log.info('Using record name {name}'.format(name = name))
+        self.log.info('Using record value {value}'.format(
+                        value = self.instance.public_dns_name))
 
         if zone.get_cname(name) is None:
+            self.log.info('The CNAME record does not exist')
             try:
                 zone.add_cname(name, self.instance.public_dns_name)
+                self.log.info('Created new CNAME record')
             except Exception, e:
                 raise e
         else:
+            self.log.info('The CNAME record already exists')
             zone.update_cname(name, self.instance.public_dns_name)
+            self.log.info('Updated the CNAME record')
 
     def autorun(self):
 
