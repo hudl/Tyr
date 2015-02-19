@@ -259,6 +259,7 @@ chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}"""
         tags['Name'] = self.name
         tags['Environment'] = self.environment
         tags['Cluster'] = self.cluster
+        tags['Group'] = self.cluster.split('-')[0]
 
         self.log.info('Using instance tags {tags}'.format(tags = tags))
 
