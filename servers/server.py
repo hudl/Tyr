@@ -219,9 +219,11 @@ class Server(object):
         elif self.environment == 'prod':
             template = '{name}.app.hudl.com'
 
+        hostname = template.format(name = self.name)
+
         self.log.info('Using hostname {hostname}'.format(hostname = hostname))
 
-        return template.format(name = self.name)
+        return hostname
 
     @property
     def user_data(self):
