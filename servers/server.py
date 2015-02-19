@@ -172,8 +172,13 @@ class Server(object):
     def envcl(self):
 
         template = '{environment}-{cluster}'
-        return template.format(environment = self.environment[0],
-                               cluster = self.cluster)
+        envcl = template.format(environment = self.environment[0],
+                                  cluster = self.cluster)
+
+        self.log.info('Using envcl {envcl}'.format(envcl = envcl))
+
+        return envcl
+
     @property
     def name(self):
 
@@ -200,6 +205,8 @@ class Server(object):
 
         self.unique_name = name
 
+        self.log.info('Using node name {name}'.format(name = name))
+
         return name
 
     @property
@@ -211,6 +218,8 @@ class Server(object):
             template = '{name}.app.staghudl.com'
         elif self.environment == 'prod':
             template = '{name}.app.hudl.com'
+
+        self.log.info('Using hostname {hostname}'.format(hostname = hostname))
 
         return template.format(name = self.name)
 
