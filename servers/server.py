@@ -380,3 +380,4 @@ chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}"""
         self.configure()
         self.launch(wait=True)
         self.tag()
+        self.route()
