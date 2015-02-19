@@ -353,6 +353,7 @@ chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}"""
 
         try:
             self.iam = boto.connect_iam()
+            self.log.info('Established connection to IAM')
         except Exception, e:
             raise e
 
@@ -360,6 +361,7 @@ chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}"""
 
         try:
             self.route53 = boto.route53.connect_to_region(self.region)
+            self.log.info('Established connection to Route53')
         except Exception, e:
             raise e
 
