@@ -284,9 +284,14 @@ chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}"""
             bdm['/dev/'+d['path']] = device
 
             if d['type'] == 'ephemeral':
-                self.log.info("""Created new ephemeral device at {path} named 
-{name} of size {size}""".format(path = d['path'], name = d['name'],
-                                size = d['size'])
+                if 'size' in d.keys():
+                    self.log.info("""Created new ephemeral device at {path} 
+named {name} of size {size}""".format(path = d['path'], name = d['name'],
+                                        size = d['size']))
+                else:
+                    self.log.info("""Created new ephemeral device at {path} 
+named {name}""".format(path = d['path'], name = d['name']))
+
             else:
                 self.log.info("""Created new EBS device at {path} of size 
 {size}""".format(path = d['path'], size = d['size']))
