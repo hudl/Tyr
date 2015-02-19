@@ -298,24 +298,40 @@ chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}"""
 
         for group in self.security_groups:
             if not exists(group):
+                self.log.info('Security Group {group} does not exist'.format(
+                                group = group))
                 self.ec2.create_security_group(group, group)
+                self.log.info('Created security group {group}'.format(
+                                group = group)
+            else:
+                self.log.info('Security Group {group} already exists'.format(
+                                group = group))
 
     def resolve_iam_role(self):
 
         try:
             instance_profile = self.iam.create_instance_profile(self.role)
+            self.log.info('Created IAM Profile {profile}'.format(
+                            profile = self.role)
+
         except Exception, e:
             if 'EntityAlreadyExists' in str(e):
-                pass
+                self.log.info('IAM Profile {profile} already exists'.format(
+                            profile = self.role))
             else:
                 raise e
 
         try:
             role = self.iam.create_role(self.role)
+            self.log.info('Created IAM Role {role}'.format(role = self.role))
             self.iam.add_role_to_instance_profile(self.role, self.role)
+            self.log.info('Attached Role {role} to Profile {profile}'.format(
+                            role = self.role, profile = self.role))
+
         except Exception, e:
             if 'EntityAlreadyExists' in str(e):
-                pass
+                self.log.info('IAM Role {role} already exists'.format(
+                                role = self.role))
             else:
                 raise e
 
