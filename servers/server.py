@@ -258,12 +258,16 @@ chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}"""
         tags['Environment'] = self.environment
         tags['Cluster'] = self.cluster
 
+        self.log.info('Using instance tags {tags}'.format(tags = tags))
+
         return tags
 
     @property
     def blockdevicemapping(self):
 
         bdm = boto.ec2.blockdevicemapping.BlockDeviceMapping()
+
+        self.log.info('Created new Block Device Mapping')
 
         for d in self.block_devices:
 
@@ -276,6 +280,14 @@ chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}"""
                 device.ephemeral_name = d['name']
 
             bdm['/dev/'+d['path']] = device
+
+            if d['type'] == 'ephemeral':
+                self.log.info("""Created new ephemeral device at {path} named 
+{name} of size {size}""".format(path = d['path'], name = d['name'],
+                                size = d['size'])
+            else:
+                self.log.info("""Created new EBS device at {path} of size 
+{size}""".format(path = d['path'], size = d['size']))
 
         return bdm
 
