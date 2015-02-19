@@ -1,5 +1,6 @@
 from exceptions import *
 import boto.ec2
+import boto.route53
 import logging
 import sys
 import string
@@ -355,6 +356,24 @@ chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}"""
 
     def tag(self):
         self.ec2.create_tags([self.instance.id], self.tags)
+
+    def route(self):
+        zone_address = self.hostname[len(self.name)+1:]
+
+        try:
+            zone = self.route53.get_zone(zone_address)
+        except Exception, e:
+            raise e
+
+        name = self.hostname + '.'
+
+        if zone.get_cname(name) is None:
+            try:
+                zone.add_cname(name, self.instance.public_dns_name)
+            except Exception, e:
+                raise e
+        else:
+            zone.update_cname(name, self.instance.public_dns_name)
 
     def autorun(self):
 
