@@ -70,6 +70,22 @@ class MongoDataNode(Server):
         chef_path = os.path.expanduser('~/.chef')
         chef_api = chef.autoconfigure(chef_path)
 
+        try:
+            node = chef.Node('self.name')
+            node.delete()
+        except chef.exceptions.ChefServerNotFoundError:
+            pass
+        except Exception as e:
+            raise e
+
+        try:
+            client = chef.Client(self.name)
+            client = client.delete()
+        except chef.exceptions.ChefServerNotFoundError:
+            pass
+        except Exception as e:
+            raise e
+
         node = chef.Node.create(self.name, api=chef_api)
         node.chef_environment = self.environment
 
