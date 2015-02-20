@@ -161,7 +161,7 @@ class MongoDataNode(Server):
 
         node.attributes.set_dotted('mongodb.replicaset_name', replica_set)
         self.log.info('Set the replica set name to \'{name}\''.format(
-                                    name = replica_set)
+                                    name = replica_set))
 
         runlist = ['role[RoleMongo]']
 
