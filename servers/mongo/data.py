@@ -143,3 +143,8 @@ class MongoDataNode(Server):
         node.run_list = runlist
 
         node.save(api=chef_api)
+
+    def autorun(self):
+
+        super(MongoDataNode, self).autorun()
+        self.bake()
