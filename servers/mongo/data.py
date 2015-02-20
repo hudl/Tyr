@@ -17,7 +17,7 @@ class MongoDataNode(Server):
 
     def __init__(self, dry = None, verbose = None, size = None, cluster = None,
                     environment = None, ami = None, region = None, role = None,
-                    keypair = None, availability_zone = None,
+                    keypair = None, availability_zone = None, chef_path = None,
                     security_groups = None, block_devices = None,
                     replica_set = None, replica_set_index = None):
 
@@ -28,6 +28,7 @@ class MongoDataNode(Server):
 
         self.replica_set = replica_set
         self.replica_set_index = replica_set_index
+        self.chef_path = chef_path
 
     def configure(self):
 
@@ -45,6 +46,15 @@ class MongoDataNode(Server):
 
         self.log.info('Using replica set index {index}'.format(
                         index=self.replica_set_index))
+
+        if self.chef_path is None:
+            self.log.warn('No Chef path provided')
+            self.chef_path = '~/.chef'
+
+        self.chef_path = os.path.expanduser(self.chef_path)
+
+        self.log.info('Using Chef path \'{path}\''.format(
+                                path = self.chef_path))
 
     @property
     def name(self):
@@ -67,10 +77,7 @@ class MongoDataNode(Server):
 
     def bake(self):
 
-        chef_path = os.path.expanduser('~/.chef')
-
-        self.log.info('Using Chef Path \'{path}\''.format(path = chef_path))
-
+        chef_path = os.path.expanduser(self.chef_path)
         chef_api = chef.autoconfigure(chef_path)
 
         try:
