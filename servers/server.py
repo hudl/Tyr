@@ -67,6 +67,8 @@ class Server(object):
             self.log.warn('No environment provided')
             self.environment = 'test'
 
+        self.environment = self.environment.lower()
+
         self.log.info('Using Environment \'{environment}\''.format(
                         environment = self.environment))
 
