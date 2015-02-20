@@ -70,4 +70,42 @@ class MongoDataNode(Server):
 
         node = chef.Node.create(self.name, api=chef_api)
         node.chef_environment = self.environment
+
+        if node.chef_environment == 'prod':
+            node.attributes.set_dotted('hudl_ebs.volumes', [
+                {
+                    'user': 'mongod',
+                    'group': 'mongod',
+                    'size': 10,
+                    'iops': 0,
+                    'device': '/dev/xvdg',
+                    'mount': '/volr/journal'},
+                {
+                    'user': 'mongod',
+                    'group': 'mongod',
+                    'size': 400,
+                    'iops': 3000,
+                    'device': '/dev/xvdf',
+                    'mount': '/volr'
+                }
+            ])
+        else:
+            node.attributes.set_dotted('hudl_ebs.volumes', [
+                {
+                    'user': 'mongod',
+                    'group': 'mongod',
+                    'size': 10,
+                    'iops': 0,
+                    'device': '/dev/xvdg',
+                    'mount': '/volr/journal'
+                },
+                {
+                    'user': 'mongod',
+                    'group': 'mongod',
+                    'size': 400,
+                    'iops': 0,
+                    'device': '/dev/xvdf',
+                    'mount': '/volr'
+                }
+            ])
         node.save(api=chef_api)
