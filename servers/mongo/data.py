@@ -44,3 +44,21 @@ class MongoDataNode(Server):
         self.log.info('Using replica set index {index}'.format(
                         index=self.replica_set_index))
 
+    @property
+    def name(self):
+
+        try:
+            return self.unique_name
+        except Exception:
+            pass
+
+        template = '{envcl}-rs{set}-{zone}-{index}'
+        name = template.format(envcl=self.envcl, set=self.replica_set,
+                                zone=self.availability_zone[-1:],
+                                index=self.replica_set_index)
+
+        self.unique_name = name
+
+        self.log.info('Using node name {name}'.format(name=name))
+
+        return name
