@@ -42,7 +42,7 @@ class MongoDataNode(Server):
 
         if self.replica_set_index is None:
             self.log.warn('No replica set set index provided')
-            self.replica_set_index = 1
+            self.replica_set_index = self.next_index()
 
         self.log.info('Using replica set index {index}'.format(
                         index=self.replica_set_index))
@@ -55,6 +55,37 @@ class MongoDataNode(Server):
 
         self.log.info('Using Chef path \'{path}\''.format(
                                 path = self.chef_path))
+
+    def next_index(self):
+
+        name_filter = '{envcl}-rs{set}-*'.format(envcl = self.envcl,
+                                                    set = self.replica_set)
+
+        filters = {
+            'tag:Name': name_filter,
+            'instance-state-name': 'running'
+        }
+
+        reservations = self.ec2.get_all_instances(filters=filters)
+
+        instances = []
+
+        for reservation in reservations:
+            instances.extend(reservation.instances)
+
+        names = [instance.tags['Name'] for instance in instances]
+
+        indexes = [name.split('-')[-1] for name in names]
+        indexes = [int(index) for index in indexes]
+
+        index = -1
+
+        for i in range(9):
+            if (i+1) not in indexes:
+                index = i+1
+                break
+
+        return index
 
     @property
     def name(self):
