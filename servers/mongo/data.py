@@ -62,3 +62,12 @@ class MongoDataNode(Server):
         self.log.info('Using node name {name}'.format(name=name))
 
         return name
+
+    def bake(self):
+
+        chef_path = os.path.expanduser('~/.chef')
+        chef_api = chef.autoconfigure(chef_path)
+
+        node = chef.Node.create(self.name, api=chef_api)
+        node.chef_environment = self.environment
+        node.save(api=chef_api)
