@@ -115,4 +115,13 @@ class MongoDataNode(Server):
         node.attributes.set_dotted('mongodb.cluster_name', cluster_name)
         node.attributes.set_dotted('mongodb.replicaset_name', replica_set)
 
+        runlist = ['role[RoleMongo]']
+
+        if node.chef_environment == 'prod':
+            pass
+        else:
+            runlist.append('role[RoleSumoLogic]')
+
+        node.run_list = runlist
+
         node.save(api=chef_api)
