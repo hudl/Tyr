@@ -81,7 +81,7 @@ class MongoDataNode(Server):
         chef_api = chef.autoconfigure(chef_path)
 
         try:
-            node = chef.Node('self.name')
+            node = chef.Node(self.name)
             node.delete()
 
             self.log.info('Removed previous chef node \'{node}\''.format(
