@@ -27,3 +27,20 @@ class MongoDataNode(Server):
         self.replica_set = replica_set
         self.replica_set_index = replica_set_index
 
+    def configure(self):
+
+        super(MongoDataNode, self).configure()
+
+        if self.replica_set is None:
+            self.log.warn('No replica set provided')
+            self.replica_set = 1
+
+        self.log.info('Using replica set {set}'.format(set=self.replica_set))
+
+        if self.replica_set_index is None:
+            self.log.warn('No replica set set index provided')
+            self.replica_set_index = 1
+
+        self.log.info('Using replica set index {index}'.format(
+                        index=self.replica_set_index))
+
