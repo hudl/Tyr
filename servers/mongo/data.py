@@ -81,7 +81,7 @@ class MongoDataNode(Server):
         chef_api = chef.autoconfigure(chef_path)
 
         try:
-            node = chef.Node(self.name)
+            node = chef.Node(self.name, api=chef_api)
             node.delete()
 
             self.log.info('Removed previous chef node \'{node}\''.format(
@@ -92,7 +92,7 @@ class MongoDataNode(Server):
             raise e
 
         try:
-            client = chef.Client(self.name)
+            client = chef.Client(self.name, api=chef_api)
             client = client.delete()
 
             self.log.info('Removed previous chef client \'{client}\''.format(
