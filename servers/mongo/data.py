@@ -68,11 +68,17 @@ class MongoDataNode(Server):
     def bake(self):
 
         chef_path = os.path.expanduser('~/.chef')
+
+        self.log.info('Using Chef Path \'{path}\''.format(path = chef_path))
+
         chef_api = chef.autoconfigure(chef_path)
 
         try:
             node = chef.Node('self.name')
             node.delete()
+
+            self.log.info('Removed previous chef node \'{node}\''.format(
+                                node = self.name))
         except chef.exceptions.ChefServerNotFoundError:
             pass
         except Exception as e:
@@ -81,13 +87,23 @@ class MongoDataNode(Server):
         try:
             client = chef.Client(self.name)
             client = client.delete()
+
+            self.log.info('Removed previous chef client \'{client}\''.format(
+                                client = self.name))
         except chef.exceptions.ChefServerNotFoundError:
             pass
         except Exception as e:
             raise e
 
         node = chef.Node.create(self.name, api=chef_api)
+
+        self.log.info('Created new Chef Node \'{node}\''.format(
+                        node = self.name))
+
         node.chef_environment = self.environment
+
+        self.log.info('Set the Chef Environment to \'{env}\''.format(
+                        env = node.chef_environment))
 
         if node.chef_environment == 'prod':
             node.attributes.set_dotted('hudl_ebs.volumes', [
@@ -127,11 +143,18 @@ class MongoDataNode(Server):
                 }
             ])
 
+        self.log.info('Configured the hudl_ebs.volumes attribute')
+
         cluster_name = self.cluster.split('-')[0]
         replica_set = 'rs' + str(self.replica_set)
 
         node.attributes.set_dotted('mongodb.cluster_name', cluster_name)
+        self.log.info('Set the cluster name to \'{name}\''.format(
+                                    name = cluster_name))
+
         node.attributes.set_dotted('mongodb.replicaset_name', replica_set)
+        self.log.info('Set the replica set name to \'{name}\''.format(
+                                    name = replica_set)
 
         runlist = ['role[RoleMongo]']
 
@@ -141,8 +164,11 @@ class MongoDataNode(Server):
             runlist.append('role[RoleSumoLogic]')
 
         node.run_list = runlist
+        self.log.info('Set the run list to \'{runlist}\''.format(
+                                        runlist = node.run_list))
 
         node.save(api=chef_api)
+        self.log.info('Saved the Chef Node configuration')
 
     def autorun(self):
 
