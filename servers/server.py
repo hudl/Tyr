@@ -170,10 +170,12 @@ class Server(object):
         self.log.info('Using EC2 block devices {devices}'.format(
                         devices = self.block_devices))
 
-    def next_index(self):
+    def next_index(self, template='{envcl}-', supplemental={}, cap=99):
 
-        name_filter = '{envcl}-rs{set}-*'.format(envcl = self.envcl,
-                                                    set = self.replica_set)
+        supplemental['envcl'] = self.envcl
+        template = template+'*'
+
+        name_filter = template.format(**supplemental)
 
         filters = {
             'tag:Name': name_filter,
@@ -194,7 +196,7 @@ class Server(object):
 
         index = -1
 
-        for i in range(9):
+        for i in range(cap):
             if (i+1) not in indexes:
                 index = i+1
                 break
