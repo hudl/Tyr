@@ -6,6 +6,7 @@ import sys
 import string
 import random
 import os.path
+import chef
 
 class Server(object):
 
@@ -22,7 +23,7 @@ class Server(object):
     def __init__(self, dry=None, verbose=None, size=None, cluster=None,
                     environment=None, ami=None, region=None, role=None,
                     keypair=None, availability_zone=None, security_groups=None,
-                    block_devices=None):
+                    block_devices=None, chef_path=None):
 
         self.dry = dry
         self.verbose = verbose
@@ -36,6 +37,7 @@ class Server(object):
         self.availability_zone = availability_zone
         self.security_groups = security_groups
         self.block_devices = block_devices
+        self.chef_path = chef_path
 
     def configure(self):
 
@@ -169,6 +171,17 @@ class Server(object):
 
         self.log.info('Using EC2 block devices {devices}'.format(
                         devices = self.block_devices))
+
+        if self.chef_path is None:
+            self.log.warn('No Chef path provided')
+            self.chef_path = '~/.chef'
+
+        self.chef_path = os.path.expanduser(self.chef_path)
+
+        self.log.info('Using Chef path \'{path}\''.format(
+                                path = self.chef_path))
+
+
 
     def next_index(self, template='{envcl}-', supplemental={}, cap=99):
 
@@ -485,6 +498,35 @@ named {name}""".format(path = d['path'], name = d['name']))
             self.log.info('The CNAME record already exists')
             zone.update_cname(name, self.instance.public_dns_name)
             self.log.info('Updated the CNAME record')
+
+    def bake(self):
+
+        chef_path = os.path.expanduser(self.chef_path)
+        self.chef_api = chef.autoconfigure(chef_path)
+
+        chef_api = self.chef_api
+
+        try:
+            node = chef.Node(self.name, api=chef_api)
+            node.delete()
+
+            self.log.info('Removed previous chef node \'{node}\''.format(
+                                node = self.name))
+        except chef.exceptions.ChefServerNotFoundError:
+            pass
+        except Exception as e:
+            raise e
+
+        try:
+            client = chef.Client(self.name, api=chef_api)
+            client = client.delete()
+
+            self.log.info('Removed previous chef client \'{client}\''.format(
+                                client = self.name))
+        except chef.exceptions.ChefServerNotFoundError:
+            pass
+        except Exception as e:
+            raise e
 
     def autorun(self):
 

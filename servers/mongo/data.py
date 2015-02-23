@@ -39,15 +39,6 @@ class MongoDataNode(Server):
 
         self.log.info('Using replica set {set}'.format(set=self.replica_set))
 
-        if self.chef_path is None:
-            self.log.warn('No Chef path provided')
-            self.chef_path = '~/.chef'
-
-        self.chef_path = os.path.expanduser(self.chef_path)
-
-        self.log.info('Using Chef path \'{path}\''.format(
-                                path = self.chef_path))
-
     @property
     def name(self):
 
@@ -72,30 +63,9 @@ class MongoDataNode(Server):
 
     def bake(self):
 
-        chef_path = os.path.expanduser(self.chef_path)
-        chef_api = chef.autoconfigure(chef_path)
+        super(MongoDataNode, self).bake()
 
-        try:
-            node = chef.Node(self.name, api=chef_api)
-            node.delete()
-
-            self.log.info('Removed previous chef node \'{node}\''.format(
-                                node = self.name))
-        except chef.exceptions.ChefServerNotFoundError:
-            pass
-        except Exception as e:
-            raise e
-
-        try:
-            client = chef.Client(self.name, api=chef_api)
-            client = client.delete()
-
-            self.log.info('Removed previous chef client \'{client}\''.format(
-                                client = self.name))
-        except chef.exceptions.ChefServerNotFoundError:
-            pass
-        except Exception as e:
-            raise e
+        chef_api = self.chef_api
 
         node = chef.Node.create(self.name, api=chef_api)
 
