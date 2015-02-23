@@ -223,23 +223,21 @@ class Server(object):
 
     @property
     def name(self):
-
         try:
             return self.unique_name
         except Exception:
             pass
 
-        def build_name():
-            template = '{envcl}-{id}'
-            return template.format(envcl = self.envcl, id = self.next_index())
+        self.unique_name = self.build_name()
 
-        exists = lambda n: len(self.ec2.get_all_instances(
-                                filters={'tag:Name': n})) > 0
+        return self.unique_name
 
-        name = build_name()
+    def build_name(self, template='{envcl}-{index}', supplemental={},
+                    search_prefix='{envcl}-', cap=99):
 
-        while exists(name):
-            name = build_name()
+        index = self.next_index(search_prefix, supplemental, cap)
+        supplemental['index'] = index
+        name = template.format(**supplemental)
 
         self.unique_name = name
 
