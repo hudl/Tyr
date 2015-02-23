@@ -42,7 +42,11 @@ class MongoDataNode(Server):
 
         if self.replica_set_index is None:
             self.log.warn('No replica set set index provided')
-            self.replica_set_index = self.next_index()
+            self.replica_set_index = self.next_index(template='{envcl}-rs{set}-',
+                                                     supplemental = {
+                                                         'set': self.replica_set,
+                                                     },
+                                                     cap = 9)
 
         self.log.info('Using replica set index {index}'.format(
                         index=self.replica_set_index))
