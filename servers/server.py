@@ -170,6 +170,37 @@ class Server(object):
         self.log.info('Using EC2 block devices {devices}'.format(
                         devices = self.block_devices))
 
+    def next_index(self):
+
+        name_filter = '{envcl}-rs{set}-*'.format(envcl = self.envcl,
+                                                    set = self.replica_set)
+
+        filters = {
+            'tag:Name': name_filter,
+            'instance-state-name': 'running'
+        }
+
+        reservations = self.ec2.get_all_instances(filters=filters)
+
+        instances = []
+
+        for reservation in reservations:
+            instances.extend(reservation.instances)
+
+        names = [instance.tags['Name'] for instance in instances]
+
+        indexes = [name.split('-')[-1] for name in names]
+        indexes = [int(index) for index in indexes]
+
+        index = -1
+
+        for i in range(9):
+            if (i+1) not in indexes:
+                index = i+1
+                break
+
+        return index
+
     @property
     def envcl(self):
 
