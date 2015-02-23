@@ -172,6 +172,11 @@ class Server(object):
 
     def next_index(self, template='{envcl}-', supplemental={}, cap=99):
 
+        try:
+            return self.index
+        except Exception:
+            pass
+
         supplemental['envcl'] = self.envcl
         template = template+'*'
 
@@ -200,6 +205,8 @@ class Server(object):
             if (i+1) not in indexes:
                 index = i+1
                 break
+
+        self.index = index
 
         return index
 
