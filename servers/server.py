@@ -206,6 +206,8 @@ class Server(object):
                 index = i+1
                 break
 
+        index = str(index)
+
         self.index = index
 
         return index
