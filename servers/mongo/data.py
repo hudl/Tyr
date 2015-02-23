@@ -19,7 +19,7 @@ class MongoDataNode(Server):
                     environment = None, ami = None, region = None, role = None,
                     keypair = None, availability_zone = None, chef_path = None,
                     security_groups = None, block_devices = None,
-                    replica_set = None, replica_set_index = None):
+                    replica_set = None):
 
         super(MongoDataNode, self).__init__(dry, verbose, size, cluster,
                                             environment, ami, region, role,
@@ -27,7 +27,6 @@ class MongoDataNode(Server):
                                             security_groups, block_devices)
 
         self.replica_set = replica_set
-        self.replica_set_index = replica_set_index
         self.chef_path = chef_path
 
     def configure(self):
@@ -39,17 +38,6 @@ class MongoDataNode(Server):
             self.replica_set = 1
 
         self.log.info('Using replica set {set}'.format(set=self.replica_set))
-
-        if self.replica_set_index is None:
-            self.log.warn('No replica set set index provided')
-            self.replica_set_index = self.next_index(template='{envcl}-rs{set}-',
-                                                     supplemental = {
-                                                         'set': self.replica_set,
-                                                     },
-                                                     cap = 9)
-
-        self.log.info('Using replica set index {index}'.format(
-                        index=self.replica_set_index))
 
         if self.chef_path is None:
             self.log.warn('No Chef path provided')
