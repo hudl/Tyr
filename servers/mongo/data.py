@@ -145,4 +145,3 @@ class MongoDataNode(Server):
     def autorun(self):
 
         super(MongoDataNode, self).autorun()
-        self.bake()
