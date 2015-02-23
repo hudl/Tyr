@@ -229,13 +229,9 @@ class Server(object):
         except Exception:
             pass
 
-        def generate_id(length=4):
-            pool = string.ascii_lowercase + string.digits
-            return ''.join(random.choice(pool) for _ in range(length))
-
         def build_name():
             template = '{envcl}-{id}'
-            return template.format(envcl = self.envcl, id = generate_id())
+            return template.format(envcl = self.envcl, id = self.next_index())
 
         exists = lambda n: len(self.ec2.get_all_instances(
                                 filters={'tag:Name': n})) > 0
