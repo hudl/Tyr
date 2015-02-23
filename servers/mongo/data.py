@@ -56,10 +56,13 @@ class MongoDataNode(Server):
         except Exception:
             pass
 
-        template = '{envcl}-rs{set}-{zone}-{index}'
-        name = template.format(envcl=self.envcl, set=self.replica_set,
-                                zone=self.availability_zone[-1:],
-                                index=self.replica_set_index)
+        name = self.build_name(
+            template='{envcl}-rs{set}-{zone}-{index}',
+            supplemental={
+                'set': self.replica_set,
+                'zone': self.availability_zone[-1:]
+            },
+            search_prefix='{envcl}-rs{set}-')
 
         self.unique_name = name
 
