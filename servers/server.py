@@ -208,6 +208,10 @@ class Server(object):
 
         index = str(index)
 
+        if cap > 9:
+            if len(index) < 2:
+                index = '0' + index
+
         self.index = index
 
         return index
