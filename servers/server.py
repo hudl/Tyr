@@ -238,11 +238,15 @@ class Server(object):
 
         return self.unique_name
 
-    def build_name(self, template='{envcl}-{index}', supplemental={},
+    def build_name(self, template='{envcl}-{zone}-{index}', supplemental={},
                     search_prefix='{envcl}-', cap=99):
 
         index = self.next_index(search_prefix, supplemental, cap)
+
         supplemental['index'] = index
+        supplemental['zone'] = self.availability_zone[-1:]
+        supplemental['envcl'] = self.envcl
+
         name = template.format(**supplemental)
 
         self.unique_name = name
