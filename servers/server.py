@@ -183,7 +183,7 @@ class Server(object):
 
 
 
-    def next_index(self, template='{envcl}-', supplemental={}, cap=99):
+    def next_index(self, template='{envcl}-{zone}-', supplemental={}, cap=99):
 
         try:
             return self.index
@@ -252,13 +252,14 @@ class Server(object):
         return self.unique_name
 
     def build_name(self, template='{envcl}-{zone}-{index}', supplemental={},
-                    search_prefix='{envcl}-', cap=99):
+                    search_prefix='{envcl}-{zone}-', cap=99):
+
+        supplemental['zone'] = self.availability_zone[-1:]
+        supplemental['envcl'] = self.envcl
 
         index = self.next_index(search_prefix, supplemental, cap)
 
         supplemental['index'] = index
-        supplemental['zone'] = self.availability_zone[-1:]
-        supplemental['envcl'] = self.envcl
 
         name = template.format(**supplemental)
 
