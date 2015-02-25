@@ -17,7 +17,7 @@ class MongoArbiterNode(Server):
                     environment = None, ami = None, region = None, role = None,
                     keypair = None, availability_zone = None, chef_path = None,
                     security_groups = None, block_devices = None,
-                    replica_set = None)
+                    replica_set = None):
 
         super(MongoArbiterNode, self).__init__(dry, verbose, size, cluster,
                                                 environment, ami, region, role,
