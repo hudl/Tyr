@@ -53,7 +53,7 @@ class MongoDataNode(Server):
                 'set': self.replica_set,
                 'zone': self.availability_zone[-1:]
             },
-            search_prefix='{envcl}-rs{set}-')
+            search_prefix='{envcl}-rs{set}-{zone}-')
 
         self.unique_name = name
 
