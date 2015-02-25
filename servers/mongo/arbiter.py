@@ -26,3 +26,13 @@ class MongoArbiterNode(Server):
         self.replica_set = replica_set
         self.chef_path = chef_path
 
+    def configure(self):
+
+        super(MongoArbiterNode, self).configure()
+
+        if self.replica_set is None:
+            self.log.warn('No replica set provided')
+            self.replica_set = 1
+
+        self.log.info('Using replica set {set}'.format(set = self.replica_set))
+
