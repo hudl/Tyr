@@ -1,4 +1,5 @@
 from .. import Server
+import logging
 
 class MongoArbiterNode(Server):
 
