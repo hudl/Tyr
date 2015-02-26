@@ -100,6 +100,9 @@ class MongoArbiterNode(Server):
         self.log.info('Set the replica set name to \'{name}\''.format(
                                     name = replica_set))
 
+        node.attributes.set_dotted('mongodb.node_type', 'arbiter')
+        self.log.info('Set the MongoDB node type to \'arbiter\'')
+
         runlist = ['role[RoleMongo]']
 
         if node.chef_environment == 'prod':
