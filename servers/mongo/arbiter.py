@@ -87,3 +87,16 @@ class MongoArbiterNode(Server):
         ])
 
         self.log.info('Configured the hudl_ebs.volumes attribute')
+
+        cluster_name = self.cluster.split('-')[0]
+        replica_set = 'rs' + str(self.replica_set)
+
+        node.attributes.set_dotted('mongodb.cluster_name', cluster_name)
+        self.log.info('Set the cluster name to \'{name}\''.format(
+                                    name = cluster_name))
+
+        node.attributes.set_dotted('mongodb.replicaset_name', replica_set)
+        self.log.info('Set the replica set name to \'{name}\''.format(
+                                    name = replica_set))
+
+
