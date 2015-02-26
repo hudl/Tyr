@@ -82,7 +82,7 @@ class MongoArbiterNode(Server):
                 'group': 'mongod',
                 'size': 1,
                 'iops': 0,
-                'device': '/dev/xvdg',
+                'device': '/dev/xvdf',
                 'mount': '/volr'
             }
         ])
