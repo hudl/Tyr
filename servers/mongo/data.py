@@ -128,6 +128,9 @@ class MongoDataNode(Server):
         self.log.info('Set the replica set name to \'{name}\''.format(
                                     name = replica_set))
 
+        node.attributes.set_dotted('mongodb.node_type', 'data')
+        self.log.info('Set the MongoDB node type to \'data\'')
+
         runlist = ['role[RoleMongo]']
 
         if node.chef_environment == 'prod':
