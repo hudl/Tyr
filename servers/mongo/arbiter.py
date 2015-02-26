@@ -99,4 +99,16 @@ class MongoArbiterNode(Server):
         self.log.info('Set the replica set name to \'{name}\''.format(
                                     name = replica_set))
 
+        runlist = ['role[RoleMongo]']
 
+        if node.chef_environment == 'prod':
+            pass
+        else:
+            runlist.append('role[RoleSumoLogic]')
+
+        node.run_list = runlist
+        self.log.info('Set the run list to \'{runlist}\''.format(
+                                        runlist = node.run_list))
+
+        node.save(api=chef_api)
+        self.log.info('Saved the Chef Node configuration')
