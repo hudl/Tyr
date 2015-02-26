@@ -47,7 +47,7 @@ class MongoArbiterNode(Server):
             pass
 
         name = self.build_name(
-                template = '{envcl}-rs{set}-{zone}-arbiter',
+                template = '{envcl}-rs{set}-{zone}-arb',
                 supplemental = {
                     'set': self.replica_set,
                     'zone': self.availability_zone
