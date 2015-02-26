@@ -58,3 +58,32 @@ class MongoArbiterNode(Server):
         self.log.info('Using node name {name}'.format(name = name))
 
         return name
+
+    def bake(self):
+
+        super(MongoArbiterNode, self).bake()
+
+        chef_api = self.chef_api
+
+        node = chef.Node.create(self.name, api=chef_api)
+
+        self.log.info('Created new Chef Node \'{node}\''.format(
+                        node = self.name))
+
+        node.chef_environment = self.environment
+
+        self.log.info('Set the Chef Environment to \'{env}\''.format(
+                        env = node.chef_environment))
+
+        node.attributes.set_dotted('hudl_ebs.volumes', [
+            {
+                'user': 'mongod',
+                'group': 'mongod',
+                'size': 1,
+                'iops': 0,
+                'device': '/dev/xvdg',
+                'mount': '/volr'
+            }
+        ])
+
+        self.log.info('Configured the hudl_ebs.volumes attribute')
