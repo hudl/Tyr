@@ -1,5 +1,6 @@
 from .. import Server
 import logging
+import chef
 
 class MongoArbiterNode(Server):
 
@@ -109,6 +110,8 @@ class MongoArbiterNode(Server):
         node.run_list = runlist
         self.log.info('Set the run list to \'{runlist}\''.format(
                                         runlist = node.run_list))
+
+        node.attributes.set_dotted('mongodb.config.smallfiles', True)
 
         node.save(api=chef_api)
         self.log.info('Saved the Chef Node configuration')
