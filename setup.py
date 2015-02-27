@@ -12,5 +12,6 @@ setup(
     install_requires = [
         'boto',
         'pyChef',
+        'paramiko'
     ]
 )

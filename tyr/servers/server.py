@@ -7,6 +7,8 @@ import string
 import random
 import os.path
 import chef
+import time
+from paramiko.client import AutoAddPolicy, SSHClient
 
 class Server(object):
 
@@ -499,6 +501,66 @@ named {name}""".format(path = d['path'], name = d['name']))
             self.log.info('The CNAME record already exists')
             zone.update_cname(name, self.instance.public_dns_name)
             self.log.info('Updated the CNAME record')
+
+    @property
+    def connection(self):
+
+        try:
+            connection = self.ssh_connection
+
+            transport = connection.get_transport()
+
+            if not transport.is_active():
+                raise Exception()
+
+            else:
+                return connection
+        except Exception:
+            pass
+
+        connection = SSHClient()
+        connection.set_missing_host_key_policy(AutoAddPolicy())
+
+        while True:
+            try:
+                connection.connect(self.hostname,
+                        username = 'ec2-user')
+                break
+            except Exception:
+                time.sleep(10)
+
+        self.ssh_connection = connection
+
+        return connection
+
+    def run(self, command):
+
+        with self.connection as conn:
+
+            state = {
+                        'in': None,
+                        'out': None,
+                        'err': None
+                    }
+
+            stdin, stdout, stderr = conn.exec_command(command)
+
+            try:
+                stdin['in'] = stdin.read()
+            except IOError:
+                pass
+
+            try:
+                state['out'] = stdout.read()
+            except IOError:
+                pass
+
+            try:
+                state['err'] = stderr.read()
+            except IOError:
+                pass
+
+            return state
 
     def bake(self):
 

@@ -26,6 +26,7 @@ At this point, the only dependencies are
 
 - [boto](https://github.com/boto/boto)
 - [PyChef](https://github.com/coderanger/pychef)
+- [paramiko](http://www.paramiko.org/)
 
 These are specified in the `setup.py` file and will automatically be installed.
 
