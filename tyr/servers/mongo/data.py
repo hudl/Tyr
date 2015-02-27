@@ -1,4 +1,4 @@
-from .. import Server
+from tyr.servers import Server
 import logging
 import os
 import chef
