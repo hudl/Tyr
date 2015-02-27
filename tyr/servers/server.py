@@ -507,7 +507,13 @@ named {name}""".format(path = d['path'], name = d['name']))
         try:
             connection = self.ssh_connection
 
-            return connection
+            transport = connection.get_transport()
+
+            if not transport.is_active():
+                raise Exception()
+
+            else:
+                return connection
         except Exception:
             pass
 
