@@ -7,6 +7,7 @@ import string
 import random
 import os.path
 import chef
+import time
 from paramiko.client import AutoAddPolicy, SSHClient
 
 class Server(object):
@@ -519,8 +520,14 @@ named {name}""".format(path = d['path'], name = d['name']))
 
         connection = SSHClient()
         connection.set_missing_host_key_policy(AutoAddPolicy())
-        connection.connect(self.hostname,
+
+        while True:
+            try:
+                connection.connect(self.hostname,
                         username = 'ec2-user')
+                break
+            except Exception:
+                time.sleep(10)
 
         self.ssh_connection = connection
 
