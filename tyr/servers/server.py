@@ -526,6 +526,35 @@ named {name}""".format(path = d['path'], name = d['name']))
 
         return connection
 
+    def run(self, command):
+
+        with self.connection as conn:
+
+            state = {
+                        'in': None,
+                        'out': None,
+                        'err': None
+                    }
+
+            stdin, stdout, stderr = conn.exec_command(command)
+
+            try:
+                stdin['in'] = stdin.read()
+            except IOError:
+                pass
+
+            try:
+                state['out'] = stdout.read()
+            except IOError:
+                pass
+
+            try:
+                state['err'] = stderr.read()
+            except IOError:
+                pass
+
+            return state
+
     def bake(self):
 
         chef_path = os.path.expanduser(self.chef_path)
