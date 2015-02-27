@@ -508,12 +508,16 @@ named {name}""".format(path = d['path'], name = d['name']))
         try:
             connection = self.ssh_connection
 
+            self.log.info('Determining is SSH transport is still active')
             transport = connection.get_transport()
 
             if not transport.is_active():
+                self.log.warn('SSH transport is no longer active')
+                self.log.info('Proceeding to re-establish SSH connection')
                 raise Exception()
 
             else:
+                self.log.info('SSH transport is still active')
                 return connection
         except Exception:
             pass
@@ -521,13 +525,18 @@ named {name}""".format(path = d['path'], name = d['name']))
         connection = SSHClient()
         connection.set_missing_host_key_policy(AutoAddPolicy())
 
+        self.log.info('Attempting to establish SSH connection')
+
         while True:
             try:
                 connection.connect(self.hostname,
                         username = 'ec2-user')
                 break
             except Exception:
+                self.log.warn('Unable to establish SSH connection')
                 time.sleep(10)
+
+        self.log.info('Successfully established SSH connection')
 
         self.ssh_connection = connection
 
