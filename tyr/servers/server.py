@@ -546,7 +546,7 @@ named {name}""".format(path = d['path'], name = d['name']))
             stdin, stdout, stderr = conn.exec_command(command)
 
             try:
-                stdin['in'] = stdin.read()
+                state['in'] = stdin.read()
             except IOError:
                 pass
 
