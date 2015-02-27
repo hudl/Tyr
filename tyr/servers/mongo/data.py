@@ -19,7 +19,8 @@ class MongoDataNode(Server):
                     environment = None, ami = None, region = None, role = None,
                     keypair = None, availability_zone = None, chef_path = None,
                     security_groups = None, block_devices = None,
-                    replica_set = None):
+                    replica_set = None, data_volume_size=None,
+                    data_volume_iops=None):
 
         super(MongoDataNode, self).__init__(dry, verbose, size, cluster,
                                             environment, ami, region, role,
@@ -28,6 +29,8 @@ class MongoDataNode(Server):
 
         self.replica_set = replica_set
         self.chef_path = chef_path
+        self.data_volume_size = data_volume_size
+        self.data_volume_iops = data_volume_iops
 
     def configure(self):
 
@@ -38,6 +41,23 @@ class MongoDataNode(Server):
             self.replica_set = 1
 
         self.log.info('Using replica set {set}'.format(set=self.replica_set))
+
+        if self.data_volume_size is None:
+            self.log.warn('No data volume size provided')
+            self.data_volume_size = 400
+
+        self.log.info('Using data volume size \'{size}\''.format(
+                                            size = self.data_volume_size))
+
+        if self.data_volume_iops is None:
+            self.log.warn('No data volume iops provided')
+            if self.environment == 'prod':
+                self.data_volume_iops = 3000
+            else:
+                self.data_volume_iops = 0
+
+        self.log.info('Using data volume iops \'{iops}\''.format(
+                                            iops = self.data_volume_iops))
 
     @property
     def name(self):
@@ -89,8 +109,8 @@ class MongoDataNode(Server):
                 {
                     'user': 'mongod',
                     'group': 'mongod',
-                    'size': 400,
-                    'iops': 3000,
+                    'size': self.data_volume_size,
+                    'iops': self.data_volume_iops,
                     'device': '/dev/xvdf',
                     'mount': '/volr'
                 }
@@ -108,8 +128,8 @@ class MongoDataNode(Server):
                 {
                     'user': 'mongod',
                     'group': 'mongod',
-                    'size': 400,
-                    'iops': 0,
+                    'size': self.data_volume_size,
+                    'iops': self.data_volume_iops,
                     'device': '/dev/xvdf',
                     'mount': '/volr'
                 }
