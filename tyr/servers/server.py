@@ -212,7 +212,7 @@ class Server(object):
         names = [instance.tags['Name'] for instance in instances]
 
         indexes = [name.split('-')[-1] for name in names]
-        indexes = [int(index) for index in indexes]
+        indexes = [int(index) for index in indexes if index.isdigit()]
 
         index = -1
 
