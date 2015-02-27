@@ -2,6 +2,7 @@ from tyr.servers import Server
 import logging
 import os
 import chef
+import sys
 
 class MongoDataNode(Server):
 
@@ -58,6 +59,15 @@ class MongoDataNode(Server):
 
         self.log.info('Using data volume iops \'{iops}\''.format(
                                             iops = self.data_volume_iops))
+
+        iops_size_ratio = self.data_volume_iops/self.data_volume_size
+
+        self.log.info('The IOPS to Size ratio is \'{ratio}\''.format(
+                                            ratio = iops_size_ratio))
+
+        if iops_size_ratio > 30:
+            self.log.critical('The IOPS to Size ratio is greater than 30')
+            sys.exit(1)
 
     @property
     def name(self):
