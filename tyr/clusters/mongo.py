@@ -1,4 +1,5 @@
 import logging
+from tyr.servers import MongoDataNode
 
 class MongoCluster(object):
 
@@ -34,3 +35,32 @@ class MongoCluster(object):
         self.block_devices = block_devices
         self.replica_set = replica_set
         self.data_nodes = data_nodes
+
+    def provision(self):
+
+        zones = 'cde'
+
+        self.log.info('Building availability zone list')
+
+        while len(zones) < self.data_nodes:
+
+            zones += zones
+
+        self.log.info('Provisioning MongoDB Data Nodes')
+
+        for i in range(self.data_nodes):
+
+            node = MongoDataNode(dry = self.dry, verbose = self.verbose,
+                                    size = self.size, cluster = self.cluster,
+                                    environment = self.environment,
+                                    ami = self.ami, region = self.region,
+                                    role = self.role, keypair = self.keypair,
+                                    chef_path = self.chef_path,
+                                    replica_set = self.replica_set,
+                                    security_groups = self.security_groups,
+                                    block_devices = self.block_devices,
+                                    availability_zone = zones[i])
+
+            node.autorun()
+
+            self.nodes.append(node)
