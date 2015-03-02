@@ -68,12 +68,12 @@ class MongoArbiterNode(Server):
 
         node = chef.Node.create(self.name, api=chef_api)
 
-        self.log.info('Created new Chef Node \'{node}\''.format(
+        self.log.info('Created new Chef Node "{node}"'.format(
                         node = self.name))
 
         node.chef_environment = self.environment
 
-        self.log.info('Set the Chef Environment to \'{env}\''.format(
+        self.log.info('Set the Chef Environment to "{env}"'.format(
                         env = node.chef_environment))
 
         node.attributes.set_dotted('hudl_ebs.volumes', [
@@ -93,15 +93,15 @@ class MongoArbiterNode(Server):
         replica_set = 'rs' + str(self.replica_set)
 
         node.attributes.set_dotted('mongodb.cluster_name', cluster_name)
-        self.log.info('Set the cluster name to \'{name}\''.format(
+        self.log.info('Set the cluster name to "{name}"'.format(
                                     name = cluster_name))
 
         node.attributes.set_dotted('mongodb.replicaset_name', replica_set)
-        self.log.info('Set the replica set name to \'{name}\''.format(
+        self.log.info('Set the replica set name to "{name}"'.format(
                                     name = replica_set))
 
         node.attributes.set_dotted('mongodb.node_type', 'arbiter')
-        self.log.info('Set the MongoDB node type to \'arbiter\'')
+        self.log.info('Set the MongoDB node type to "arbiter"')
 
         runlist = ['role[RoleMongo]']
 
@@ -111,7 +111,7 @@ class MongoArbiterNode(Server):
             runlist.append('role[RoleSumoLogic]')
 
         node.run_list = runlist
-        self.log.info('Set the run list to \'{runlist}\''.format(
+        self.log.info('Set the run list to "{runlist}"'.format(
                                         runlist = node.run_list))
 
         node.attributes.set_dotted('mongodb.config.smallfiles', True)

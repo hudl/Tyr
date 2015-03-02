@@ -46,25 +46,25 @@ class Server(object):
         if self.dry is None:
             self.dry = False
 
-        self.log.info('Using dry value \'{dry}\''.format(dry = self.dry))
+        self.log.info('Using dry value "{dry}"'.format(dry = self.dry))
 
         if self.verbose is None:
             self.verbose = False
 
-        self.log.info('Using verbose value \'{verbose}\''.format(
+        self.log.info('Using verbose value "{verbose}"'.format(
                         verbose = self.verbose))
 
         if self.size is None:
             self.log.warn('No Instance Type provided')
             self.size = 'm3.medium'
 
-        self.log.info('Using Instance Type \'{size}\''.format(size = self.size))
+        self.log.info('Using Instance Type "{size}"'.format(size = self.size))
 
         if self.cluster is None:
             self.log.warn('No cluster provided')
             raise InvalidCluster('A cluster must be specified.')
 
-        self.log.info('Using Cluster \'{cluster}\''.format(
+        self.log.info('Using Cluster "{cluster}"'.format(
                         cluster = self.cluster))
 
         if self.environment is None:
@@ -73,7 +73,7 @@ class Server(object):
 
         self.environment = self.environment.lower()
 
-        self.log.info('Using Environment \'{environment}\''.format(
+        self.log.info('Using Environment "{environment}"'.format(
                         environment = self.environment))
 
         if self.region is None:
@@ -84,11 +84,11 @@ class Server(object):
 
         if not valid(self.region):
 
-            error = '\'{region}\' is not a valid EC2 region'.format(
+            error = '"{region}" is not a valid EC2 region'.format(
                         region=self.region)
             raise RegionDoesNotExist(error)
 
-        self.log.info('Using EC2 Region \'{region}\''.format(
+        self.log.info('Using EC2 Region "{region}"'.format(
                         region = self.region))
 
         self.establish_ec2_connection()
@@ -103,16 +103,16 @@ class Server(object):
             self.ec2.get_all_images(image_ids=[self.ami])
         except Exception, e:
             if 'Invalid id' in str(e):
-                error = '\'{ami}\' is not a valid AMI'.format(ami = self.ami)
+                error = '"{ami}" is not a valid AMI'.format(ami = self.ami)
                 raise InvalidAMI(error)
 
-        self.log.info('Using EC2 AMI \'{ami}\''.format(ami = self.ami))
+        self.log.info('Using EC2 AMI "{ami}"'.format(ami = self.ami))
 
         if self.role is None:
             self.log.warn('No IAM Role provided')
             self.role = self.environment[0] + '-' + self.cluster
 
-        self.log.info('Using IAM Role \'{role}\''.format(role = self.role))
+        self.log.info('Using IAM Role "{role}"'.format(role = self.role))
 
         self.resolve_iam_role()
 
@@ -126,11 +126,11 @@ class Server(object):
                 self.ec2.get_all_key_pairs()]
 
         if not valid(self.keypair):
-            error = '\'{keypair}\' is not a valid EC2 keypair'.format(
+            error = '"{keypair}" is not a valid EC2 keypair'.format(
                         keypair = self.keypair)
             raise InvalidKeyPair(error)
 
-        self.log.info('Using EC2 Key Pair \'{keypair}\''.format(
+        self.log.info('Using EC2 Key Pair "{keypair}"'.format(
                         keypair = self.keypair))
 
         if self.availability_zone is None:
@@ -143,11 +143,11 @@ class Server(object):
         valid = lambda z: z in [zone.name for zone in self.ec2.get_all_zones()]
 
         if not valid(self.availability_zone):
-            error = '\'{zone}\' is not a valid EC2 availability zone'.format(
+            error = '"{zone}" is not a valid EC2 availability zone'.format(
                     zone = self.availability_zone)
             raise InvalidAvailabilityZone(error)
 
-        self.log.info('Using EC2 Availability Zone \'{zone}\''.format(
+        self.log.info('Using EC2 Availability Zone "{zone}"'.format(
                         zone = self.availability_zone))
 
         if self.security_groups is None:
@@ -180,7 +180,7 @@ class Server(object):
 
         self.chef_path = os.path.expanduser(self.chef_path)
 
-        self.log.info('Using Chef path \'{path}\''.format(
+        self.log.info('Using Chef path "{path}"'.format(
                                 path = self.chef_path))
 
 
@@ -408,7 +408,7 @@ named {name}""".format(path = d['path'], name = d['name']))
 
     def establish_ec2_connection(self):
 
-        self.log.info('Using EC2 Region \'{region}\''.format(
+        self.log.info('Using EC2 Region "{region}"'.format(
                         region=self.region))
         self.log.info("Attempting to connect to EC2")
 
@@ -573,7 +573,7 @@ named {name}""".format(path = d['path'], name = d['name']))
             node = chef.Node(self.name, api=chef_api)
             node.delete()
 
-            self.log.info('Removed previous chef node \'{node}\''.format(
+            self.log.info('Removed previous chef node "{node}"'.format(
                                 node = self.name))
         except chef.exceptions.ChefServerNotFoundError:
             pass
@@ -584,7 +584,7 @@ named {name}""".format(path = d['path'], name = d['name']))
             client = chef.Client(self.name, api=chef_api)
             client = client.delete()
 
-            self.log.info('Removed previous chef client \'{client}\''.format(
+            self.log.info('Removed previous chef client "{client}"'.format(
                                 client = self.name))
         except chef.exceptions.ChefServerNotFoundError:
             pass
