@@ -3,6 +3,7 @@ import logging
 import os
 import chef
 import sys
+import json
 
 class MongoDataNode(Server):
 
@@ -93,6 +94,16 @@ class MongoDataNode(Server):
         self.log.info('Using node name {name}'.format(name=name))
 
         return name
+
+    def run_mongo(self, command):
+
+        template = 'mongo --port 27018 --eval "JSON.stringify({command})"'
+
+        command = template.format(command = command)
+
+        r = self.run(command)
+
+        return json.loads(r['out'].split('\n')[2])
 
     def bake(self):
 

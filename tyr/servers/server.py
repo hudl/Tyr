@@ -600,6 +600,47 @@ named {name}""".format(path = d['path'], name = d['name']))
         except Exception as e:
             raise e
 
+    def baked(self):
+
+        self.log.info('Determining status of "{node}"'.format(
+                                            node = self.hostname))
+
+        self.log.info('Waiting for Chef Client to start')
+
+        while True:
+            r = self.run('ls -l /var/log')
+
+            if 'chef-client.log' in r['out']:
+                break
+            else:
+                time.sleep(10)
+
+        self.log.info('Chef Client has started')
+
+        self.log.info('Waiting for Chef Client to finish')
+
+        while True:
+            r = self.run('pgrep chef-client')
+
+            if len(r['out']) > 0:
+                time.sleep(10)
+            else:
+                break
+
+        self.log.info('Chef Client has finished')
+
+        self.log.info('Determining Node state')
+
+        r = self.run('tail /var/log/chef-client.log')
+
+        if 'Chef Run complete in' in r['out']:
+            self.log.info('Chef Client was successful')
+            return True
+        else:
+            self.log.info('Chef Client was not successful')
+            self.log.debug(r['out'])
+            return False
+
     def autorun(self):
 
         self.configure()
