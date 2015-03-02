@@ -108,6 +108,7 @@ class MongoCluster(object):
                 states.append(True)
             else:
                 self.log.info('Chef Client was not successful')
+                self.log.debug(r['out'])
                 states.append(False)
 
         return all(states)
