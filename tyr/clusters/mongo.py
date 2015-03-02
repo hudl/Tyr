@@ -97,4 +97,13 @@ class MongoCluster(object):
         for node in self.nodes[1:]:
             self.add(node)
 
+    def autorun(self):
 
+        self.provision()
+        if self.baked():
+            self.initiate()
+            while True:
+                if len(self.status()['members']) > 0:
+                    if self.status()['members'][0]['stateStr'] == 'PRIMARY':
+                        break
+            self.add_all()
