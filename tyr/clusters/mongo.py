@@ -1,6 +1,7 @@
 import logging
 from tyr.servers import MongoDataNode
 import time
+import json
 
 class MongoCluster(object):
 
@@ -69,3 +70,13 @@ class MongoCluster(object):
     def baked(self):
 
         return all([node.baked() for node in self.nodes])
+
+    def status(self):
+
+        self.log.info('Determining replica set status')
+
+        cmd = 'mongo --port 27018 --eval "JSON.stringify(rs.status())"'
+
+        r = self.nodes[0].run(cmd)
+
+        return json.loads(r['out'].split('\n')[2])
