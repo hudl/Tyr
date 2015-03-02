@@ -1,5 +1,6 @@
 import logging
 from tyr.servers import MongoDataNode
+import time
 
 class MongoCluster(object):
 
@@ -64,3 +65,49 @@ class MongoCluster(object):
             node.autorun()
 
             self.nodes.append(node)
+
+    def baked(self):
+
+        states = []
+
+        for node in self.nodes:
+
+            self.log.info('Determining status of "{node}"'.format(
+                                            node = node.hostname))
+
+            self.log.info('Waiting for Chef Client to start')
+
+            while True:
+                r = node.run('ls -l /var/log')
+
+                if 'chef-client.log' in r['out']:
+                    break
+                else:
+                    time.sleep(10)
+
+            self.log.info('Chef Client has started')
+
+            self.log.info('Waiting for Chef Client to finish')
+
+            while True:
+                r = node.run('pgrep chef-client')
+
+                if len(r['out']) > 0:
+                    time.sleep(10)
+                else:
+                    break
+
+            self.log.info('Chef Client has finished')
+
+            self.log.info('Determining Node state')
+
+            r = node.run('tail /var/log/chef-client.log')
+
+            if 'Chef Run complete in' in r['out']:
+                self.log.info('Chef Client was successful')
+                states.append(True)
+            else:
+                self.log.info('Chef Client was not successful')
+                states.append(False)
+
+        return all(states)
