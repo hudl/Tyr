@@ -75,30 +75,19 @@ class MongoCluster(object):
 
         self.log.info('Determining replica set status')
 
-        cmd = 'mongo --port 27018 --eval "JSON.stringify(rs.status())"'
-
-        r = self.nodes[0].run(cmd)
-
-        return json.loads(r['out'].split('\n')[2])
+        return self.nodes[0].run_mongo('rs.status()')
 
     def initiate(self):
 
         self.log.info('Initiating replica set')
 
-        cmd = 'mongo --port 27018 --eval "JSON.stringify(rs.initiate())"'
-
-        r = self.nodes[0].run(cmd)
-
-        return json.loads(r['out'].split('\n')[2])
+        return self.nodes[0].run_mongo('rs.initiate()')
 
     def add(self, node):
 
         self.log.info('Adding "{node}" to the replica set'.format(
                                     node = node.hostname))
 
-        cmd = 'mongo --port 27018 --eval "JSON.stringify(rs.add(\'{address}\'))"'
-        cmd = cmd.format(address = node.hostname + ':27018')
+        template = 'rs.add(\'{node}:27018\')'
 
-        r = self.nodes[0].run(cmd)
-
-        return json.loads(r['out'].split('\n')[2])
+        return self.nodes[0].run_mongo(template.format(node = node.hostname))
