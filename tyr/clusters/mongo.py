@@ -90,3 +90,15 @@ class MongoCluster(object):
         r = self.nodes[0].run(cmd)
 
         return json.loads(r['out'].split('\n')[2])
+
+    def add(self, node):
+
+        self.log.info('Adding "{node}" to the replica set'.format(
+                                    node = node.hostname))
+
+        cmd = 'mongo --port 27018 --eval "JSON.stringify(rs.add(\'{address}\'))"'
+        cmd = cmd.format(address = node.hostname + ':27018')
+
+        r = self.nodes[0].run(cmd)
+
+        return json.loads(r['out'].split('\n')[2])
