@@ -46,6 +46,9 @@ class MongoDataNode(Server):
         if self.data_volume_size is None:
             self.log.warn('No data volume size provided')
             self.data_volume_size = 400
+        elif self.data_volume_size < 1:
+            self.log.critical('The data volume size is less than 1')
+            sys.exit(1)
 
         self.log.info('Using data volume size \'{size}\''.format(
                                             size = self.data_volume_size))
