@@ -91,3 +91,10 @@ class MongoCluster(object):
         template = 'rs.add(\'{node}:27018\')'
 
         return self.nodes[0].run_mongo(template.format(node = node.hostname))
+
+    def add_all(self):
+
+        for node in self.nodes[1:]:
+            self.add(node)
+
+
