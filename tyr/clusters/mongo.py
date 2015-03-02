@@ -80,3 +80,13 @@ class MongoCluster(object):
         r = self.nodes[0].run(cmd)
 
         return json.loads(r['out'].split('\n')[2])
+
+    def initiate(self):
+
+        self.log.info('Initiating replica set')
+
+        cmd = 'mongo --port 27018 --eval "JSON.stringify(rs.initiate())"'
+
+        r = self.nodes[0].run(cmd)
+
+        return json.loads(r['out'].split('\n')[2])
