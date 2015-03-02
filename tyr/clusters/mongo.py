@@ -1,5 +1,5 @@
 import logging
-from tyr.servers import MongoDataNode
+from tyr.servers import MongoDataNode, MongoArbiterNode
 import time
 import json
 
@@ -47,11 +47,13 @@ class MongoCluster(object):
 
         self.log.info('Building availability zone list')
 
-        while len(zones) < self.data_nodes:
+        while len(zones) < (self.data_nodes+1):
 
             zones += zones
 
         self.log.info('Provisioning MongoDB Data Nodes')
+
+        i = 0
 
         for i in range(self.data_nodes):
 
@@ -67,6 +69,25 @@ class MongoCluster(object):
                                     availability_zone = zones[i],
                                     data_volume_size = self.data_volume_size,
                                     data_volume_iops = self.data_volume_iops)
+
+            node.autorun()
+
+            self.nodes.append(node)
+
+        if (self.data_nodes%2) == 0:
+
+            self.log.info('Including Arbiter Node')
+
+            node = MongoArbiterNode(dry = self.dry, verbose = self.verbose,
+                                    cluster = self.cluster,
+                                    environment = self.environment,
+                                    ami = self.ami, region = self.region,
+                                    role = self.role, keypair = self.keypair,
+                                    chef_path = self.chef_path,
+                                    replica_set = self.replica_set,
+                                    security_groups = self.security_groups,
+                                    block_devices = self.block_devices,
+                                    availability_zone = zones[i+1])
 
             node.autorun()
 
@@ -94,6 +115,9 @@ class MongoCluster(object):
                                     node = node.hostname))
 
         template = 'rs.add(\'{node}:27018\')'
+
+        if node.__class__.__name__ == 'MongoArbiterNode':
+            template = 'rs.addArb(\'{node}:27018\')'
 
         return self.nodes[0].run_mongo(template.format(node = node.hostname))
 
