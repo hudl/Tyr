@@ -103,6 +103,7 @@ class Server(object):
         try:
             self.ec2.get_all_images(image_ids=[self.ami])
         except Exception, e:
+            self.log.error(str(e))
             if 'Invalid id' in str(e):
                 error = '"{ami}" is not a valid AMI'.format(ami = self.ami)
                 raise InvalidAMI(error)
@@ -398,6 +399,7 @@ named {name}""".format(path = d['path'], name = d['name']))
                 self.log.info('IAM Profile {profile} already exists'.format(
                             profile = self.role))
             else:
+                self.log.error(str(e))
                 raise e
 
         try:
@@ -412,6 +414,7 @@ named {name}""".format(path = d['path'], name = d['name']))
                 self.log.info('IAM Role {role} already exists'.format(
                                 role = self.role))
             else:
+                self.log.error(str(e))
                 raise e
 
         role_policies = self.iam.list_role_policies(self.role)
@@ -436,6 +439,7 @@ named {name}""".format(path = d['path'], name = d['name']))
                     self.log.info('Added policy "{policy}"'.format(
                                         policy = policy))
                 except Exception, e:
+                    self.log.error(str(e))
                     raise e
 
             else:
@@ -459,6 +463,7 @@ named {name}""".format(path = d['path'], name = d['name']))
                         self.log.info('Removed policy "{policy}"'.format(
                                             policy = policy))
                     except Exception, e:
+                        self.log.error(str(e))
                         raise e
 
                     try:
@@ -467,6 +472,7 @@ named {name}""".format(path = d['path'], name = d['name']))
                         self.log.info('Added policy "{policy}"'.format(
                                             policy = policy))
                     except Exception, e:
+                        self.log.error(str(e))
                         raise e
 
     def establish_ec2_connection(self):
@@ -481,6 +487,7 @@ named {name}""".format(path = d['path'], name = d['name']))
             if self.verbose:
                 self.log.info('Established connection to EC2')
         except Exception, e:
+            self.log.error(str(e))
             raise e
 
     def establish_iam_connection(self):
@@ -489,6 +496,7 @@ named {name}""".format(path = d['path'], name = d['name']))
             self.iam = boto.connect_iam()
             self.log.info('Established connection to IAM')
         except Exception, e:
+            self.log.error(str(e))
             raise e
 
     def establish_route53_connection(self):
@@ -497,6 +505,7 @@ named {name}""".format(path = d['path'], name = d['name']))
             self.route53 = boto.route53.connect_to_region(self.region)
             self.log.info('Established connection to Route53')
         except Exception, e:
+            self.log.error(str(e))
             raise e
 
     def launch(self, wait=False):
@@ -527,6 +536,7 @@ named {name}""".format(path = d['path'], name = d['name']))
                     self.instance.update()
                     state = self.instance.state
                 except Exception:
+                    self.log.error(str(e))
                     pass
 
             self.log.info('The instance is running')
@@ -546,6 +556,7 @@ named {name}""".format(path = d['path'], name = d['name']))
             zone = self.route53.get_zone(zone_address)
             self.log.info('Retrieved zone from Route53')
         except Exception, e:
+            self.log.error(str(e))
             raise e
 
         name = self.hostname + '.'
@@ -559,6 +570,7 @@ named {name}""".format(path = d['path'], name = d['name']))
                 zone.add_cname(name, self.instance.public_dns_name)
                 self.log.info('Created new CNAME record')
             except Exception, e:
+                self.log.error(str(e))
                 raise e
         else:
             self.log.info('The CNAME record already exists')
@@ -650,6 +662,7 @@ named {name}""".format(path = d['path'], name = d['name']))
         except chef.exceptions.ChefServerNotFoundError:
             pass
         except Exception as e:
+            self.log.error(str(e))
             raise e
 
         try:
@@ -661,6 +674,7 @@ named {name}""".format(path = d['path'], name = d['name']))
         except chef.exceptions.ChefServerNotFoundError:
             pass
         except Exception as e:
+            self.log.error(str(e))
             raise e
 
     def baked(self):
