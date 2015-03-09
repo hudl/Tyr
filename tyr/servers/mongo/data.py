@@ -60,7 +60,7 @@ class MongoDataNode(Server):
         }
      ]
 }"""
-        }
+            }
 
         super(MongoDataNode, self).configure()
 
