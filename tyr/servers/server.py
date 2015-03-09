@@ -443,6 +443,32 @@ named {name}""".format(path = d['path'], name = d['name']))
                 self.log.info('Policy "{policy}" already exists'.format(
                                         policy = policy))
 
+                if document == self.iam.get_role_policy(self.role, policy):
+
+                    self.log.info('Policy "{policy}" is accurate'.format(
+                                        policy = policy))
+
+                else:
+
+                    self.log.warn('Policy "{policy}" has been modified'.format(
+                                        policy = policy))
+
+                    try:
+                        self.iam.delete_role_policy(self.role, policy)
+
+                        self.log.info('Removed policy "{policy}"'.format(
+                                            policy = policy))
+                    except Exception, e:
+                        raise e
+
+                    try:
+                        self.iam.put_role_policy(self.role, policy, document)
+
+                        self.log.info('Added policy "{policy}"'.format(
+                                            policy = policy))
+                    except Exception, e:
+                        raise e
+
     def establish_ec2_connection(self):
 
         self.log.info('Using EC2 Region "{region}"'.format(
