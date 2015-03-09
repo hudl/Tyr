@@ -18,17 +18,43 @@ class MongoArbiterNode(Server):
                     environment = None, ami = None, region = None, role = None,
                     keypair = None, availability_zone = None, chef_path = None,
                     security_groups = None, block_devices = None,
-                    replica_set = None):
+                    replica_set = None, role_policies=None):
 
         super(MongoArbiterNode, self).__init__(dry, verbose, size, cluster,
                                                 environment, ami, region, role,
                                                 keypair, availability_zone,
-                                                security_groups, block_devices)
+                                                security_groups, block_devices,
+                                                role_policies)
 
         self.replica_set = replica_set
         self.chef_path = chef_path
 
     def configure(self):
+
+        if self.role_policies is None:
+
+            self.role_policies = {
+                'allow-volume-control': """{
+    "Statement": [
+        {
+            "Sid": "Stmt1367531520227",
+            "Action": [
+                "ec2:AttachVolume",
+                "ec2:CreateVolume",
+                "ec2:DescribeVolumeAttribute",
+                "ec2:DescribeVolumeStatus",
+                "ec2:DescribeVolumes",
+                "ec2:EnableVolumeIO",
+                "ec2:DetachVolume"
+             ],
+             "Effect": "Allow",
+             "Resource": [
+                "*"
+             ]
+        }
+     ]
+}"""
+            }
 
         super(MongoArbiterNode, self).configure()
 
