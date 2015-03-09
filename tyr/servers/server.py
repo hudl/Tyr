@@ -25,7 +25,7 @@ class Server(object):
     def __init__(self, dry=None, verbose=None, size=None, cluster=None,
                     environment=None, ami=None, region=None, role=None,
                     keypair=None, availability_zone=None, security_groups=None,
-                    block_devices=None, chef_path=None):
+                    block_devices=None, chef_path=None, role_policies=None):
 
         self.dry = dry
         self.verbose = verbose
@@ -40,6 +40,7 @@ class Server(object):
         self.security_groups = security_groups
         self.block_devices = block_devices
         self.chef_path = chef_path
+        self.role_policies = role_policies
 
     def configure(self):
 
@@ -113,6 +114,13 @@ class Server(object):
             self.role = self.environment[0] + '-' + self.cluster
 
         self.log.info('Using IAM Role "{role}"'.format(role = self.role))
+
+        if self.role_policies is None:
+            self.log.warn('No IAM Role Policies provided')
+            self.role_policies = {}
+
+        self.log.info('Using IAM Role Policies {policies}'.format(
+                                            policies = self.role_policies))
 
         self.resolve_iam_role()
 
@@ -405,6 +413,35 @@ named {name}""".format(path = d['path'], name = d['name']))
                                 role = self.role))
             else:
                 raise e
+
+        role_policies = self.iam.list_role_policies(self.role)
+        response = role_policies['list_role_policies_response']
+        result = response['list_role_policies_result']
+        policies = result['policy_names']
+
+        self.log.info('Existing policies: {policies}'.format(policies=policies))
+
+        for policy, document in self.role_policies.iteritems():
+
+            self.log.info('Processing policy "{policy}"'.format(policy=policy))
+
+            if policy not in policies:
+
+                self.log.info('Policy "{policy}" does not exist'.format(
+                                        policy = policy))
+
+                try:
+                    self.iam.put_role_policy(self.role, policy, document)
+
+                    self.log.info('Added policy "{policy}"'.format(
+                                        policy = policy))
+                except Exception, e:
+                    raise e
+
+            else:
+
+                self.log.info('Policy "{policy}" already exists'.format(
+                                        policy = policy))
 
     def establish_ec2_connection(self):
 
