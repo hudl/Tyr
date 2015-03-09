@@ -73,6 +73,8 @@ class MongoDataNode(Server):
             self.log.critical('The IOPS to Size ratio is greater than 30')
             sys.exit(1)
 
+        self.configure_iam_role()
+
     @property
     def name(self):
 
@@ -104,6 +106,63 @@ class MongoDataNode(Server):
         r = self.run(command)
 
         return json.loads(r['out'].split('\n')[2])
+
+    def configure_iam_role(self):
+
+        role = self.role
+
+        role_policies = self.iam.list_role_policies(self.role)
+        response = role_policies['list_role_policies_response']
+        result = response['list_role_policies_result']
+        policies = result['policy_names']
+
+        self.log.info('Existing policies: {policies}'.format(policies=policies))
+
+        required_policies = {
+                'allow-volume-control': """{
+    "Statement": [
+        {
+            "Sid": "Stmt1367531520227",
+            "Action": [
+                "ec2:AttachVolume",
+                "ec2:CreateVolume",
+                "ec2:DescribeVolumeAttribute",
+                "ec2:DescribeVolumeStatus",
+                "ec2:DescribeVolumes",
+                "ec2:EnableVolumeIO",
+                "ec2:DetachVolume"
+             ],
+             "Effect": "Allow",
+             "Resource": [
+                "*"
+             ]
+        }
+     ]
+}"""
+        }
+
+        for policy in required_policies.keys():
+
+            self.log.info('Processing policy "{policy}"'.format(policy=policy))
+
+            if policy not in policies:
+
+                self.log.info('Policy "{policy}" does not exist'.format(
+                                        policy = policy))
+
+                try:
+                    self.iam.put_role_policy(self.role, policy,
+                            required_policies[policy])
+
+                    self.log.info('Added policy "{policy}"'.format(
+                                        policy = policy))
+                except Exception, e:
+                    raise e
+
+            else:
+
+                self.log.info('Policy "{policy}" already exists'.format(
+                                        policy = policy))
 
     def bake(self):
 
