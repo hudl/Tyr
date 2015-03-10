@@ -22,11 +22,14 @@ class MongoDataWarehousingNode(Server):
                     replica_set = None, data_volume_size=None,
                     role_policies=None):
 
-        super(MongoDataNode, self).__init__(dry, verbose, size, cluster,
-                                            environment, ami, region, role,
-                                            keypair, availability_zone,
-                                            security_groups, block_devices,
-                                            role_policies)
+        super(MongoDataWarehousingNode, self).__init__(dry, verbose, size,
+                                                        cluster, ami, role,
+                                                        environment, region,
+                                                        keypair,
+                                                        availability_zone,
+                                                        security_groups,
+                                                        block_devices,
+                                                        role_policies)
 
         self.replica_set = replica_set
         self.chef_path = chef_path
@@ -59,7 +62,7 @@ class MongoDataWarehousingNode(Server):
 }"""
             }
 
-        super(MongoDataNode, self).configure()
+        super(MongoDataWarehousingNode, self).configure()
 
         if self.replica_set is None:
             self.log.warn('No replica set provided')
@@ -101,7 +104,7 @@ class MongoDataWarehousingNode(Server):
 
     def bake(self):
 
-        super(MongoDataNode, self).bake()
+        super(MongoDataWarehousingNode, self).bake()
 
         chef_api = self.chef_api
 
