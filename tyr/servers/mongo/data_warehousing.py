@@ -31,4 +31,68 @@ class MongoDataWarehousingNode(Server):
         self.data_volume_size = data_volume_size
         self.data_volume_iops = data_volume_iops
 
+    def configure(self):
+
+        if self.role_policies is None:
+
+            self.role_policies = {
+                'allow-volume-control': """{
+    "Statement": [
+        {
+            "Sid": "Stmt1367531520227",
+            "Action": [
+                "ec2:AttachVolume",
+                "ec2:CreateVolume",
+                "ec2:DescribeVolumeAttribute",
+                "ec2:DescribeVolumeStatus",
+                "ec2:DescribeVolumes",
+                "ec2:EnableVolumeIO",
+                "ec2:DetachVolume"
+             ],
+             "Effect": "Allow",
+             "Resource": [
+                "*"
+             ]
+        }
+     ]
+}"""
+            }
+
+        super(MongoDataNode, self).configure()
+
+        if self.replica_set is None:
+            self.log.warn('No replica set provided')
+            self.replica_set = 1
+
+        self.log.info('Using replica set "{set}"'.format(set=self.replica_set))
+
+        if self.data_volume_size is None:
+            self.log.warn('No data volume size provided')
+            self.data_volume_size = 400
+        elif self.data_volume_size < 1:
+            self.log.critical('The data volume size is less than 1')
+            sys.exit(1)
+
+        self.log.info('Using data volume size "{size}"'.format(
+                                            size = self.data_volume_size))
+
+        if self.data_volume_iops is None:
+            self.log.warn('No data volume iops provided')
+            if self.environment == 'prod':
+                self.data_volume_iops = 3000
+            else:
+                self.data_volume_iops = 0
+
+        self.log.info('Using data volume iops "{iops}"'.format(
+                                            iops = self.data_volume_iops))
+
+        iops_size_ratio = self.data_volume_iops/self.data_volume_size
+
+        self.log.info('The IOPS to Size ratio is "{ratio}"'.format(
+                                            ratio = iops_size_ratio))
+
+        if iops_size_ratio > 30:
+            self.log.critical('The IOPS to Size ratio is greater than 30')
+            sys.exit(1)
+
 
