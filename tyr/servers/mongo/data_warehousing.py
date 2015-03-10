@@ -95,4 +95,25 @@ class MongoDataWarehousingNode(Server):
             self.log.critical('The IOPS to Size ratio is greater than 30')
             sys.exit(1)
 
+    @property
+    def name(self):
+
+        try:
+            return self.unique_name
+        except Exception:
+            pass
+
+        name = self.build_name(
+            template='{envcl}-rs{set}-{zone}-fulla',
+            supplemental={
+                'set': self.replica_set,
+                'zone': self.availability_zone[-1:]
+            },
+            search_prefix='{envcl}-rs{set}-{zone}-')
+
+        self.unique_name = name
+
+        self.log.info('Using node name {name}'.format(name=name))
+
+        return name
 
