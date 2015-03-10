@@ -22,12 +22,13 @@ class MongoDataNode(Server):
                     keypair = None, availability_zone = None, chef_path = None,
                     security_groups = None, block_devices = None,
                     replica_set = None, data_volume_size=None,
-                    data_volume_iops=None):
+                    data_volume_iops=None, role_policies=None):
 
         super(MongoDataNode, self).__init__(dry, verbose, size, cluster,
                                             environment, ami, region, role,
                                             keypair, availability_zone,
-                                            security_groups, block_devices)
+                                            security_groups, block_devices,
+                                            role_policies)
 
         self.replica_set = replica_set
         self.chef_path = chef_path
@@ -35,6 +36,31 @@ class MongoDataNode(Server):
         self.data_volume_iops = data_volume_iops
 
     def configure(self):
+
+        if self.role_policies is None:
+
+            self.role_policies = {
+                'allow-volume-control': """{
+    "Statement": [
+        {
+            "Sid": "Stmt1367531520227",
+            "Action": [
+                "ec2:AttachVolume",
+                "ec2:CreateVolume",
+                "ec2:DescribeVolumeAttribute",
+                "ec2:DescribeVolumeStatus",
+                "ec2:DescribeVolumes",
+                "ec2:EnableVolumeIO",
+                "ec2:DetachVolume"
+             ],
+             "Effect": "Allow",
+             "Resource": [
+                "*"
+             ]
+        }
+     ]
+}"""
+            }
 
         super(MongoDataNode, self).configure()
 

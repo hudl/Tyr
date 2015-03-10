@@ -25,7 +25,7 @@ class Server(object):
     def __init__(self, dry=None, verbose=None, size=None, cluster=None,
                     environment=None, ami=None, region=None, role=None,
                     keypair=None, availability_zone=None, security_groups=None,
-                    block_devices=None, chef_path=None):
+                    block_devices=None, chef_path=None, role_policies=None):
 
         self.dry = dry
         self.verbose = verbose
@@ -40,6 +40,7 @@ class Server(object):
         self.security_groups = security_groups
         self.block_devices = block_devices
         self.chef_path = chef_path
+        self.role_policies = role_policies
 
     def configure(self):
 
@@ -102,6 +103,7 @@ class Server(object):
         try:
             self.ec2.get_all_images(image_ids=[self.ami])
         except Exception, e:
+            self.log.error(str(e))
             if 'Invalid id' in str(e):
                 error = '"{ami}" is not a valid AMI'.format(ami = self.ami)
                 raise InvalidAMI(error)
@@ -113,6 +115,13 @@ class Server(object):
             self.role = self.environment[0] + '-' + self.cluster
 
         self.log.info('Using IAM Role "{role}"'.format(role = self.role))
+
+        if self.role_policies is None:
+            self.log.warn('No IAM Role Policies provided')
+            self.role_policies = {}
+
+        self.log.info('Using IAM Role Policies {policies}'.format(
+                                            policies = self.role_policies))
 
         self.resolve_iam_role()
 
@@ -390,6 +399,7 @@ named {name}""".format(path = d['path'], name = d['name']))
                 self.log.info('IAM Profile {profile} already exists'.format(
                             profile = self.role))
             else:
+                self.log.error(str(e))
                 raise e
 
         try:
@@ -404,7 +414,66 @@ named {name}""".format(path = d['path'], name = d['name']))
                 self.log.info('IAM Role {role} already exists'.format(
                                 role = self.role))
             else:
+                self.log.error(str(e))
                 raise e
+
+        role_policies = self.iam.list_role_policies(self.role)
+        response = role_policies['list_role_policies_response']
+        result = response['list_role_policies_result']
+        policies = result['policy_names']
+
+        self.log.info('Existing policies: {policies}'.format(policies=policies))
+
+        for policy, document in self.role_policies.iteritems():
+
+            self.log.info('Processing policy "{policy}"'.format(policy=policy))
+
+            if policy not in policies:
+
+                self.log.info('Policy "{policy}" does not exist'.format(
+                                        policy = policy))
+
+                try:
+                    self.iam.put_role_policy(self.role, policy, document)
+
+                    self.log.info('Added policy "{policy}"'.format(
+                                        policy = policy))
+                except Exception, e:
+                    self.log.error(str(e))
+                    raise e
+
+            else:
+
+                self.log.info('Policy "{policy}" already exists'.format(
+                                        policy = policy))
+
+                if document == self.iam.get_role_policy(self.role, policy):
+
+                    self.log.info('Policy "{policy}" is accurate'.format(
+                                        policy = policy))
+
+                else:
+
+                    self.log.warn('Policy "{policy}" has been modified'.format(
+                                        policy = policy))
+
+                    try:
+                        self.iam.delete_role_policy(self.role, policy)
+
+                        self.log.info('Removed policy "{policy}"'.format(
+                                            policy = policy))
+                    except Exception, e:
+                        self.log.error(str(e))
+                        raise e
+
+                    try:
+                        self.iam.put_role_policy(self.role, policy, document)
+
+                        self.log.info('Added policy "{policy}"'.format(
+                                            policy = policy))
+                    except Exception, e:
+                        self.log.error(str(e))
+                        raise e
 
     def establish_ec2_connection(self):
 
@@ -418,6 +487,7 @@ named {name}""".format(path = d['path'], name = d['name']))
             if self.verbose:
                 self.log.info('Established connection to EC2')
         except Exception, e:
+            self.log.error(str(e))
             raise e
 
     def establish_iam_connection(self):
@@ -426,6 +496,7 @@ named {name}""".format(path = d['path'], name = d['name']))
             self.iam = boto.connect_iam()
             self.log.info('Established connection to IAM')
         except Exception, e:
+            self.log.error(str(e))
             raise e
 
     def establish_route53_connection(self):
@@ -434,6 +505,7 @@ named {name}""".format(path = d['path'], name = d['name']))
             self.route53 = boto.route53.connect_to_region(self.region)
             self.log.info('Established connection to Route53')
         except Exception, e:
+            self.log.error(str(e))
             raise e
 
     def launch(self, wait=False):
@@ -464,6 +536,7 @@ named {name}""".format(path = d['path'], name = d['name']))
                     self.instance.update()
                     state = self.instance.state
                 except Exception:
+                    self.log.error(str(e))
                     pass
 
             self.log.info('The instance is running')
@@ -483,6 +556,7 @@ named {name}""".format(path = d['path'], name = d['name']))
             zone = self.route53.get_zone(zone_address)
             self.log.info('Retrieved zone from Route53')
         except Exception, e:
+            self.log.error(str(e))
             raise e
 
         name = self.hostname + '.'
@@ -496,6 +570,7 @@ named {name}""".format(path = d['path'], name = d['name']))
                 zone.add_cname(name, self.instance.public_dns_name)
                 self.log.info('Created new CNAME record')
             except Exception, e:
+                self.log.error(str(e))
                 raise e
         else:
             self.log.info('The CNAME record already exists')
@@ -587,6 +662,7 @@ named {name}""".format(path = d['path'], name = d['name']))
         except chef.exceptions.ChefServerNotFoundError:
             pass
         except Exception as e:
+            self.log.error(str(e))
             raise e
 
         try:
@@ -598,6 +674,7 @@ named {name}""".format(path = d['path'], name = d['name']))
         except chef.exceptions.ChefServerNotFoundError:
             pass
         except Exception as e:
+            self.log.error(str(e))
             raise e
 
     def baked(self):
