@@ -59,6 +59,24 @@ class MongoDataWarehousingNode(Server):
              ]
         }
      ]
+}""",
+                'allow-upload-to-s3-fulla': """{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "Stmt1421959713000",
+      "Effect": "Allow",
+      "Action": [
+        "s3:AbortMultipartUpload",
+        "s3:CreateBucket",
+        "s3:ListBucketMultipartUploads",
+        "s3:PutObject"
+      ],
+      "Resource": [
+        "arn:aws:s3:::ds-fulla/*"
+      ]
+    }
+  ]
 }"""
             }
 
