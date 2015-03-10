@@ -133,4 +133,33 @@ class MongoDataWarehousingNode(Server):
         self.log.info('Set the Chef Environment to "{env}"'.format(
                         env = node.chef_environment))
 
+        node.attributes.set_dotted('hudl_ebs.volumes', [
+            {
+                'user': 'mongod',
+                'group': 'mongod',
+                'size': 10,
+                'iops': 0,
+                'device': '/dev/xvdg',
+                'mount': '/volr/journal'
+            },
+            {
+                'user': 'mongod',
+                'group': 'mongod',
+                'size': self.data_volume_size,
+                'iops': self.data_volume_iops,
+                'device': '/dev/xvdf',
+                'mount': '/volr'
+            },
+            {
+                'user': 'mongod',
+                'group': 'mongod',
+                'size': self.data_volume_size,
+                'iops': self.data_volume_iops,
+                'device': '/dev/xvde',
+                'mount': '/fulla'
+            }
+        ])
+
+        self.log.info('Configured the hudl_ebs.volumes attribute')
+
 
