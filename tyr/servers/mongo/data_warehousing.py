@@ -18,7 +18,7 @@ class MongoDataWarehousingNode(Server):
                     keypair = None, availability_zone = None, chef_path = None,
                     security_groups = None, block_devices = None,
                     replica_set = None, data_volume_size=None,
-                    data_volume_iops=None, role_policies=None):
+                    role_policies=None):
 
         super(MongoDataNode, self).__init__(dry, verbose, size, cluster,
                                             environment, ami, region, role,
@@ -29,7 +29,6 @@ class MongoDataWarehousingNode(Server):
         self.replica_set = replica_set
         self.chef_path = chef_path
         self.data_volume_size = data_volume_size
-        self.data_volume_iops = data_volume_iops
 
     def configure(self):
 
@@ -75,25 +74,6 @@ class MongoDataWarehousingNode(Server):
 
         self.log.info('Using data volume size "{size}"'.format(
                                             size = self.data_volume_size))
-
-        if self.data_volume_iops is None:
-            self.log.warn('No data volume iops provided')
-            if self.environment == 'prod':
-                self.data_volume_iops = 3000
-            else:
-                self.data_volume_iops = 0
-
-        self.log.info('Using data volume iops "{iops}"'.format(
-                                            iops = self.data_volume_iops))
-
-        iops_size_ratio = self.data_volume_iops/self.data_volume_size
-
-        self.log.info('The IOPS to Size ratio is "{ratio}"'.format(
-                                            ratio = iops_size_ratio))
-
-        if iops_size_ratio > 30:
-            self.log.critical('The IOPS to Size ratio is greater than 30')
-            sys.exit(1)
 
     @property
     def name(self):
@@ -146,7 +126,7 @@ class MongoDataWarehousingNode(Server):
                 'user': 'mongod',
                 'group': 'mongod',
                 'size': self.data_volume_size,
-                'iops': self.data_volume_iops,
+                'iops': 0,
                 'device': '/dev/xvdf',
                 'mount': '/volr'
             },
@@ -154,7 +134,7 @@ class MongoDataWarehousingNode(Server):
                 'user': 'mongod',
                 'group': 'mongod',
                 'size': self.data_volume_size,
-                'iops': self.data_volume_iops,
+                'iops': 0,
                 'device': '/dev/xvde',
                 'mount': '/fulla'
             }
