@@ -173,4 +173,20 @@ class MongoDataWarehousingNode(Server):
         self.log.info('Set the replica set name to "{name}"'.format(
                                     name = replica_set))
 
+        node.attributes.set_dotted('mongodb.node_type', 'data_warehousing')
+        self.log.info('Set the MongoDB node type to "data_warehousing"')
+
+        runlist = ['role[RoleMongo]']
+
+        if node.chef_environment == 'prod':
+            pass
+        else:
+            runlist.append('role[RoleSumoLogic]')
+
+        node.run_list = runlist
+        self.log.info('Set the run list to "{runlist}"'.format(
+                                        runlist = node.run_list))
+
+        node.save(api=chef_api)
+        self.log.info('Saved the Chef Node configuration')
 
