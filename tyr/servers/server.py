@@ -739,6 +739,7 @@ named {name}""".format(path = d['path'], name = d['name']))
 
     def autorun(self):
 
+        self.establish_logger()
         self.configure()
         self.launch(wait=True)
         self.tag()
