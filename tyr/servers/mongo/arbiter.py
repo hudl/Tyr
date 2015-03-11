@@ -57,28 +57,6 @@ class MongoArbiterNode(Server):
 
         self.log.info('Using replica set {set}'.format(set = self.replica_set))
 
-    @property
-    def name(self):
-
-        try:
-            return self.unique_name
-        except Exception:
-            pass
-
-        name = self.build_name(
-                template = '{envcl}-rs{set}-{zone}-arb',
-                supplemental = {
-                    'set': self.replica_set,
-                    'zone': self.availability_zone
-                },
-                search_prefix = '{envcl}-rs{set}-{zone}-')
-
-        self.unique_name = name
-
-        self.log.info('Using node name {name}'.format(name = name))
-
-        return name
-
     def bake(self):
 
         super(MongoArbiterNode, self).bake()
