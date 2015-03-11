@@ -12,6 +12,9 @@ from paramiko.client import AutoAddPolicy, SSHClient
 
 class Server(object):
 
+    NAME_TEMPLATE='{envcl}-{zone}-{index}'
+    NAME_SEARCH_PREFIX='{envcl}-{zone}-'
+
     def __init__(self, dry=None, verbose=None, size=None, cluster=None,
                     environment=None, ami=None, region=None, role=None,
                     keypair=None, availability_zone=None, security_groups=None,
@@ -203,15 +206,14 @@ class Server(object):
 
 
 
-    def next_index(self, template='{envcl}-{zone}-', supplemental={}, cap=99):
+    def next_index(self, supplemental={}, cap=99):
 
         try:
             return self.index
         except Exception:
             pass
 
-        supplemental['envcl'] = self.envcl
-        template = template+'*'
+        template = self.NAME_SEARCH_PREFIX+'*'
 
         name_filter = template.format(**supplemental)
 
@@ -271,13 +273,16 @@ class Server(object):
 
         return self.unique_name
 
-    def build_name(self, template='{envcl}-{zone}-{index}', supplemental={},
-                    search_prefix='{envcl}-{zone}-', cap=99):
+    def build_name(self, cap=99):
+
+        template = self.NAME_TEMPLATE
+
+        supplemental = self.__dict__.copy()
 
         supplemental['zone'] = self.availability_zone[-1:]
         supplemental['envcl'] = self.envcl
 
-        index = self.next_index(search_prefix, supplemental, cap)
+        index = self.next_index(supplemental, cap)
 
         supplemental['index'] = index
 
