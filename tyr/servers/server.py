@@ -14,6 +14,7 @@ class Server(object):
 
     NAME_TEMPLATE='{envcl}-{zone}-{index}'
     NAME_SEARCH_PREFIX='{envcl}-{zone}-'
+    NAME_AUTO_INDEX=True
 
     def __init__(self, dry=None, verbose=None, size=None, cluster=None,
                     environment=None, ami=None, region=None, role=None,
@@ -282,9 +283,10 @@ class Server(object):
         supplemental['zone'] = self.availability_zone[-1:]
         supplemental['envcl'] = self.envcl
 
-        index = self.next_index(supplemental, cap)
+        if self.NAME_AUTO_INDEX:
 
-        supplemental['index'] = index
+            index = self.next_index(supplemental, cap)
+            supplemental['index'] = index
 
         name = template.format(**supplemental)
 
