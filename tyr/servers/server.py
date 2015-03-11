@@ -259,16 +259,11 @@ class Server(object):
 
     @property
     def name(self):
+
         try:
             return self.unique_name
         except Exception:
             pass
-
-        self.unique_name = self.build_name()
-
-        return self.unique_name
-
-    def build_name(self):
 
         template = self.NAME_TEMPLATE
 
@@ -282,13 +277,11 @@ class Server(object):
             index = self.next_index(supplemental)
             supplemental['index'] = index
 
-        name = template.format(**supplemental)
+        self.unique_name = template.format(**supplemental)
 
-        self.unique_name = name
+        self.log.info('Using node name {name}'.format(name = self.unique_name))
 
-        self.log.info('Using node name {name}'.format(name = name))
-
-        return name
+        return self.unique_name
 
     @property
     def hostname(self):
