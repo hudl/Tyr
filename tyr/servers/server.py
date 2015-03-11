@@ -207,7 +207,7 @@ class Server(object):
 
 
 
-    def next_index(self, supplemental={}, cap=99):
+    def next_index(self, supplemental={}):
 
         try:
             return self.index
@@ -237,20 +237,14 @@ class Server(object):
 
         index = -1
 
-        for i in range(cap):
+        for i in 99:
             if (i+1) not in indexes:
                 index = i+1
                 break
 
-        index = str(index)
+        self.index = str(index)
 
-        if cap > 9:
-            if len(index) < 2:
-                index = '0' + index
-
-        self.index = index
-
-        return index
+        return self.index
 
     @property
     def envcl(self):
@@ -274,7 +268,7 @@ class Server(object):
 
         return self.unique_name
 
-    def build_name(self, cap=99):
+    def build_name(self):
 
         template = self.NAME_TEMPLATE
 
@@ -285,7 +279,7 @@ class Server(object):
 
         if self.NAME_AUTO_INDEX:
 
-            index = self.next_index(supplemental, cap)
+            index = self.next_index(supplemental)
             supplemental['index'] = index
 
         name = template.format(**supplemental)
