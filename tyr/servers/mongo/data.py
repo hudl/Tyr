@@ -10,6 +10,7 @@ class MongoDataNode(Server):
 
     NAME_TEMPLATE = '{envcl}-rs{replica_set}-{zone}-{index}'
     NAME_SEARCH_PREFIX = '{envcl}-rs{replica_set}-{zone}-'
+    NAME_AUTO_INDEX=True
 
     def __init__(self, dry = None, verbose = None, size = None, cluster = None,
                     environment = None, ami = None, region = None, role = None,
