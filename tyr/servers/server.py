@@ -237,7 +237,7 @@ class Server(object):
 
         index = -1
 
-        for i in 99:
+        for i in range(99):
             if (i+1) not in indexes:
                 index = i+1
                 break
