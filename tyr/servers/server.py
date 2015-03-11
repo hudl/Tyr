@@ -680,6 +680,18 @@ named {name}""".format(path = d['path'], name = d['name']))
             self.log.error(str(e))
             raise e
 
+        node = chef.Node.create(self.name, api=chef_api)
+
+        self.log.info('Created new Chef Node "{node}"'.format(
+                        node = self.name))
+
+        node.chef_environment = self.environment
+
+        self.log.info('Set the Chef Environment to "{env}"'.format(
+                        env = node.chef_environment))
+
+        self.chef_node = node
+
     def baked(self):
 
         self.log.info('Determining status of "{node}"'.format(

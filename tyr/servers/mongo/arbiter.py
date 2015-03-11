@@ -63,16 +63,7 @@ class MongoArbiterNode(Server):
         super(MongoArbiterNode, self).bake()
 
         chef_api = self.chef_api
-
-        node = chef.Node.create(self.name, api=chef_api)
-
-        self.log.info('Created new Chef Node "{node}"'.format(
-                        node = self.name))
-
-        node.chef_environment = self.environment
-
-        self.log.info('Set the Chef Environment to "{env}"'.format(
-                        env = node.chef_environment))
+        node = self.chef_node
 
         node.attributes.set_dotted('hudl_ebs.volumes', [
             {
