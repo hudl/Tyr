@@ -48,7 +48,7 @@ class MongoNode(Server):
 
         node.attributes.set_dotted('mongodb.node_type', self.CHEF_MONGODB_TYPE)
         self.log.info('Set the MongoDB node type to "{type_}"'.format(
-                                            type_ = self.CHEF_MONGODB_TYPE)
+                                            type_ = self.CHEF_MONGODB_TYPE))
 
         node.save(api=chef_api)
         self.log.info('Saved the Chef Node configuration')
