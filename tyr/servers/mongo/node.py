@@ -39,5 +39,11 @@ class MongoNode(Server):
         self.log.info('Set the cluster name to "{name}"'.format(
                                     name = cluster_name))
 
+        if node.chef_environment == 'prod':
+            node.run_list.append('role[RoleSumoLogic]')
+
+        self.log.info('Set the run list to "{runlist}"'.format(
+                                        runlist = node.run_list))
+
         node.save(api=chef_api)
         self.log.info('Saved the Chef Node configuration')
