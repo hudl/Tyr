@@ -13,8 +13,7 @@ class MongoDataWarehousingNode(MongoReplicaSetMember):
                     environment = None, ami = None, region = None, role = None,
                     keypair = None, availability_zone = None, chef_path = None,
                     security_groups = None, block_devices = None,
-                    replica_set = None, data_volume_size=None,
-                    role_policies=None):
+                    replica_set = None, data_volume_size=None):
 
         super(MongoDataWarehousingNode, self).__init__(dry, verbose, size,
                                                         cluster, ami, role,
@@ -23,17 +22,14 @@ class MongoDataWarehousingNode(MongoReplicaSetMember):
                                                         availability_zone,
                                                         security_groups,
                                                         block_devices,
-                                                        role_policies,
                                                         replica_set)
 
         self.data_volume_size = data_volume_size
 
     def configure(self):
 
-        if self.role_policies is None:
-
-            self.role_policies = {
-                'allow-volume-control': """{
+        self.role_policies = {
+            'allow-volume-control': """{
     "Statement": [
         {
             "Sid": "Stmt1367531520227",
@@ -53,7 +49,7 @@ class MongoDataWarehousingNode(MongoReplicaSetMember):
         }
      ]
 }""",
-                'allow-upload-to-s3-fulla': """{
+            'allow-upload-to-s3-fulla': """{
   "Version": "2012-10-17",
   "Statement": [
     {
@@ -71,7 +67,7 @@ class MongoDataWarehousingNode(MongoReplicaSetMember):
     }
   ]
 }""",
-                'allow-download-scripts-s3-fulla': """{
+            'allow-download-scripts-s3-fulla': """{
    "Version":"2012-10-17",
    "Statement":[
        {
@@ -96,7 +92,7 @@ class MongoDataWarehousingNode(MongoReplicaSetMember):
        }
    ]
 }"""
-            }
+        }
 
         super(MongoDataWarehousingNode, self).configure()
 

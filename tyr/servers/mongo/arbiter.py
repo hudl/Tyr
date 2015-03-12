@@ -13,20 +13,18 @@ class MongoArbiterNode(MongoReplicaSetMember):
                     environment = None, ami = None, region = None, role = None,
                     keypair = None, availability_zone = None, chef_path = None,
                     security_groups = None, block_devices = None,
-                    replica_set = None, role_policies=None):
+                    replica_set = None):
 
         super(MongoArbiterNode, self).__init__(dry, verbose, size, cluster,
                                                 environment, ami, region, role,
                                                 keypair, availability_zone,
                                                 security_groups, block_devices,
-                                                role_policies, replica_set)
+                                                replica_set)
 
     def configure(self):
 
-        if self.role_policies is None:
-
-            self.role_policies = {
-                'allow-volume-control': """{
+        self.role_policies = {
+            'allow-volume-control': """{
     "Statement": [
         {
             "Sid": "Stmt1367531520227",
@@ -46,7 +44,7 @@ class MongoArbiterNode(MongoReplicaSetMember):
         }
      ]
 }"""
-            }
+        }
 
         super(MongoArbiterNode, self).configure()
 

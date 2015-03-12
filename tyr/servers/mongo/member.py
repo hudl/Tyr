@@ -6,16 +6,15 @@ class MongoReplicaSetMember(MongoNode):
                     environment = None, ami = None, region = None, role = None,
                     keypair = None, availability_zone = None, chef_path = None,
                     security_groups = None, block_devices = None,
-                    replica_set = None, role_policies=None):
+                    replica_set = None):
 
         super(MongoReplicaSetMember, self).__init__(dry, verbose, size, cluster,
                                                 environment, ami, region, role,
                                                 keypair, availability_zone,
-                                                security_groups, block_devices,
-                                                role_policies)
+                                                security_groups, block_devices)
 
         self.replica_set = replica_set
- 
+
     def configure(self):
 
         super(MongoReplicaSetMember, self).configure()

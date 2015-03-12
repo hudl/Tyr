@@ -15,22 +15,20 @@ class MongoDataNode(MongoReplicaSetMember):
                     keypair = None, availability_zone = None, chef_path = None,
                     security_groups = None, block_devices = None,
                     replica_set = None, data_volume_size=None,
-                    data_volume_iops=None, role_policies=None):
+                    data_volume_iops=None):
 
         super(MongoDataNode, self).__init__(dry, verbose, size, cluster,
                                             environment, ami, region, role,
                                             keypair, availability_zone,
                                             security_groups, block_devices,
-                                            role_policies, replica_set)
+                                            replica_set)
 
         self.data_volume_size = data_volume_size
         self.data_volume_iops = data_volume_iops
 
     def configure(self):
 
-        if self.role_policies is None:
-
-            self.role_policies = {
+        self.role_policies = {
                 'allow-volume-control': """{
     "Statement": [
         {
@@ -51,7 +49,7 @@ class MongoDataNode(MongoReplicaSetMember):
         }
      ]
 }"""
-            }
+        }
 
         super(MongoDataNode, self).configure()
 

@@ -18,7 +18,7 @@ class Server(object):
     def __init__(self, dry=None, verbose=None, size=None, cluster=None,
                     environment=None, ami=None, region=None, role=None,
                     keypair=None, availability_zone=None, security_groups=None,
-                    block_devices=None, chef_path=None, role_policies=None):
+                    block_devices=None, chef_path=None):
 
         self.dry = dry
         self.verbose = verbose
@@ -33,7 +33,6 @@ class Server(object):
         self.security_groups = security_groups
         self.block_devices = block_devices
         self.chef_path = chef_path
-        self.role_policies = role_policies
 
     def establish_logger(self):
 
@@ -127,13 +126,6 @@ class Server(object):
             self.role = self.environment[0] + '-' + self.cluster
 
         self.log.info('Using IAM Role "{role}"'.format(role = self.role))
-
-        if self.role_policies is None:
-            self.log.warn('No IAM Role Policies provided')
-            self.role_policies = {}
-
-        self.log.info('Using IAM Role Policies {policies}'.format(
-                                            policies = self.role_policies))
 
         self.resolve_iam_role()
 
