@@ -26,4 +26,18 @@ class MongoReplicaSetMember(MongoNode):
 
         self.log.info('Using replica set {set}'.format(set = self.replica_set))
 
+    def bake(self):
 
+        super(MongoReplicaSetMember, self).bake()
+
+        chef_api = self.chef_api
+        node = self.chef_node
+
+        replica_set = 'rs' + str(self.replica_set)
+
+        node.attributes.set_dotted('mongodb.replicaset_name', replica_set)
+        self.log.info('Set the replica set name to "{name}"'.format(
+                                    name = replica_set))
+
+        node.save(api=chef_api)
+        self.log.info('Saved the Chef Node configuration')
