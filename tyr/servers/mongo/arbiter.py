@@ -8,6 +8,8 @@ class MongoArbiterNode(Server):
     NAME_SEARCH_PREFIX = '{envcl}-rs{replica_set}-{zone}-'
     NAME_AUTO_INDEX=False
 
+    CHEF_RUNLIST = ['role[RoleMongo]']
+
     def __init__(self, dry = None, verbose = None, size = None, cluster = None,
                     environment = None, ami = None, region = None, role = None,
                     keypair = None, availability_zone = None, chef_path = None,
@@ -92,14 +94,9 @@ class MongoArbiterNode(Server):
         node.attributes.set_dotted('mongodb.node_type', 'arbiter')
         self.log.info('Set the MongoDB node type to "arbiter"')
 
-        runlist = ['role[RoleMongo]']
-
         if node.chef_environment == 'prod':
-            pass
-        else:
-            runlist.append('role[RoleSumoLogic]')
+            node.run_list.append('role[RoleSumoLogic]')
 
-        node.run_list = runlist
         self.log.info('Set the run list to "{runlist}"'.format(
                                         runlist = node.run_list))
 

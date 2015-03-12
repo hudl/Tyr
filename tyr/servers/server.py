@@ -16,6 +16,8 @@ class Server(object):
     NAME_SEARCH_PREFIX='{envcl}-{zone}-'
     NAME_AUTO_INDEX=True
 
+    CHEF_RUNLIST=['role[RoleBase]']
+
     def __init__(self, dry=None, verbose=None, size=None, cluster=None,
                     environment=None, ami=None, region=None, role=None,
                     keypair=None, availability_zone=None, security_groups=None,
@@ -539,7 +541,6 @@ named {name}""".format(path = d['path'], name = d['name']))
                     self.instance.update()
                     state = self.instance.state
                 except Exception:
-                    self.log.error(str(e))
                     pass
 
             self.log.info('The instance is running')
@@ -689,6 +690,13 @@ named {name}""".format(path = d['path'], name = d['name']))
 
         self.log.info('Set the Chef Environment to "{env}"'.format(
                         env = node.chef_environment))
+
+        node.run_list = self.CHEF_RUNLIST
+
+        self.log.info('Set Chef run list to {list}'.format(list = node.run_list))
+
+        node.save(api=chef_api)
+        self.log.info('Saved the Chef Node configuration')
 
         self.chef_node = node
 
