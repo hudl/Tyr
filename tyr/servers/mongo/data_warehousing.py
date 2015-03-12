@@ -1,11 +1,8 @@
 from member import MongoReplicaSetMember
-import logging
-import os
-import chef
 
 class MongoDataWarehousingNode(MongoReplicaSetMember):
 
-    NAME_TEMPLATE = '{envcl}-rs{replica_set}-{zone}-fulla',
+    NAME_TEMPLATE = '{envcl}-rs{replica_set}-{zone}-fulla'
     NAME_SEARCH_PREFIX = '{envcl}-rs{replica_set}-{zone}-'
     NAME_AUTO_INDEX=False
 
@@ -152,4 +149,3 @@ class MongoDataWarehousingNode(MongoReplicaSetMember):
 
         node.save(api=chef_api)
         self.log.info('Saved the Chef Node configuration')
-

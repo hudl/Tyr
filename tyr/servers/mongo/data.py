@@ -1,10 +1,5 @@
 from member import MongoReplicaSetMember
-import logging
-import os
-import chef
 import sys
-import json
-from pprint import pprint
 
 class MongoDataNode(MongoReplicaSetMember):
 

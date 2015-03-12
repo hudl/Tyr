@@ -1,6 +1,4 @@
 from member import MongoReplicaSetMember
-import logging
-import chef
 
 class MongoArbiterNode(MongoReplicaSetMember):
 

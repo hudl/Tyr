@@ -2,9 +2,6 @@ from exceptions import *
 import boto.ec2
 import boto.route53
 import logging
-import sys
-import string
-import random
 import os.path
 import chef
 import time
@@ -363,15 +360,15 @@ chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}"""
 
             if d['type'] == 'ephemeral':
                 if 'size' in d.keys():
-                    self.log.info("""Created new ephemeral device at {path} 
+                    self.log.info("""Created new ephemeral device at {path}
 named {name} of size {size}""".format(path = d['path'], name = d['name'],
                                         size = d['size']))
                 else:
-                    self.log.info("""Created new ephemeral device at {path} 
+                    self.log.info("""Created new ephemeral device at {path}
 named {name}""".format(path = d['path'], name = d['name']))
 
             else:
-                self.log.info("""Created new EBS device at {path} of size 
+                self.log.info("""Created new EBS device at {path} of size
 {size}""".format(path = d['path'], size = d['size']))
 
         return bdm
