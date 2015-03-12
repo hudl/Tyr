@@ -1,4 +1,4 @@
-from tyr.servers import Server
+from tyr.servers.server import Server
 
 class MongoNode(Server):
 
