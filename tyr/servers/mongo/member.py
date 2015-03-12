@@ -31,14 +31,13 @@ class MongoReplicaSetMember(MongoNode):
 
         super(MongoReplicaSetMember, self).bake()
 
-        chef_api = self.chef_api
-        node = self.chef_node
+        with self.chef_api:
 
-        replica_set = 'rs' + str(self.replica_set)
+            replica_set = 'rs' + str(self.replica_set)
 
-        node.attributes.set_dotted('mongodb.replicaset_name', replica_set)
-        self.log.info('Set the replica set name to "{name}"'.format(
-                                    name = replica_set))
+            self.chef_node.attributes.set_dotted('mongodb.replicaset_name', replica_set)
+            self.log.info('Set the replica set name to "{name}"'.format(
+                                        name = replica_set))
 
-        node.save(api=chef_api)
-        self.log.info('Saved the Chef Node configuration')
+            self.chef_node.save()
+            self.log.info('Saved the Chef Node configuration')

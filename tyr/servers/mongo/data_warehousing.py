@@ -53,37 +53,36 @@ class MongoDataWarehousingNode(MongoReplicaSetMember):
 
         super(MongoDataWarehousingNode, self).bake()
 
-        chef_api = self.chef_api
-        node = self.chef_node
+        with self.chef_api:
 
-        node.attributes.set_dotted('hudl_ebs.volumes', [
-            {
-                'user': 'mongod',
-                'group': 'mongod',
-                'size': 10,
-                'iops': 0,
-                'device': '/dev/xvdg',
-                'mount': '/volr/journal'
-            },
-            {
-                'user': 'mongod',
-                'group': 'mongod',
-                'size': self.data_volume_size,
-                'iops': 0,
-                'device': '/dev/xvdf',
-                'mount': '/volr'
-            },
-            {
-                'user': 'mongod',
-                'group': 'mongod',
-                'size': self.data_volume_size,
-                'iops': 0,
-                'device': '/dev/xvde',
-                'mount': '/fulla'
-            }
-        ])
+            self.chef_node.attributes.set_dotted('hudl_ebs.volumes', [
+                {
+                    'user': 'mongod',
+                    'group': 'mongod',
+                    'size': 10,
+                    'iops': 0,
+                    'device': '/dev/xvdg',
+                    'mount': '/volr/journal'
+                },
+                {
+                    'user': 'mongod',
+                    'group': 'mongod',
+                    'size': self.data_volume_size,
+                    'iops': 0,
+                    'device': '/dev/xvdf',
+                    'mount': '/volr'
+                },
+                {
+                    'user': 'mongod',
+                    'group': 'mongod',
+                    'size': self.data_volume_size,
+                    'iops': 0,
+                    'device': '/dev/xvde',
+                    'mount': '/fulla'
+                }
+            ])
 
-        self.log.info('Configured the hudl_ebs.volumes attribute')
+            self.log.info('Configured the hudl_ebs.volumes attribute')
 
-        node.save(api=chef_api)
-        self.log.info('Saved the Chef Node configuration')
+            self.chef_node.save()
+            self.log.info('Saved the Chef Node configuration')

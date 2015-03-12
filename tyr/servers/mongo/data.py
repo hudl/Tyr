@@ -64,29 +64,28 @@ class MongoDataNode(MongoReplicaSetMember):
 
         super(MongoDataNode, self).bake()
 
-        chef_api = self.chef_api
-        node = self.chef_node
+        with self.chef_api:
 
-        node.attributes.set_dotted('hudl_ebs.volumes', [
-            {
-                'user': 'mongod',
-                'group': 'mongod',
-                'size': 10,
-                'iops': 0,
-                'device': '/dev/xvdg',
-                'mount': '/volr/journal'
-            },
-            {
-                'user': 'mongod',
-                'group': 'mongod',
-                'size': self.data_volume_size,
-                'iops': self.data_volume_iops,
-                'device': '/dev/xvdf',
-                'mount': '/volr'
-            }
-        ])
+            self.chef_node.attributes.set_dotted('hudl_ebs.volumes', [
+                {
+                    'user': 'mongod',
+                    'group': 'mongod',
+                    'size': 10,
+                    'iops': 0,
+                    'device': '/dev/xvdg',
+                    'mount': '/volr/journal'
+                },
+                {
+                    'user': 'mongod',
+                    'group': 'mongod',
+                    'size': self.data_volume_size,
+                    'iops': self.data_volume_iops,
+                    'device': '/dev/xvdf',
+                    'mount': '/volr'
+                }
+            ])
 
-        self.log.info('Configured the hudl_ebs.volumes attribute')
+            self.log.info('Configured the hudl_ebs.volumes attribute')
 
-        node.save(api=chef_api)
-        self.log.info('Saved the Chef Node configuration')
+            self.chef_node.save()
+            self.log.info('Saved the Chef Node configuration')

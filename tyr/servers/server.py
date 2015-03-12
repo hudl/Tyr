@@ -648,50 +648,50 @@ named {name}""".format(path = d['path'], name = d['name']))
         chef_path = os.path.expanduser(self.chef_path)
         self.chef_api = chef.autoconfigure(chef_path)
 
-        chef_api = self.chef_api
+        with self.chef_api:
+            try:
+                node = chef.Node(self.name)
+                node.delete()
 
-        try:
-            node = chef.Node(self.name, api=chef_api)
-            node.delete()
-
-            self.log.info('Removed previous chef node "{node}"'.format(
+                self.log.info('Removed previous chef node "{node}"'.format(
                                 node = self.name))
-        except chef.exceptions.ChefServerNotFoundError:
-            pass
-        except Exception as e:
-            self.log.error(str(e))
-            raise e
+            except chef.exceptions.ChefServerNotFoundError:
+                pass
+            except Exception as e:
+                self.log.error(str(e))
+                raise e
 
-        try:
-            client = chef.Client(self.name, api=chef_api)
-            client = client.delete()
+            try:
+                client = chef.Client(self.name)
+                client = client.delete()
 
-            self.log.info('Removed previous chef client "{client}"'.format(
+                self.log.info('Removed previous chef client "{client}"'.format(
                                 client = self.name))
-        except chef.exceptions.ChefServerNotFoundError:
-            pass
-        except Exception as e:
-            self.log.error(str(e))
-            raise e
+            except chef.exceptions.ChefServerNotFoundError:
+                pass
+            except Exception as e:
+                self.log.error(str(e))
+                raise e
 
-        node = chef.Node.create(self.name, api=chef_api)
+            node = chef.Node.create(self.name)
 
-        self.log.info('Created new Chef Node "{node}"'.format(
-                        node = self.name))
+            self.chef_node = node
 
-        node.chef_environment = self.environment
+            self.log.info('Created new Chef Node "{node}"'.format(
+                                node = self.name))
 
-        self.log.info('Set the Chef Environment to "{env}"'.format(
-                        env = node.chef_environment))
+            self.chef_node.chef_environment = self.environment
 
-        node.run_list = self.CHEF_RUNLIST
+            self.log.info('Set the Chef Environment to "{env}"'.format(
+                        env = self.chef_node.chef_environment))
 
-        self.log.info('Set Chef run list to {list}'.format(list = node.run_list))
+            self.chef_node.run_list = self.CHEF_RUNLIST
 
-        node.save(api=chef_api)
-        self.log.info('Saved the Chef Node configuration')
+            self.log.info('Set Chef run list to {list}'.format(
+                                            list = self.chef_node.run_list))
 
-        self.chef_node = node
+            self.chef_node.save()
+            self.log.info('Saved the Chef Node configuration')
 
     def baked(self):
 
