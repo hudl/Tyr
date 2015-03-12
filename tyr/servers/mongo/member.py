@@ -1,4 +1,4 @@
-from tyr.servers import MongoNode
+from node import MongoNode
 
 class MongoReplicaSetMember(MongoNode):
 
