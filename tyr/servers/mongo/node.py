@@ -26,4 +26,18 @@ class MongoNode(Server):
 
         return json.loads(r['out'].split('\n')[2])
 
+    def bake(self):
 
+        super(MongoNode, self).bake()
+
+        chef_api = self.chef_api
+        node = self.chef_node
+
+        cluster_name = self.cluster.split('-')[0]
+
+        node.attributes.set_dotted('mongodb.cluster_name', cluster_name)
+        self.log.info('Set the cluster name to "{name}"'.format(
+                                    name = cluster_name))
+
+        node.save(api=chef_api)
+        self.log.info('Saved the Chef Node configuration')
