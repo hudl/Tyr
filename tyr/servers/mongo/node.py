@@ -5,6 +5,8 @@ class MongoNode(Server):
     CHEF_RUNLIST = ['role[RoleMongo]']
     CHEF_MONGODB_TYPE = 'generic'
 
+    IAM_ROLE_POLICIES = ['allow-volume-control']
+
     def __init__(self, dry = None, verbose = None, size = None, cluster = None,
                     environment = None, ami = None, region = None, role = None,
                     keypair = None, availability_zone = None, chef_path = None,

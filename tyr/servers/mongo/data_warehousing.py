@@ -6,6 +6,12 @@ class MongoDataWarehousingNode(MongoReplicaSetMember):
     NAME_SEARCH_PREFIX = '{envcl}-rs{replica_set}-{zone}-'
     NAME_AUTO_INDEX=False
 
+    IAM_ROLE_POLICIES = [
+        'allow-volume-control',
+        'allow-upload-to-s3-fulla',
+        'allow-download-scripts-s3-fulla'
+    ]
+
     CHEF_RUNLIST = ['role[RoleMongo]']
     CHEF_MONGODB_TYPE = 'data_warehousing'
 
@@ -27,12 +33,6 @@ class MongoDataWarehousingNode(MongoReplicaSetMember):
         self.data_volume_size = data_volume_size
 
     def configure(self):
-
-        self.role_policies = [
-            'allow-volume-control',
-            'allow-upload-to-s3-fulla',
-            'allow-download-scripts-s3-fulla'
-        ]
 
         super(MongoDataWarehousingNode, self).configure()
 

@@ -28,10 +28,6 @@ class MongoDataNode(MongoReplicaSetMember):
 
     def configure(self):
 
-        self.role_policies = [
-            'allow-volume-control'
-        ]
-
         super(MongoDataNode, self).configure()
 
         if self.data_volume_size is None:

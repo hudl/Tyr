@@ -14,6 +14,8 @@ class Server(object):
     NAME_SEARCH_PREFIX='{envcl}-{zone}-'
     NAME_AUTO_INDEX=True
 
+    IAM_ROLE_POLICIES = []
+
     CHEF_RUNLIST=['role[RoleBase]']
 
     def __init__(self, dry=None, verbose=None, size=None, cluster=None,
@@ -419,7 +421,7 @@ named {name}""".format(path = d['path'], name = d['name']))
 
         self.log.info('Existing policies: {policies}'.format(policies=existing_policies))
 
-        for policy in self.role_policies:
+        for policy in self.IAM_ROLE_POLICIES:
 
             self.log.info('Processing policy "{policy}"'.format(policy=policy))
 

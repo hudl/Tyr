@@ -21,14 +21,6 @@ class MongoArbiterNode(MongoReplicaSetMember):
                                                 security_groups, block_devices,
                                                 replica_set)
 
-    def configure(self):
-
-        self.role_policies = [
-            'allow-volume-control'
-        ]
-
-        super(MongoArbiterNode, self).configure()
-
     def bake(self):
 
         super(MongoArbiterNode, self).bake()
