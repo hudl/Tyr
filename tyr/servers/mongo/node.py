@@ -3,6 +3,7 @@ from tyr.servers import Server
 class MongoNode(Server):
 
     CHEF_RUNLIST = ['role[RoleMongo]']
+    CHEF_MONGODB_TYPE = 'generic'
 
     def __init__(self, dry = None, verbose = None, size = None, cluster = None,
                     environment = None, ami = None, region = None, role = None,
@@ -44,6 +45,10 @@ class MongoNode(Server):
 
         self.log.info('Set the run list to "{runlist}"'.format(
                                         runlist = node.run_list))
+
+        node.attributes.set_dotted('mongodb.node_type', self.CHEF_MONGODB_TYPE)
+        self.log.info('Set the MongoDB node type to "{type_}"'.format(
+                                            type_ = self.CHEF_MONGODB_TYPE)
 
         node.save(api=chef_api)
         self.log.info('Saved the Chef Node configuration')
