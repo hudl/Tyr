@@ -21,8 +21,6 @@ class MongoArbiterNode(MongoReplicaSetMember):
                                                 security_groups, block_devices,
                                                 role_policies, replica_set)
 
-        self.chef_path = chef_path
-
     def configure(self):
 
         if self.role_policies is None:

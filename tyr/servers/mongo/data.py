@@ -23,7 +23,6 @@ class MongoDataNode(MongoReplicaSetMember):
                                             security_groups, block_devices,
                                             role_policies, replica_set)
 
-        self.chef_path = chef_path
         self.data_volume_size = data_volume_size
         self.data_volume_iops = data_volume_iops
 

@@ -26,7 +26,6 @@ class MongoDataWarehousingNode(MongoReplicaSetMember):
                                                         role_policies,
                                                         replica_set)
 
-        self.chef_path = chef_path
         self.data_volume_size = data_volume_size
 
     def configure(self):
