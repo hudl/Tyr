@@ -6,6 +6,7 @@ import os.path
 import chef
 import time
 from paramiko.client import AutoAddPolicy, SSHClient
+from tyr.policies import policies
 
 class Server(object):
 
@@ -414,21 +415,21 @@ named {name}""".format(path = d['path'], name = d['name']))
         role_policies = self.iam.list_role_policies(self.role)
         response = role_policies['list_role_policies_response']
         result = response['list_role_policies_result']
-        policies = result['policy_names']
+        existing_policies = result['policy_names']
 
-        self.log.info('Existing policies: {policies}'.format(policies=policies))
+        self.log.info('Existing policies: {policies}'.format(policies=existing_policies))
 
-        for policy, document in self.role_policies.iteritems():
+        for policy in self.role_policies:
 
             self.log.info('Processing policy "{policy}"'.format(policy=policy))
 
-            if policy not in policies:
+            if policy not in existing_policies:
 
                 self.log.info('Policy "{policy}" does not exist'.format(
                                         policy = policy))
 
                 try:
-                    self.iam.put_role_policy(self.role, policy, document)
+                    self.iam.put_role_policy(self.role, policy, policies[policy])
 
                     self.log.info('Added policy "{policy}"'.format(
                                         policy = policy))
@@ -441,7 +442,7 @@ named {name}""".format(path = d['path'], name = d['name']))
                 self.log.info('Policy "{policy}" already exists'.format(
                                         policy = policy))
 
-                if document == self.iam.get_role_policy(self.role, policy):
+                if policies[policy] == self.iam.get_role_policy(self.role, policy):
 
                     self.log.info('Policy "{policy}" is accurate'.format(
                                         policy = policy))
@@ -461,7 +462,7 @@ named {name}""".format(path = d['path'], name = d['name']))
                         raise e
 
                     try:
-                        self.iam.put_role_policy(self.role, policy, document)
+                        self.iam.put_role_policy(self.role, policy, policies[policy])
 
                         self.log.info('Added policy "{policy}"'.format(
                                             policy = policy))

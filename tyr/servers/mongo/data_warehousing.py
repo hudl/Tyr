@@ -28,71 +28,11 @@ class MongoDataWarehousingNode(MongoReplicaSetMember):
 
     def configure(self):
 
-        self.role_policies = {
-            'allow-volume-control': """{
-    "Statement": [
-        {
-            "Sid": "Stmt1367531520227",
-            "Action": [
-                "ec2:AttachVolume",
-                "ec2:CreateVolume",
-                "ec2:DescribeVolumeAttribute",
-                "ec2:DescribeVolumeStatus",
-                "ec2:DescribeVolumes",
-                "ec2:EnableVolumeIO",
-                "ec2:DetachVolume"
-             ],
-             "Effect": "Allow",
-             "Resource": [
-                "*"
-             ]
-        }
-     ]
-}""",
-            'allow-upload-to-s3-fulla': """{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "Stmt1421959713000",
-      "Effect": "Allow",
-      "Action": [
-        "s3:AbortMultipartUpload",
-        "s3:CreateBucket",
-        "s3:ListBucketMultipartUploads",
-        "s3:PutObject"
-      ],
-      "Resource": [
-        "arn:aws:s3:::ds-fulla/*"
-      ]
-    }
-  ]
-}""",
-            'allow-download-scripts-s3-fulla': """{
-   "Version":"2012-10-17",
-   "Statement":[
-       {
-           "Sid":"Stmt1408567829000",
-           "Effect":"Allow",
-           "Action":[
-               "s3:ListBucket"
-           ],
-           "Resource":[
-               "arn:aws:s3:::ds-fulla/*"
-           ]
-       },
-       {
-           "Sid":"Stmt1408567479000",
-           "Effect":"Allow",
-           "Action":[
-               "s3:GetObject"
-           ],
-           "Resource":[
-               "arn:aws:s3:::ds-fulla/*"
-           ]
-       }
-   ]
-}"""
-        }
+        self.role_policies = [
+            'allow-volume-control',
+            'allow-upload-to-s3-fulla',
+            'allow-download-scripts-s3-fulla'
+        ]
 
         super(MongoDataWarehousingNode, self).configure()
 
