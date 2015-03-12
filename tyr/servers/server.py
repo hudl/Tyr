@@ -18,14 +18,14 @@ class Server(object):
 
     CHEF_RUNLIST=['role[RoleBase]']
 
-    def __init__(self, dry=None, verbose=None, size=None, cluster=None,
+    def __init__(self, dry=None, verbose=None, instance_type=None, cluster=None,
                     environment=None, ami=None, region=None, role=None,
                     keypair=None, availability_zone=None, security_groups=None,
                     block_devices=None, chef_path=None):
 
         self.dry = dry
         self.verbose = verbose
-        self.size = size
+        self.instance_type = instance_type
         self.cluster = cluster
         self.environment = environment
         self.ami = ami
@@ -69,11 +69,12 @@ class Server(object):
         self.log.info('Using verbose value "{verbose}"'.format(
                         verbose = self.verbose))
 
-        if self.size is None:
+        if self.instance_type is None:
             self.log.warn('No Instance Type provided')
-            self.size = 'm3.medium'
+            self.instance_type = 'm3.medium'
 
-        self.log.info('Using Instance Type "{size}"'.format(size = self.size))
+        self.log.info('Using Instance Type "{type_}"'.format(
+                                                    type_ = self.instance_type))
 
         if self.cluster is None:
             self.log.warn('No cluster provided')
@@ -511,7 +512,7 @@ named {name}""".format(path = d['path'], name = d['name']))
                 'image_id': self.ami,
                 'instance_profile_name': self.role,
                 'key_name': self.keypair,
-                'instance_type': self.size,
+                'instance_type': self.instance_type,
                 'security_groups': self.security_groups,
                 'block_device_map': self.blockdevicemapping,
                 'user_data': self.user_data,
