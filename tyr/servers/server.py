@@ -2,34 +2,30 @@ from exceptions import *
 import boto.ec2
 import boto.route53
 import logging
-import sys
-import string
-import random
 import os.path
 import chef
 import time
 from paramiko.client import AutoAddPolicy, SSHClient
+from tyr.policies import policies
 
 class Server(object):
 
-    log = logging.getLogger('Servers.Server')
-    log.setLevel(logging.DEBUG)
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.DEBUG)
-    formatter = logging.Formatter(
-            '%(asctime)s [%(name)s] %(levelname)s: %(message)s',
-            datefmt='%H:%M:%S')
-    ch.setFormatter(formatter)
-    log.addHandler(ch)
+    NAME_TEMPLATE='{envcl}-{zone}-{index}'
+    NAME_SEARCH_PREFIX='{envcl}-{zone}-'
+    NAME_AUTO_INDEX=True
 
-    def __init__(self, dry=None, verbose=None, size=None, cluster=None,
+    IAM_ROLE_POLICIES = []
+
+    CHEF_RUNLIST=['role[RoleBase]']
+
+    def __init__(self, dry=None, verbose=None, instance_type=None, cluster=None,
                     environment=None, ami=None, region=None, role=None,
                     keypair=None, availability_zone=None, security_groups=None,
-                    block_devices=None, chef_path=None, role_policies=None):
+                    block_devices=None, chef_path=None):
 
         self.dry = dry
         self.verbose = verbose
-        self.size = size
+        self.instance_type = instance_type
         self.cluster = cluster
         self.environment = environment
         self.ami = ami
@@ -40,7 +36,25 @@ class Server(object):
         self.security_groups = security_groups
         self.block_devices = block_devices
         self.chef_path = chef_path
-        self.role_policies = role_policies
+
+    def establish_logger(self):
+
+        try:
+            return self.log
+        except:
+            pass
+
+        log = logging.getLogger(self.__class__.__name__)
+        log.setLevel(logging.DEBUG)
+        ch = logging.StreamHandler()
+        ch.setLevel(logging.DEBUG)
+        formatter = logging.Formatter(
+                '%(asctime)s [%(name)s] %(levelname)s: %(message)s',
+                datefmt='%H:%M:%S')
+        ch.setFormatter(formatter)
+        log.addHandler(ch)
+
+        self.log = log
 
     def configure(self):
 
@@ -55,11 +69,12 @@ class Server(object):
         self.log.info('Using verbose value "{verbose}"'.format(
                         verbose = self.verbose))
 
-        if self.size is None:
+        if self.instance_type is None:
             self.log.warn('No Instance Type provided')
-            self.size = 'm3.medium'
+            self.instance_type = 'm3.medium'
 
-        self.log.info('Using Instance Type "{size}"'.format(size = self.size))
+        self.log.info('Using Instance Type "{type_}"'.format(
+                                                    type_ = self.instance_type))
 
         if self.cluster is None:
             self.log.warn('No cluster provided')
@@ -115,13 +130,6 @@ class Server(object):
             self.role = self.environment[0] + '-' + self.cluster
 
         self.log.info('Using IAM Role "{role}"'.format(role = self.role))
-
-        if self.role_policies is None:
-            self.log.warn('No IAM Role Policies provided')
-            self.role_policies = {}
-
-        self.log.info('Using IAM Role Policies {policies}'.format(
-                                            policies = self.role_policies))
 
         self.resolve_iam_role()
 
@@ -194,15 +202,14 @@ class Server(object):
 
 
 
-    def next_index(self, template='{envcl}-{zone}-', supplemental={}, cap=99):
+    def next_index(self, supplemental={}):
 
         try:
             return self.index
         except Exception:
             pass
 
-        supplemental['envcl'] = self.envcl
-        template = template+'*'
+        template = self.NAME_SEARCH_PREFIX+'*'
 
         name_filter = template.format(**supplemental)
 
@@ -225,20 +232,17 @@ class Server(object):
 
         index = -1
 
-        for i in range(cap):
+        for i in range(99):
             if (i+1) not in indexes:
                 index = i+1
                 break
 
-        index = str(index)
+        self.index = str(index)
 
-        if cap > 9:
-            if len(index) < 2:
-                index = '0' + index
+        if len(self.index == 1):
+            self.index = '0'+self.index
 
-        self.index = index
-
-        return index
+        return self.index
 
     @property
     def envcl(self):
@@ -253,32 +257,29 @@ class Server(object):
 
     @property
     def name(self):
+
         try:
             return self.unique_name
         except Exception:
             pass
 
-        self.unique_name = self.build_name()
+        template = self.NAME_TEMPLATE
 
-        return self.unique_name
-
-    def build_name(self, template='{envcl}-{zone}-{index}', supplemental={},
-                    search_prefix='{envcl}-{zone}-', cap=99):
+        supplemental = self.__dict__.copy()
 
         supplemental['zone'] = self.availability_zone[-1:]
         supplemental['envcl'] = self.envcl
 
-        index = self.next_index(search_prefix, supplemental, cap)
+        if self.NAME_AUTO_INDEX:
 
-        supplemental['index'] = index
+            index = self.next_index(supplemental)
+            supplemental['index'] = index
 
-        name = template.format(**supplemental)
+        self.unique_name = template.format(**supplemental)
 
-        self.unique_name = name
+        self.log.info('Using node name {name}'.format(name = self.unique_name))
 
-        self.log.info('Using node name {name}'.format(name = name))
-
-        return name
+        return self.unique_name
 
     @property
     def hostname(self):
@@ -358,15 +359,15 @@ chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}"""
 
             if d['type'] == 'ephemeral':
                 if 'size' in d.keys():
-                    self.log.info("""Created new ephemeral device at {path} 
+                    self.log.info("""Created new ephemeral device at {path}
 named {name} of size {size}""".format(path = d['path'], name = d['name'],
                                         size = d['size']))
                 else:
-                    self.log.info("""Created new ephemeral device at {path} 
+                    self.log.info("""Created new ephemeral device at {path}
 named {name}""".format(path = d['path'], name = d['name']))
 
             else:
-                self.log.info("""Created new EBS device at {path} of size 
+                self.log.info("""Created new EBS device at {path} of size
 {size}""".format(path = d['path'], size = d['size']))
 
         return bdm
@@ -420,21 +421,21 @@ named {name}""".format(path = d['path'], name = d['name']))
         role_policies = self.iam.list_role_policies(self.role)
         response = role_policies['list_role_policies_response']
         result = response['list_role_policies_result']
-        policies = result['policy_names']
+        existing_policies = result['policy_names']
 
-        self.log.info('Existing policies: {policies}'.format(policies=policies))
+        self.log.info('Existing policies: {policies}'.format(policies=existing_policies))
 
-        for policy, document in self.role_policies.iteritems():
+        for policy in self.IAM_ROLE_POLICIES:
 
             self.log.info('Processing policy "{policy}"'.format(policy=policy))
 
-            if policy not in policies:
+            if policy not in existing_policies:
 
                 self.log.info('Policy "{policy}" does not exist'.format(
                                         policy = policy))
 
                 try:
-                    self.iam.put_role_policy(self.role, policy, document)
+                    self.iam.put_role_policy(self.role, policy, policies[policy])
 
                     self.log.info('Added policy "{policy}"'.format(
                                         policy = policy))
@@ -447,7 +448,7 @@ named {name}""".format(path = d['path'], name = d['name']))
                 self.log.info('Policy "{policy}" already exists'.format(
                                         policy = policy))
 
-                if document == self.iam.get_role_policy(self.role, policy):
+                if policies[policy] == self.iam.get_role_policy(self.role, policy):
 
                     self.log.info('Policy "{policy}" is accurate'.format(
                                         policy = policy))
@@ -467,7 +468,7 @@ named {name}""".format(path = d['path'], name = d['name']))
                         raise e
 
                     try:
-                        self.iam.put_role_policy(self.role, policy, document)
+                        self.iam.put_role_policy(self.role, policy, policies[policy])
 
                         self.log.info('Added policy "{policy}"'.format(
                                             policy = policy))
@@ -514,7 +515,7 @@ named {name}""".format(path = d['path'], name = d['name']))
                 'image_id': self.ami,
                 'instance_profile_name': self.role,
                 'key_name': self.keypair,
-                'instance_type': self.size,
+                'instance_type': self.instance_type,
                 'security_groups': self.security_groups,
                 'block_device_map': self.blockdevicemapping,
                 'user_data': self.user_data,
@@ -536,7 +537,6 @@ named {name}""".format(path = d['path'], name = d['name']))
                     self.instance.update()
                     state = self.instance.state
                 except Exception:
-                    self.log.error(str(e))
                     pass
 
             self.log.info('The instance is running')
@@ -651,31 +651,50 @@ named {name}""".format(path = d['path'], name = d['name']))
         chef_path = os.path.expanduser(self.chef_path)
         self.chef_api = chef.autoconfigure(chef_path)
 
-        chef_api = self.chef_api
+        with self.chef_api:
+            try:
+                node = chef.Node(self.name)
+                node.delete()
 
-        try:
-            node = chef.Node(self.name, api=chef_api)
-            node.delete()
-
-            self.log.info('Removed previous chef node "{node}"'.format(
+                self.log.info('Removed previous chef node "{node}"'.format(
                                 node = self.name))
-        except chef.exceptions.ChefServerNotFoundError:
-            pass
-        except Exception as e:
-            self.log.error(str(e))
-            raise e
+            except chef.exceptions.ChefServerNotFoundError:
+                pass
+            except Exception as e:
+                self.log.error(str(e))
+                raise e
 
-        try:
-            client = chef.Client(self.name, api=chef_api)
-            client = client.delete()
+            try:
+                client = chef.Client(self.name)
+                client = client.delete()
 
-            self.log.info('Removed previous chef client "{client}"'.format(
+                self.log.info('Removed previous chef client "{client}"'.format(
                                 client = self.name))
-        except chef.exceptions.ChefServerNotFoundError:
-            pass
-        except Exception as e:
-            self.log.error(str(e))
-            raise e
+            except chef.exceptions.ChefServerNotFoundError:
+                pass
+            except Exception as e:
+                self.log.error(str(e))
+                raise e
+
+            node = chef.Node.create(self.name)
+
+            self.chef_node = node
+
+            self.log.info('Created new Chef Node "{node}"'.format(
+                                node = self.name))
+
+            self.chef_node.chef_environment = self.environment
+
+            self.log.info('Set the Chef Environment to "{env}"'.format(
+                        env = self.chef_node.chef_environment))
+
+            self.chef_node.run_list = self.CHEF_RUNLIST
+
+            self.log.info('Set Chef run list to {list}'.format(
+                                            list = self.chef_node.run_list))
+
+            self.chef_node.save()
+            self.log.info('Saved the Chef Node configuration')
 
     def baked(self):
 
@@ -720,6 +739,7 @@ named {name}""".format(path = d['path'], name = d['name']))
 
     def autorun(self):
 
+        self.establish_logger()
         self.configure()
         self.launch(wait=True)
         self.tag()
