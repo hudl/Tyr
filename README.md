@@ -36,7 +36,7 @@ Ideally, the usage of each server and cluster type should be documented.
 However, here's a quick sample. We're going to spin up a MongoDB data node.
 
 ``` python
-from tyr.servers import MongoDataNode
+from tyr.servers.mongo import MongoDataNode
 node = MongoDataNode(cluster='monolith-mongo')
 node.autorun()
 ```
@@ -44,8 +44,6 @@ node.autorun()
 Yep, that's it. Magical, right?
 
 ## Contributing
-
-_Move fast, **don't** break things_.
 
 1. Clone the repository
 2. Checkout a new branch
