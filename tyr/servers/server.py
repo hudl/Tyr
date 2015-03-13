@@ -239,6 +239,9 @@ class Server(object):
 
         self.index = str(index)
 
+        if len(self.index == 1):
+            self.index = '0'+self.index
+
         return self.index
 
     @property
