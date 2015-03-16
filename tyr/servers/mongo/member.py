@@ -33,7 +33,8 @@ class MongoReplicaSetMember(MongoNode):
 
         with self.chef_api:
 
-            replica_set = 'rs' + str(self.replica_set)
+            group = self.cluster.split('-')[0]
+            replica_set = group + '-rs' + str(self.replica_set)
 
             self.chef_node.attributes.set_dotted('mongodb.replicaset_name', replica_set)
             self.log.info('Set the replica set name to "{name}"'.format(
