@@ -136,7 +136,7 @@ class Server(object):
 
         if self.role is None:
             self.log.warn('No IAM Role provided')
-            self.role = self.environment[0] + '-' + self.group + '-' + self.type_
+            self.role = self.envcl
 
         self.log.info('Using IAM Role "{role}"'.format(role = self.role))
 
@@ -180,7 +180,7 @@ class Server(object):
             self.log.warn('No EC2 security groups provided')
 
             self.security_groups = ['management', 'chef-nodes']
-            self.security_groups.append(self.environment[0] + '-' + self.group + '-' + self.type_)
+            self.security_groups.append(self.envcl)
 
         self.log.info('Using security groups {groups}'.format(
                         groups=', '.join(self.security_groups)))
