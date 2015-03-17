@@ -18,15 +18,16 @@ class Server(object):
 
     CHEF_RUNLIST=['role[RoleBase]']
 
-    def __init__(self, dry=None, verbose=None, instance_type=None, cluster=None,
-                    environment=None, ami=None, region=None, role=None,
-                    keypair=None, availability_zone=None, security_groups=None,
-                    block_devices=None, chef_path=None):
+    def __init__(self, dry=None, verbose=None, instance_type=None, group=None,
+                    type_=None, environment=None, ami=None, region=None,
+                    role=None, keypair=None, availability_zone=None,
+                    security_groups=None, block_devices=None, chef_path=None):
 
         self.dry = dry
         self.verbose = verbose
         self.instance_type = instance_type
-        self.cluster = cluster
+        self.group = group
+        self.type_ = type_
         self.environment = environment
         self.ami = ami
         self.region = region
@@ -76,12 +77,20 @@ class Server(object):
         self.log.info('Using Instance Type "{type_}"'.format(
                                                     type_ = self.instance_type))
 
-        if self.cluster is None:
-            self.log.warn('No cluster provided')
-            raise InvalidCluster('A cluster must be specified.')
+        if self.group is None:
+            self.log.warn('No group provided')
+            raise InvalidCluster('A group must be specified.')
 
-        self.log.info('Using Cluster "{cluster}"'.format(
-                        cluster = self.cluster))
+        self.log.info('Using group "{group}"'.format(
+                        group = self.group))
+
+        if self.type_ is None:
+            self.log.warn('No type provided')
+            raise InvalidCluster('A type must be specified.')
+
+        self.log.info('Using type "{type_}"'.format(
+                        type_ = self.type_))
+
 
         if self.environment is None:
             self.log.warn('No environment provided')
@@ -127,7 +136,7 @@ class Server(object):
 
         if self.role is None:
             self.log.warn('No IAM Role provided')
-            self.role = self.environment[0] + '-' + self.cluster
+            self.role = self.environment[0] + '-' + self.group + '-' + self.type_
 
         self.log.info('Using IAM Role "{role}"'.format(role = self.role))
 
@@ -171,8 +180,7 @@ class Server(object):
             self.log.warn('No EC2 security groups provided')
 
             self.security_groups = ['management', 'chef-nodes']
-            self.security_groups.append(self.environment[0] + '-' +
-                    self.cluster)
+            self.security_groups.append(self.environment[0] + '-' + self.group + '-' + self.type_)
 
         self.log.info('Using security groups {groups}'.format(
                         groups=', '.join(self.security_groups)))
@@ -239,7 +247,7 @@ class Server(object):
 
         self.index = str(index)
 
-        if len(self.index == 1):
+        if len(self.index) == 1:
             self.index = '0'+self.index
 
         return self.index
@@ -247,9 +255,10 @@ class Server(object):
     @property
     def envcl(self):
 
-        template = '{environment}-{cluster}'
+        template = '{environment}-{group}-{type_}'
         envcl = template.format(environment = self.environment[0],
-                                  cluster = self.cluster)
+                                  group = self.group,
+                                  type_ = self.type_)
 
         self.log.info('Using envcl {envcl}'.format(envcl = envcl))
 
@@ -330,9 +339,8 @@ chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}"""
         tags = {}
         tags['Name'] = self.name
         tags['Environment'] = self.environment
-        tags['Cluster'] = self.cluster
-        tags['Group'] = self.cluster.split('-')[0]
-        tags['Role'] = 'Role'+self.cluster.split('-')[1].capitalize()
+        tags['Group'] = self.group
+        tags['Role'] = 'Role'+self.type_.capitalize()
 
         self.log.info('Using instance tags {tags}'.format(tags = tags))
 

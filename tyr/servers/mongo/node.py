@@ -8,13 +8,13 @@ class MongoNode(Server):
     IAM_ROLE_POLICIES = ['allow-volume-control']
 
     def __init__(self, dry = None, verbose = None, instance_type = None,
-                    cluster = None, environment = None, ami = None,
+                    group = None, type_ = None, environment = None, ami = None,
                     region = None, role = None, keypair = None,
                     availability_zone = None, security_groups = None,
                     block_devices = None, chef_path = None):
 
-        super(MongoNode, self).__init__(dry, verbose, instance_type, cluster,
-                                        environment, ami, region, role,
+        super(MongoNode, self).__init__(dry, verbose, instance_type, group,
+                                        type_, environment, ami, region, role,
                                         keypair, availability_zone,
                                         security_groups, block_devices,
                                         chef_path)
@@ -35,11 +35,10 @@ class MongoNode(Server):
 
         with self.chef_api:
 
-            cluster_name = self.cluster.split('-')[0]
-
-            self.chef_node.attributes.set_dotted('mongodb.cluster_name', cluster_name)
-            self.log.info('Set the cluster name to "{name}"'.format(
-                                        name = cluster_name))
+            self.chef_node.attributes.set_dotted(
+                                            'mongodb.cluster_name', self.group)
+            self.log.info('Set the cluster name to "{group}"'.format(
+                                        group = self.group))
 
             if self.chef_node.chef_environment == 'prod':
                 self.chef_node.run_list.append('role[RoleSumoLogic]')

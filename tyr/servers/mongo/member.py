@@ -3,14 +3,14 @@ from node import MongoNode
 class MongoReplicaSetMember(MongoNode):
 
     def __init__(self, dry = None, verbose = None, instance_type = None,
-                    cluster = None, environment = None, ami = None,
+                    group = None, type_ = None, environment = None, ami = None,
                     region = None, role = None, keypair = None,
                     availability_zone = None, security_groups = None,
                     block_devices = None, chef_path = None, replica_set = None):
 
         super(MongoReplicaSetMember, self).__init__(dry, verbose, instance_type,
-                                                    cluster, environment, ami,
-                                                    region, role, keypair,
+                                                    group, type_, environment,
+                                                    ami, region, role, keypair,
                                                     availability_zone,
                                                     security_groups,
                                                     block_devices, chef_path)
@@ -33,10 +33,11 @@ class MongoReplicaSetMember(MongoNode):
 
         with self.chef_api:
 
-            group = self.cluster.split('-')[0]
-            replica_set = group + '-rs' + str(self.replica_set)
+            replica_set = '{group}-rs{set_}'.format(group = self.group,
+                                                    set_ = self.replica_set)
 
-            self.chef_node.attributes.set_dotted('mongodb.replicaset_name', replica_set)
+            self.chef_node.attributes.set_dotted(
+                                        'mongodb.replicaset_name', replica_set)
             self.log.info('Set the replica set name to "{name}"'.format(
                                         name = replica_set))
 
