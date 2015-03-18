@@ -9,13 +9,13 @@ class MongoArbiterNode(MongoReplicaSetMember):
     CHEF_RUNLIST = ['role[RoleMongo]']
     CHEF_MONGODB_TYPE = 'arbiter'
 
-    def __init__(self, group = None, type_ = None, instance_type = None,
+    def __init__(self, group = None, server_type = None, instance_type = None,
                     environment = None, ami = None, region = None, role = None,
                     keypair = None, availability_zone = None,
                     security_groups = None, block_devices = None,
                     chef_path = None, replica_set = None):
 
-        super(MongoArbiterNode, self).__init__(group, type_, instance_type,
+        super(MongoArbiterNode, self).__init__(group, server_type, instance_type,
                                                 environment, ami, region, role,
                                                 keypair, availability_zone,
                                                 security_groups, block_devices,

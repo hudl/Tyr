@@ -2,13 +2,13 @@ from node import MongoNode
 
 class MongoReplicaSetMember(MongoNode):
 
-    def __init__(self, group = None, type_ = None, instance_type = None,
+    def __init__(self, group = None, server_type = None, instance_type = None,
                     environment = None, ami = None, region = None, role = None,
                     keypair = None, availability_zone = None,
                     security_groups = None, block_devices = None,
                     chef_path = None, replica_set = None):
 
-        super(MongoReplicaSetMember, self).__init__(group, type_, instance_type,
+        super(MongoReplicaSetMember, self).__init__(group, server_type, instance_type,
                                                     environment, ami, region,
                                                     role, keypair,
                                                     availability_zone,

@@ -2,22 +2,22 @@ from tyr.servers.server import Server
 
 class MongoNode(Server):
 
-    TYPE_ = 'mongo'
+    SERVER_TYPE = 'mongo'
 
     CHEF_RUNLIST = ['role[RoleMongo]']
     CHEF_MONGODB_TYPE = 'generic'
 
     IAM_ROLE_POLICIES = ['allow-volume-control']
 
-    def __init__(self, group = None, type_ = None, instance_type = None,
+    def __init__(self, group = None, server_type = None, instance_type = None,
                     environment = None, ami = None, region = None, role = None,
                     keypair = None, availability_zone = None,
                     security_groups = None, block_devices = None,
                     chef_path = None):
 
-        if type_ is None: type_ = self.TYPE_
+        if server_type is None: server_type = self.SERVER_TYPE
 
-        super(MongoNode, self).__init__(group, type_, instance_type,
+        super(MongoNode, self).__init__(group, server_type, instance_type,
                                         environment, ami, region, role,
                                         keypair, availability_zone,
                                         security_groups, block_devices,

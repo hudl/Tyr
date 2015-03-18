@@ -18,14 +18,14 @@ class Server(object):
 
     CHEF_RUNLIST=['role[RoleBase]']
 
-    def __init__(self, group=None, type_=None, instance_type=None,
+    def __init__(self, group=None, server_type=None, instance_type=None,
                     environment=None, ami=None, region=None, role=None,
                     keypair=None, availability_zone=None, security_groups=None,
                     block_devices=None, chef_path=None):
 
         self.instance_type = instance_type
         self.group = group
-        self.type_ = type_
+        self.server_type= server_type
         self.environment = environment
         self.ami = ami
         self.region = region
@@ -61,8 +61,8 @@ class Server(object):
             self.log.warn('No Instance Type provided')
             self.instance_type = 'm3.medium'
 
-        self.log.info('Using Instance Type "{type_}"'.format(
-                                                    type_ = self.instance_type))
+        self.log.info('Using Instance Type "{instance_type}"'.format(
+                                            instance_type = self.instance_type))
 
         if self.group is None:
             self.log.warn('No group provided')
@@ -71,12 +71,12 @@ class Server(object):
         self.log.info('Using group "{group}"'.format(
                         group = self.group))
 
-        if self.type_ is None:
+        if self.server_type is None:
             self.log.warn('No type provided')
             raise InvalidCluster('A type must be specified.')
 
-        self.log.info('Using type "{type_}"'.format(
-                        type_ = self.type_))
+        self.log.info('Using type "{server_type}"'.format(
+                        server_type = self.server_type))
 
 
         if self.environment is None:
@@ -242,10 +242,10 @@ class Server(object):
     @property
     def envcl(self):
 
-        template = '{environment}-{group}-{type_}'
+        template = '{environment}-{group}-{server_type}'
         envcl = template.format(environment = self.environment[0],
                                   group = self.group,
-                                  type_ = self.type_)
+                                  server_type = self.server_type)
 
         self.log.info('Using envcl {envcl}'.format(envcl = envcl))
 
@@ -327,7 +327,7 @@ chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}"""
         tags['Name'] = self.name
         tags['Environment'] = self.environment
         tags['Group'] = self.group
-        tags['Role'] = 'Role'+self.type_.capitalize()
+        tags['Role'] = 'Role'+self.server_type.capitalize()
 
         self.log.info('Using instance tags {tags}'.format(tags = tags))
 

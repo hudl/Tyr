@@ -15,7 +15,7 @@ class MongoCluster(object):
     ch.setFormatter(formatter)
     log.addHandler(ch)
 
-    def __init__(self, group = None, type_ = None, instance_type = None,
+    def __init__(self, group = None, server_type = None, instance_type = None,
                     environment = None, ami = None, region = None, role = None,
                     keypair = None, chef_path = None, replica_set = None,
                     security_groups = None, block_devices = None,
@@ -26,7 +26,7 @@ class MongoCluster(object):
 
         self.instance_type = instance_type
         self.group = group
-        self.type_ = type_
+        self.server_type = server_type
         self.environment = environment
         self.ami = ami
         self.region = region
@@ -57,7 +57,7 @@ class MongoCluster(object):
 
         for i in range(self.data_nodes):
 
-            node = MongoDataNode(group = self.group, type_ = self.type_,
+            node = MongoDataNode(group = self.group, server_type = self.server_type,,
                                     instance_type = self.instance_type,
                                     environment = self.environment,
                                     ami = self.ami, region = self.region,
@@ -79,7 +79,7 @@ class MongoCluster(object):
 
             self.log.info('Including Arbiter Node')
 
-            node = MongoArbiterNode(group = self.group, type_ = self.type_,
+            node = MongoArbiterNode(group = self.group, server_type = self.server_type,
                                     instance_type = self.instance_type,
                                     environment = self.environment,
                                     ami = self.ami, region = self.region,
