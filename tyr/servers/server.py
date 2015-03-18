@@ -18,7 +18,7 @@ class Server(object):
 
     CHEF_RUNLIST=['role[RoleBase]']
 
-    def __init__(self, instance_type=None, group=None, type_=None,
+    def __init__(self, group=None, type_=None, instance_type=None,
                     environment=None, ami=None, region=None, role=None,
                     keypair=None, availability_zone=None, security_groups=None,
                     block_devices=None, chef_path=None):

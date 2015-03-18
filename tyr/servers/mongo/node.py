@@ -9,7 +9,7 @@ class MongoNode(Server):
 
     IAM_ROLE_POLICIES = ['allow-volume-control']
 
-    def __init__(self, instance_type = None, group = None, type_ = None,
+    def __init__(self, group = None, type_ = None, instance_type = None,
                     environment = None, ami = None, region = None, role = None,
                     keypair = None, availability_zone = None,
                     security_groups = None, block_devices = None,
@@ -17,7 +17,7 @@ class MongoNode(Server):
 
         if type_ is None: type_ = TYPE_
 
-        super(MongoNode, self).__init__(instance_type, group, type_,
+        super(MongoNode, self).__init__(group, type_, instance_type,
                                         environment, ami, region, role,
                                         keypair, availability_zone,
                                         security_groups, block_devices,
