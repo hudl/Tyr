@@ -23,6 +23,22 @@ class MongoNode(Server):
                                         security_groups, block_devices,
                                         chef_path)
 
+    def configure(self):
+
+        super(MongoNode, self).configure()
+
+        # This is just a temporary fix to override the default security
+        # groups for MongoDB nodes until the security_groups argument
+        # is removed.
+        self.security_groups = [
+            'management',
+            'chef-nodes',
+            self.envcl,
+            '{env}-mongo-management'.format(env = self.environment[0])
+        ]
+
+        self.resolve_security_groups()
+
     def run_mongo(self, command):
 
         template = 'mongo --port 27018 --eval "JSON.stringify({command})"'
