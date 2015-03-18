@@ -13,7 +13,9 @@ class MongoNode(Server):
                     environment = None, ami = None, region = None, role = None,
                     keypair = None, availability_zone = None,
                     security_groups = None, block_devices = None,
-                    chef_path = None):
+                    chef_path = None, mongodb_version=None):
+
+        self.mongodb_version = mongodb_version
 
         if server_type is None: server_type = self.SERVER_TYPE
 
@@ -27,17 +29,12 @@ class MongoNode(Server):
 
         super(MongoNode, self).configure()
 
-        # This is just a temporary fix to override the default security
-        # groups for MongoDB nodes until the security_groups argument
-        # is removed.
-        self.security_groups = [
-            'management',
-            'chef-nodes',
-            self.envcl,
-            '{env}-mongo-management'.format(env = self.environment[0])
-        ]
+        if self.mongodb_version is None:
+            self.log.warn('MongoDB version not set')
+            self.mongodb_version = '2.4.13'
 
-        self.resolve_security_groups()
+        self.log.info('Using version {version} of MongoDB'.format(
+                                                version = self.mongodb_version))
 
     def run_mongo(self, command):
 
@@ -59,6 +56,15 @@ class MongoNode(Server):
                                             'mongodb.cluster_name', self.group)
             self.log.info('Set the cluster name to "{group}"'.format(
                                         group = self.group))
+
+            mongodb_version = '{version}-mongodb_1'.format(
+                                                version = self.mongodb_version)
+
+            self.chef_node.attributes.set_dotted(
+                                    'mongodb.package_version', mongodb_version)
+
+            self.log.info('Set the MongoDB package version to {version}'.format(
+                                                    version = mongodb_version))
 
             if self.chef_node.chef_environment == 'prod':
                 self.chef_node.run_list.append('role[RoleSumoLogic]')
