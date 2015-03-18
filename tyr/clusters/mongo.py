@@ -15,7 +15,7 @@ class MongoCluster(object):
     ch.setFormatter(formatter)
     log.addHandler(ch)
 
-    def __init__(self, dry = None, verbose = None, size = None, cluster = None,
+    def __init__(self, group = None, type_ = None, instance_type = None,
                     environment = None, ami = None, region = None, role = None,
                     keypair = None, chef_path = None, replica_set = None,
                     security_groups = None, block_devices = None,
@@ -24,10 +24,9 @@ class MongoCluster(object):
 
         self.nodes = []
 
-        self.dry = dry
-        self.verbose = verbose
-        self.size = size
-        self.cluster = cluster
+        self.instance_type = instance_type
+        self.group = group
+        self.type_ = type_
         self.environment = environment
         self.ami = ami
         self.region = region
@@ -58,8 +57,8 @@ class MongoCluster(object):
 
         for i in range(self.data_nodes):
 
-            node = MongoDataNode(dry = self.dry, verbose = self.verbose,
-                                    size = self.size, cluster = self.cluster,
+            node = MongoDataNode(group = self.group, type_ = self.type_,
+                                    instance_type = self.instance_type,
                                     environment = self.environment,
                                     ami = self.ami, region = self.region,
                                     role = self.role, keypair = self.keypair,
@@ -80,8 +79,8 @@ class MongoCluster(object):
 
             self.log.info('Including Arbiter Node')
 
-            node = MongoArbiterNode(dry = self.dry, verbose = self.verbose,
-                                    cluster = self.cluster,
+            node = MongoArbiterNode(group = self.group, type_ = self.type_,
+                                    instance_type = self.instance_type,
                                     environment = self.environment,
                                     ami = self.ami, region = self.region,
                                     role = self.role, keypair = self.keypair,
