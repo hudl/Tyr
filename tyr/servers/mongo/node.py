@@ -15,7 +15,7 @@ class MongoNode(Server):
                     security_groups = None, block_devices = None,
                     chef_path = None):
 
-        if type_ is None: type_ = TYPE_
+        if type_ is None: type_ = self.TYPE_
 
         super(MongoNode, self).__init__(group, type_, instance_type,
                                         environment, ami, region, role,
