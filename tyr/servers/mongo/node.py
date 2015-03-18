@@ -2,6 +2,8 @@ from tyr.servers.server import Server
 
 class MongoNode(Server):
 
+    TYPE_ = 'mongo'
+
     CHEF_RUNLIST = ['role[RoleMongo]']
     CHEF_MONGODB_TYPE = 'generic'
 
@@ -12,6 +14,8 @@ class MongoNode(Server):
                     region = None, role = None, keypair = None,
                     availability_zone = None, security_groups = None,
                     block_devices = None, chef_path = None):
+
+        if type_ is None: type_ = TYPE_
 
         super(MongoNode, self).__init__(dry, verbose, instance_type, group,
                                         type_, environment, ami, region, role,
