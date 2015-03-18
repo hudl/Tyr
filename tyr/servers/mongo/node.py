@@ -2,18 +2,22 @@ from tyr.servers.server import Server
 
 class MongoNode(Server):
 
+    SERVER_TYPE = 'mongo'
+
     CHEF_RUNLIST = ['role[RoleMongo]']
     CHEF_MONGODB_TYPE = 'generic'
 
     IAM_ROLE_POLICIES = ['allow-volume-control']
 
-    def __init__(self, dry = None, verbose = None, instance_type = None,
-                    cluster = None, environment = None, ami = None,
-                    region = None, role = None, keypair = None,
-                    availability_zone = None, security_groups = None,
-                    block_devices = None, chef_path = None):
+    def __init__(self, group = None, server_type = None, instance_type = None,
+                    environment = None, ami = None, region = None, role = None,
+                    keypair = None, availability_zone = None,
+                    security_groups = None, block_devices = None,
+                    chef_path = None):
 
-        super(MongoNode, self).__init__(dry, verbose, instance_type, cluster,
+        if server_type is None: server_type = self.SERVER_TYPE
+
+        super(MongoNode, self).__init__(group, server_type, instance_type,
                                         environment, ami, region, role,
                                         keypair, availability_zone,
                                         security_groups, block_devices,
@@ -35,11 +39,10 @@ class MongoNode(Server):
 
         with self.chef_api:
 
-            cluster_name = self.cluster.split('-')[0]
-
-            self.chef_node.attributes.set_dotted('mongodb.cluster_name', cluster_name)
-            self.log.info('Set the cluster name to "{name}"'.format(
-                                        name = cluster_name))
+            self.chef_node.attributes.set_dotted(
+                                            'mongodb.cluster_name', self.group)
+            self.log.info('Set the cluster name to "{group}"'.format(
+                                        group = self.group))
 
             if self.chef_node.chef_environment == 'prod':
                 self.chef_node.run_list.append('role[RoleSumoLogic]')
