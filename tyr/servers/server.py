@@ -18,13 +18,11 @@ class Server(object):
 
     CHEF_RUNLIST=['role[RoleBase]']
 
-    def __init__(self, dry=None, verbose=None, instance_type=None, group=None,
-                    type_=None, environment=None, ami=None, region=None,
-                    role=None, keypair=None, availability_zone=None,
-                    security_groups=None, block_devices=None, chef_path=None):
+    def __init__(self, instance_type=None, group=None, type_=None,
+                    environment=None, ami=None, region=None, role=None,
+                    keypair=None, availability_zone=None, security_groups=None,
+                    block_devices=None, chef_path=None):
 
-        self.dry = dry
-        self.verbose = verbose
         self.instance_type = instance_type
         self.group = group
         self.type_ = type_
@@ -58,17 +56,6 @@ class Server(object):
         self.log = log
 
     def configure(self):
-
-        if self.dry is None:
-            self.dry = False
-
-        self.log.info('Using dry value "{dry}"'.format(dry = self.dry))
-
-        if self.verbose is None:
-            self.verbose = False
-
-        self.log.info('Using verbose value "{verbose}"'.format(
-                        verbose = self.verbose))
 
         if self.instance_type is None:
             self.log.warn('No Instance Type provided')
@@ -492,9 +479,7 @@ named {name}""".format(path = d['path'], name = d['name']))
 
         try:
             self.ec2 = boto.ec2.connect_to_region(self.region)
-
-            if self.verbose:
-                self.log.info('Established connection to EC2')
+            self.log.info('Established connection to EC2')
         except Exception, e:
             self.log.error(str(e))
             raise e

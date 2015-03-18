@@ -15,15 +15,14 @@ class MongoDataWarehousingNode(MongoReplicaSetMember):
     CHEF_RUNLIST = ['role[RoleMongo]']
     CHEF_MONGODB_TYPE = 'data_warehousing'
 
-    def __init__(self, dry = None, verbose = None, instance_type = None,
-                    groupe = None, type_ = None, environment = None, ami = None,
-                    region = None, role = None, keypair = None,
-                    availability_zone = None, security_groups = None,
-                    block_devices = None, chef_path = None, replica_set = None,
+    def __init__(self, instance_type = None, group = None, type_ = None,
+                    environment = None, ami = None, region = None, role = None,
+                    keypair = None, availability_zone = None,
+                    security_groups = None, block_devices = None,
+                    chef_path = None, replica_set = None,
                     data_volume_size = None):
 
-        super(MongoDataWarehousingNode, self).__init__(dry, verbose,
-                                                        instance_type,
+        super(MongoDataWarehousingNode, self).__init__(instance_type,
                                                         group, type_,
                                                         environment,  ami,
                                                         region, role, keypair,
