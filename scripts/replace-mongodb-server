@@ -1,0 +1,77 @@
+import os
+import click
+import sys
+from tyr.servers.mongo import MongoDataNode
+
+def clear():
+
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+def exit(code):
+
+    print '\nExiting.'
+    sys.exit(code)
+
+def confirm():
+
+    response = ''
+
+    while response != 'y' and response != 'n':
+        response = raw_input('\nContinue? (y/n) ')
+
+    if response == 'y': return True
+    elif response == 'n': exit(1)
+
+def launch_server(environment, group, instance_type, availability_zone,
+                    replica_set, data_volume_size, data_volume_iops,
+                    mongodb_package_version):
+
+    clear()
+
+    print 'We\'re going to create a server with the following properties:\n'
+    print 'Environment: {environment}'.format(environment = environment)
+    print 'Group: {group}'.format(group = group)
+    print 'Instance Type: {instance_type}'.format(instance_type = instance_type)
+    print 'Availability Zone: {zone}'.format(zone = availability_zone)
+    print 'Replica Set: {replica_set}'.format(replica_set = replica_set)
+    print 'Data Volume Size: {size}'.format(size = data_volume_size)
+    print 'Data Volume IOPS: {iops}'.format(iops = data_volume_iops)
+    print 'MongoDB Package Version: {version}'.format(
+                                            version = mongodb_package_version)
+
+    if confirm():
+
+        print '\n'
+
+        node = MongoDataNode(group = group, instance_type = instance_type,
+                                environment = environment,
+                                availability_zone = availability_zone,
+                                replica_set = replica_set,
+                                data_volume_size = data_volume_size,
+                                data_volume_iops = data_volume_iops,
+                                mongodb_version = mongodb_package_version)
+        node.autorun()
+
+@click.command()
+@click.option('--environment', default='stage',
+                type=click.Choice(['stage', 'prod']),
+                help='Server environment.')
+@click.option('--group', default='monolith', help='Server group.')
+@click.option('--instance-type', default='m3.medium', help='EC2 instance type.')
+@click.option('--availability-zone', default='c', help='EC2 availability zone.')
+@click.option('--replica-set', default=1, help='MongoDB replica set.')
+@click.option('--data-volume-size', default=400, help='Data volume size (GB).')
+@click.option('--data-volume-iops', default=3000, help='Data volume IOPS.')
+@click.option('--mongodb-package-version', default='2.4.13', help='MongoDB package version.')
+@click.option('--decommission', help='Hostname of the server to replace.')
+def replace_server(environment, group, instance_type, availability_zone,
+                    replica_set, data_volume_size, data_volume_iops,
+                    mongodb_package_version, decommission):
+
+    node = launch_server(environment, group, instance_type, availability_zone,
+                    replica_set, data_volume_size, data_volume_iops,
+                    mongodb_package_version)
+
+if __name__ == '__main__':
+
+    replace_server()
