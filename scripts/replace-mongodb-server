@@ -52,6 +52,27 @@ def launch_server(environment, group, instance_type, availability_zone,
                                 mongodb_version = mongodb_package_version)
         node.autorun()
 
+        clear()
+
+        print 'Awesome work, {user}!'.format(user = os.getlogin())
+
+        print '\nNow we\'re going to SSH into the server and wait until chef client has finished. Ready?'
+
+        confirm()
+
+        print '\n'
+
+        baked = node.baked()
+
+        if baked:
+
+            return node
+
+        else:
+
+            print '\nIt looks like chef failed to finish running.'
+            exit()
+
 @click.command()
 @click.option('--environment', default='stage',
                 type=click.Choice(['stage', 'prod']),
