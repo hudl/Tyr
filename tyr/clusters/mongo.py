@@ -20,7 +20,7 @@ class MongoCluster(object):
                     keypair = None, chef_path = None, replica_set = None,
                     security_groups = None, block_devices = None,
                     data_volume_size=None, data_volume_iops=None,
-                    data_nodes=None, role_policies=None, mongodb_version=None):
+                    data_nodes=None, mongodb_version=None):
 
         self.nodes = []
 
@@ -39,7 +39,6 @@ class MongoCluster(object):
         self.data_volume_size = data_volume_size
         self.data_volume_iops = data_volume_iops
         self.data_nodes = data_nodes
-        self.role_policies = role_policies
         self.mongodb_version = mongodb_version
 
     def provision(self):
@@ -70,7 +69,6 @@ class MongoCluster(object):
                                     availability_zone = zones[i],
                                     data_volume_size = self.data_volume_size,
                                     data_volume_iops = self.data_volume_iops,
-                                    role_policies = role_policies,
                                     mongodb_version = mongodb_version)
 
             node.autorun()
@@ -91,7 +89,6 @@ class MongoCluster(object):
                                     security_groups = self.security_groups,
                                     block_devices = self.block_devices,
                                     availability_zone = zones[i+1],
-                                    role_policies = role_policies,
                                     mongodb_version = mongodb_version)
 
             node.autorun()
