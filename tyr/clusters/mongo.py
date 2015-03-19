@@ -69,7 +69,7 @@ class MongoCluster(object):
                                     availability_zone = zones[i],
                                     data_volume_size = self.data_volume_size,
                                     data_volume_iops = self.data_volume_iops,
-                                    mongodb_version = mongodb_version)
+                                    mongodb_version = self.mongodb_version)
 
             node.autorun()
 
@@ -89,7 +89,7 @@ class MongoCluster(object):
                                     security_groups = self.security_groups,
                                     block_devices = self.block_devices,
                                     availability_zone = zones[i+1],
-                                    mongodb_version = mongodb_version)
+                                    mongodb_version = self.mongodb_version)
 
             node.autorun()
 
