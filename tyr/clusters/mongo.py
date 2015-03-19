@@ -1,5 +1,5 @@
 import logging
-from tyr.servers import MongoDataNode, MongoArbiterNode
+from tyr.servers.mongo import MongoDataNode, MongoArbiterNode
 import time
 import json
 
