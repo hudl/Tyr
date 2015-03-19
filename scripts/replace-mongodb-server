@@ -2,6 +2,9 @@ import os
 import click
 import sys
 from tyr.servers.mongo import MongoDataNode
+import json
+import time
+from paramiko.client import AutoAddPolicy, SSHClient
 
 def clear():
 
@@ -21,6 +24,66 @@ def confirm():
 
     if response == 'y': return True
     elif response == 'n': exit(1)
+
+def run_mongo_command(address, command):
+
+    connection = SSHClient()
+    connection.set_missing_host_key_policy(AutoAddPolicy())
+
+    while True:
+        try:
+            connection.connect(address,
+                                username = 'ec2-user')
+            break
+        except Exception:
+                print 'Unable to establish SSH connection'
+                time.sleep(10)
+
+    print 'Successfully established SSH connection'
+
+    template = 'mongo --port 27018 --eval "JSON.stringify({command})"'
+    command = template.format(command = command)
+
+    stdin, stdout, sterr = connection.exec_command(command)
+
+    output = stdout.read()
+
+    try:
+        return json.loads(output.split('\n')[2])
+    except ValueError:
+        return output.split('\n')[2]
+
+def find_primary(address):
+
+    isMaster = run_mongo_command(address, 'db.isMaster()')
+
+    if isMaster['ok'] != 1:
+
+        print 'There was a problem running db.isMaster() on {host}'.format(
+                                                            host = address)
+
+        exit()
+
+    primary = isMaster['primary'].split(':')[0]
+
+    return primary
+
+def add_server(server, primary):
+
+    command = 'rs.add(\'{node}:27018\')'.format(node = server)
+
+    added = run_mongo_command(primary, command)
+
+    if added['ok'] != 1:
+
+        print 'There was a problem running "{command}" on {host}'.format(
+                                                            command = command,
+                                                            host = primary)
+        exit()
+
+    else:
+
+        return True
 
 def launch_server(environment, group, instance_type, availability_zone,
                     replica_set, data_volume_size, data_volume_iops,
@@ -73,9 +136,156 @@ def launch_server(environment, group, instance_type, availability_zone,
             print '\nIt looks like chef failed to finish running.'
             exit()
 
+def set_maintenance_mode(node):
+
+    clear()
+
+    print 'The next step is to put the server into maintenance mode.'
+    print 'You\'ll be doing this in StackDriver'
+    print 'This information should help you:\n'
+
+    print 'Instance Hostname: {hostname}'.format(hostname = node.hostname)
+    print 'Instance ID: {id_}'.format(id_ = node.instance.id)
+
+    print '\nContinue when the server is in maintenance mode.'
+
+    confirm()
+
+def add_to_replica_set(node, address):
+
+    clear()
+
+    print 'Now we\'re going to add the new server to the replica set.'
+
+    confirm()
+
+    primary = find_primary(address)
+
+    if add_server(node.hostname, primary):
+
+        print '\nThe server has been added to the replica set. Onto the next step...'
+
+        confirm()
+
+def remove_arbiter_from_replica_set(address):
+
+    clear()
+
+    print 'In this part we\'ll be be removing the arbiter, if it exists, from the replica set.'
+
+    status = run_mongo_command(address, 'rs.status()')
+
+    if status['ok'] != 1:
+
+        print 'There was a problem getting the replica set status'
+        exit()
+
+    arbiter = ''
+
+    for member in status['members']:
+
+        if member['stateStr'] == 'ARBITER':
+            arbiter = member['name'].split(':')[0]
+            break
+
+    if arbiter == '':
+
+        print 'We couldn\'t find an arbiter. Skip arbiter removal?'
+
+        confirm()
+
+        return ''
+
+    print 'It looks like the arbiter is {arbiter}.'.format(arbiter = arbiter)
+
+    confirm()
+
+    primary = find_primary(address)
+    command = 'rs.remove("{arbiter}")'.format(arbiter = arbiter)
+
+    remove = run_mongo_command(primary, command)
+
+    return arbiter.split(':')[0]
+
+def wait_for_sync(node):
+
+    clear()
+
+    print 'This next step is pretty simple - wait for the server to finish syncing.'
+    print 'We\'ll check the status every ten minutes and let you know when it\'s ready.'
+
+    confirm()
+
+    while True:
+
+        status = run_mongo_command(node.instance.public_dns_name, 'rs.status()')
+
+        if status['ok'] != 1:
+
+            print 'There was a problem getting the replica set status'
+            exit()
+
+        state = ''
+
+        for member in status['members']:
+            if member['self']:
+                state = member['stateStr']
+                break
+
+        if state == 'SECONDARY':
+            break
+
+        print 'Not finished yet...'
+        time.sleep(600)
+
+    print '\nLooks like the server finished syncing. Awesome work {user}!'.format(
+                                                        user = os.getlogin())
+
+    confirm()
+
+def add_arbiter_to_replica_set(address, arbiter):
+
+    clear()
+
+    print 'In this part we\'ll be re-adding the arbiter to the replica set.'
+
+    confirm()
+
+
+    primary = find_primary(address)
+    command = 'rs.addArb("{arbiter}")'.format(arbiter = arbiter)
+
+    add = run_mongo_command(primary, command)
+
+    if remove['ok'] != 1:
+
+        print 'There was a problem removing the arbiter'
+        exit()
+
+    print 'Awesome, the arbiter is back in the replica set!'
+
+    confirm()
+
+def remove_decommissioned_node(address):
+
+    clear()
+
+    print 'Now we\'re going to remove the decommissioned node from the replica set. Almost done!'
+
+    confirm()
+
+    primary = find_primary(address)
+    command = 'rs.remove("{address}")'.format(address = address)
+
+    run_mongo_command(primary, command)
+
+    print 'The server has been removed.'
+
+    confirm()
+
 @click.command()
 @click.option('--environment', default='stage',
-                type=click.Choice(['stage', 'prod']),
+                type=click.Choice(['test', 'stage', 'prod']),
                 help='Server environment.')
 @click.option('--group', default='monolith', help='Server group.')
 @click.option('--instance-type', default='m3.medium', help='EC2 instance type.')
@@ -92,6 +302,20 @@ def replace_server(environment, group, instance_type, availability_zone,
     node = launch_server(environment, group, instance_type, availability_zone,
                     replica_set, data_volume_size, data_volume_iops,
                     mongodb_package_version)
+
+    set_maintenance_mode(node)
+
+    add_to_replica_set(node, decommission)
+
+    arbiter = remove_arbiter_from_replica_set(decommission)
+
+    wait_for_sync(node)
+
+    if arbiter != '':
+
+        add_arbiter_to_replica_set(decommission, arbiter)
+
+    remove_decommissioned_node(decommission)
 
 if __name__ == '__main__':
 
