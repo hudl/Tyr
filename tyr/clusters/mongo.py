@@ -57,7 +57,7 @@ class MongoCluster(object):
 
         for i in range(self.data_nodes):
 
-            node = MongoDataNode(group = self.group, server_type = self.server_type,,
+            node = MongoDataNode(group = self.group, server_type = self.server_type,
                                     instance_type = self.instance_type,
                                     environment = self.environment,
                                     ami = self.ami, region = self.region,
