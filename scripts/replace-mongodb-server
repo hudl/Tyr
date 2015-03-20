@@ -243,9 +243,12 @@ def wait_for_sync(node):
         state = ''
 
         for member in status['members']:
-            if member['self']:
-                state = member['stateStr']
-                break
+            try:
+                if member['self']:
+                    state = member['stateStr']
+                    break
+            except KeyError:
+                pass
 
         if state == 'SECONDARY':
             break
