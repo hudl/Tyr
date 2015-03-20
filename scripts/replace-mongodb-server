@@ -269,7 +269,7 @@ def add_arbiter_to_replica_set(replica_set, arbiter):
 
     confirm()
 
-    replica_set.add_member(arbiter)
+    replica_set.add_member(arbiter, arbiter=True)
 
     print 'Awesome, the arbiter is back in the replica set!'
 
