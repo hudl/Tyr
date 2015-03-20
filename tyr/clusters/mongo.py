@@ -133,8 +133,13 @@ class MongoCluster(object):
         self.provision()
         if self.baked():
             self.initiate()
+
             while True:
-                if len(self.status()['members']) > 0:
-                    if self.status()['members'][0]['stateStr'] == 'PRIMARY':
-                        break
+                try:
+                    if len(self.status()['members']) > 0:
+                        if self.status()['members'][0]['stateStr'] == 'PRIMARY':
+                            break
+                except KeyError:
+                    pass
+
             self.add_all()
