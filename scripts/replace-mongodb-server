@@ -64,6 +64,16 @@ class ReplicaSet(object):
 
         return arbiter
 
+    def failover(self):
+
+        member = self.primary
+
+        run_mongo_command(self.primary, 'rs.stepDown()')
+
+        time.sleep(120)
+
+        self.determine_primary(member)
+
     def add_member(self, address, arbiter=False):
 
         name = '{address}:27018'.format(address = address)
