@@ -597,8 +597,8 @@ named {name}""".format(path = d['path'], name = d['name']))
 
         while True:
             try:
-                connection.connect(self.hostname,
-                        username = 'ec2-user')
+                connection.connect(self.instance.public_dns_name,
+                                    username = 'ec2-user')
                 break
             except Exception:
                 self.log.warn('Unable to establish SSH connection')
