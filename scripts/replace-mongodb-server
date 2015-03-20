@@ -337,6 +337,34 @@ def replace_server(environment, group, instance_type, availability_zone,
 
         add_arbiter_to_replica_set(replica_set, arbiter)
 
+    if replica_set.primary == decommission:
+
+        print 'The server you want to replace is the primary.'
+        print 'The replica set will need to fail over.'
+
+        print '\nHow should we proceed?'
+        print '(a)utomatic failover'
+        print '(m)anual failover'
+        print '(q)uit'
+
+        choice = raw_input('\nChoice: ')
+
+        if choice.lower() == 'a':
+
+            replica_set.failover()
+
+        elif choice.lower() == 'm':
+
+            print '\n Continue once the primary has stepped down.'
+
+            confirm()
+
+            replica_set.determine_primary()
+
+        else:
+
+            exit()
+
     remove_decommissioned_node(replica_set, decommission)
 
 if __name__ == '__main__':
