@@ -316,6 +316,27 @@ def remove_decommissioned_node(replica_set, decommission):
 
     confirm()
 
+def terminate_decommissioned_node(address):
+
+    clear()
+
+    command = 'curl http://169.254.169.254/latest/meta-data/instance-id'
+
+    instance_id = run_command(address, command)
+
+    print 'Final step - terminating the old instance - {instance_id}.'.format(
+                                                    instance_id = instance_id)
+
+    confirm()
+
+    conn = boto.ec2.connect_to_region('us-east-1')
+
+    response = conn.terminate_instances(instance_ids=[instance_id])
+
+    if instance_id in response:
+
+        print 'Successfully terminated the instance!'
+
 @click.command()
 @click.option('--environment', default='stage',
                 type=click.Choice(['test', 'stage', 'prod']),
@@ -388,6 +409,7 @@ def replace_server(environment, group, instance_type, availability_zone,
 
     if replace:
         remove_decommissioned_node(replica_set, member)
+        terminate_decommissioned_node(member)
 
 if __name__ == '__main__':
 
