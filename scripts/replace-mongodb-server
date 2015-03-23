@@ -201,7 +201,7 @@ def launch_server(environment, group, instance_type, availability_zone,
         else:
 
             print '\nIt looks like chef failed to finish running.'
-            exit()
+            exit(1)
 
 def set_maintenance_mode(node):
 
@@ -263,7 +263,7 @@ def wait_for_sync(node):
         if status['ok'] != 1:
 
             print 'There was a problem getting the replica set status'
-            exit()
+            exit(1)
 
         state = ''
 
@@ -378,7 +378,7 @@ def replace_server(environment, group, instance_type, availability_zone,
 
         else:
 
-            exit()
+            exit(1)
 
     remove_decommissioned_node(replica_set, decommission)
 
