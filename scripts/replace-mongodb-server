@@ -17,6 +17,8 @@ def exit(code):
 
 def confirm():
 
+    print '\a'
+
     response = ''
 
     while response != 'y' and response != 'n':
