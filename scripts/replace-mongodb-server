@@ -109,7 +109,7 @@ class ReplicaSet(object):
             raise Exception('Failed to remove the member:\n{error}'.format(
                                                             error = response))
 
-def run_mongo_command(address, command):
+def run_command(address, command):
 
     connection = SSHClient()
     connection.set_missing_host_key_policy(AutoAddPolicy())
@@ -125,17 +125,26 @@ def run_mongo_command(address, command):
 
     print 'Successfully established SSH connection'
 
-    template = 'mongo --port 27018 --eval "JSON.stringify({command})"'
-    command = template.format(command = command)
-
     stdin, stdout, sterr = connection.exec_command(command)
 
-    output = stdout.read()
+    return stdout.read()
 
     try:
         return json.loads(output.split('\n')[2])
     except ValueError:
         return output.split('\n')[2]
+
+def run_mongo_command(address, command):
+
+    template = 'mongo --port 27018 --eval "JSON.stringify({command})"'
+    command = template.format(command = command)
+
+    response = run_command(address, command)
+
+    try:
+        return json.loads(response.split('\n')[2])
+    except ValueError:
+        return response
 
 def launch_server(environment, group, instance_type, availability_zone,
                     replica_set, data_volume_size, data_volume_iops,
