@@ -88,7 +88,7 @@ class ReplicaSet(object):
         if response['ok'] == 0:
             raise Exception(response['errmsg'])
 
-    def remove_member(self, address):
+    def remove_member(self, address, arbiter=False):
 
         name = '{address}:27018'.format(address = address)
 
@@ -108,6 +108,12 @@ class ReplicaSet(object):
         if isMember:
             raise Exception('Failed to remove the member:\n{error}'.format(
                                                             error = response))
+
+        if arbiter:
+
+            run_command(address, 'sudo service mongod stop')
+            run_command(address, 'sudo rm -rf /volr/*')
+            run_command(address, 'sudo service mongod start')
 
 def run_command(address, command):
 
@@ -226,16 +232,16 @@ def add_to_replica_set(replica_set, node):
 
     confirm()
 
-def remove_arbiter_from_replica_set(replica_set, arbiter):
+def remove_arbiter_from_replica_set(replica_set, address):
 
     clear()
 
     print 'In this part we\'ll be be removing the arbiter, from the replica set.'
-    print 'We\'re using {arbiter} as the arbiter'.format(arbiter = arbiter)
+    print 'We\'re using {address} as the arbiter'.format(address = address)
 
     confirm()
 
-    replica_set.remove_member(arbiter)
+    replica_set.remove_member(address, arbiter=True)
 
     print 'The arbiter has been successfully removed. Great job!'
 
