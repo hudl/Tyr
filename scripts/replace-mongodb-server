@@ -327,10 +327,14 @@ def remove_decommissioned_node(replica_set, decommission):
 @click.option('--data-volume-size', default=400, help='Data volume size (GB).')
 @click.option('--data-volume-iops', default=3000, help='Data volume IOPS.')
 @click.option('--mongodb-package-version', default='2.4.13', help='MongoDB package version.')
-@click.option('--decommission', help='Hostname of the server to replace.')
+@click.option('--member', help='Hostname of a server in the replica set')
+@click.option('--replace', is_flag=True, help='Replace existing member')
 def replace_server(environment, group, instance_type, availability_zone,
                     replica_set, data_volume_size, data_volume_iops,
-                    mongodb_package_version, decommission):
+                    mongodb_package_version, member, replace):
+
+    print member
+    print replace
 
     node = launch_server(environment, group, instance_type, availability_zone,
                     replica_set, data_volume_size, data_volume_iops,
@@ -338,7 +342,7 @@ def replace_server(environment, group, instance_type, availability_zone,
 
     set_maintenance_mode(node)
 
-    replica_set = ReplicaSet(decommission)
+    replica_set = ReplicaSet(member)
 
     add_to_replica_set(replica_set, node)
 
@@ -354,7 +358,7 @@ def replace_server(environment, group, instance_type, availability_zone,
 
         add_arbiter_to_replica_set(replica_set, arbiter)
 
-    if replica_set.primary == decommission:
+    if replica_set.primary == member:
 
         print 'The server you want to replace is the primary.'
         print 'The replica set will need to fail over.'
@@ -382,7 +386,8 @@ def replace_server(environment, group, instance_type, availability_zone,
 
             exit(1)
 
-    remove_decommissioned_node(replica_set, decommission)
+    if replace:
+        remove_decommissioned_node(replica_set, member)
 
 if __name__ == '__main__':
 
