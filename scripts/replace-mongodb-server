@@ -5,6 +5,8 @@ from tyr.servers.mongo import MongoDataNode
 import json
 import time
 from paramiko.client import AutoAddPolicy, SSHClient
+import requests
+import boto.ec2
 
 def clear():
 
@@ -223,18 +225,102 @@ def launch_server(environment, group, instance_type, availability_zone,
             print '\nIt looks like chef failed to finish running.'
             exit(1)
 
-def set_maintenance_mode(node):
+def registered_in_stackdriver(stackdriver_username, stackdriver_api_key, instance_id):
+
+    headers = headers = {
+            'x-stackdriver-apikey': stackdriver_api_key,
+            'Content-Type': 'application/json'
+    }
+
+    template = 'https://api.stackdriver.com/v0.2/instances/{id_}'
+
+    endpoint = template.format(id_ = instance_id)
+
+    r = requests.get(endpoint, headers=headers)
+
+    return r.status_code != 404
+
+def set_maintenance_mode(stackdriver_username, stackdriver_api_key, instance_id):
 
     clear()
 
-    print 'The next step is to put the server into maintenance mode.'
-    print 'You\'ll be doing this in StackDriver'
-    print 'This information should help you:\n'
+    print 'The next step is to put the server into maintenance mode in StackDriver.'
 
-    print 'Instance Hostname: {hostname}'.format(hostname = node.hostname)
-    print 'Instance ID: {id_}'.format(id_ = node.instance.id)
+    confirm()
 
-    print '\nContinue when the server is in maintenance mode.'
+    while not registered_in_stackdriver(stackdriver_username,
+                                        stackdriver_api_key, instance_id):
+
+        print 'Not yet listed in Stackdriver...'
+        time.sleep(10)
+
+    headers = {
+        'x-stackdriver-apikey': stackdriver_api_key,
+        'Content-Type': 'application/json'
+    }
+
+    template = 'https://api.stackdriver.com/v0.2/instances/{id_}/maintenance/'
+    endpoint = template.format(id_ = instance_id)
+
+    body = {
+        'username': stackdriver_username,
+        'reason': "Waiting for MongoDB node to finish syncing.",
+        'maintenance': True
+    }
+
+    data = json.dumps(body)
+
+    r = requests.put(endpoint, data=data, headers=headers)
+
+    if r.status_code != 200:
+
+        print 'Failed to put the node into maintenance mode. Received code {code}'.format(
+                                                    code = r.status_code)
+
+        exit(1)
+
+    else:
+
+        print 'Placed the node in maintenance mode.'
+
+    confirm()
+
+def unset_maintenance_mode(stackdriver_username, stackdriver_api_key, instance_id):
+
+    clear()
+
+    print 'The next step is to take the server out off maintenance mode in StackDriver.'
+
+    confirm()
+
+    headers = {
+        'x-stackdriver-apikey': stackdriver_api_key,
+        'Content-Type': 'application/json'
+    }
+
+    template = 'https://api.stackdriver.com/v0.2/instances/{id_}/maintenance/'
+    endpoint = template.format(id_ = instance_id)
+
+    body = {
+        'username': stackdriver_username,
+        'reason': "MongoDB node finished syncing.",
+        'maintenance': False
+    }
+
+    data = json.dumps(body)
+
+    r = requests.put(endpoint, data=data, headers=headers)
+
+    if r.status_code != 200:
+
+        print 'Failed to remove the node from maintenance mode. Received code {code}'.format(
+                                                    code = r.status_code)
+
+        exit(1)
+
+    else:
+
+        print 'Removed the node from maintenance mode.'
 
     confirm()
 
@@ -375,14 +461,26 @@ def replace_server(environment, group, instance_type, availability_zone,
                     replica_set, data_volume_size, data_volume_iops,
                     mongodb_package_version, member, replace, node_type):
 
-    print member
-    print replace
+    stackdriver_api_key = os.environ.get('STACKDRIVER_API_KEY')
+
+    if stackdriver_api_key is None:
+
+        print 'The environment variable \'STACKDRIVER_API_KEY\' isn\'t set.'
+        exit(1)
+
+    stackdriver_username = os.environ.get('STACKDRIVER_USERNAME')
+
+    if stackdriver_username is None:
+
+        print 'The environment variable \'STACKDRIVER_USERNAME\' isn\'t set.'
+        exit(1)
 
     node = launch_server(environment, group, instance_type, availability_zone,
-                    replica_set, data_volume_size, data_volume_iops,
-                    mongodb_package_version, node_type)
+                            replica_set, data_volume_size, data_volume_iops,
+                            mongodb_package_version, node_type)
 
-    set_maintenance_mode(node)
+    set_maintenance_mode(stackdriver_username, stackdriver_api_key,
+                            node.instance.id)
 
     replica_set = ReplicaSet(member)
 
@@ -395,6 +493,9 @@ def replace_server(environment, group, instance_type, availability_zone,
         remove_arbiter_from_replica_set(replica_set, arbiter)
 
     wait_for_sync(node)
+
+    unset_maintenance_mode(stackdriver_username, stackdriver_api_key,
+                            node.instance.id)
 
     if arbiter is not None:
 
