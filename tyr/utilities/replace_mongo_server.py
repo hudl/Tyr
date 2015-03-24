@@ -158,7 +158,7 @@ def run_mongo_command(address, command):
 
 def launch_server(environment, group, instance_type, availability_zone,
                     replica_set, data_volume_size, data_volume_iops,
-                    mongodb_package_version, node_type):
+                    mongodb_package_version, node_type, interactive):
 
     clear()
 
@@ -179,51 +179,53 @@ def launch_server(environment, group, instance_type, availability_zone,
     print 'MongoDB Package Version: {version}'.format(
                                             version = mongodb_package_version)
 
-    if confirm():
-
-        print '\n'
-
-        node = None
-
-        if node_type == 'data':
-            node = MongoDataNode(group = group, instance_type = instance_type,
-                                    environment = environment,
-                                    availability_zone = availability_zone,
-                                    replica_set = replica_set,
-                                    data_volume_size = data_volume_size,
-                                    data_volume_iops = data_volume_iops,
-                                    mongodb_version = mongodb_package_version)
-
-        elif node_type == 'datawarehousing':
-            node = MongoDataWarehousingNode(group = group, instance_type = instance_type,
-                                    environment = environment,
-                                    availability_zone = availability_zone,
-                                    replica_set = replica_set,
-                                    data_volume_size = data_volume_size,
-                                    mongodb_version = mongodb_package_version)
-
-        node.autorun()
-
-        clear()
-
-        print 'Awesome work, {user}!'.format(user = os.getlogin())
-
-        print '\nNow we\'re going to SSH into the server and wait until chef client has finished. Ready?'
-
+    if interactive:
         confirm()
 
-        print '\n'
+    print '\n'
 
-        baked = node.baked()
+    node = None
 
-        if baked:
+    if node_type == 'data':
+        node = MongoDataNode(group = group, instance_type = instance_type,
+                                environment = environment,
+                                availability_zone = availability_zone,
+                                replica_set = replica_set,
+                                data_volume_size = data_volume_size,
+                                data_volume_iops = data_volume_iops,
+                                mongodb_version = mongodb_package_version)
 
-            return node
+    elif node_type == 'datawarehousing':
+        node = MongoDataWarehousingNode(group = group, instance_type = instance_type,
+                                environment = environment,
+                                availability_zone = availability_zone,
+                                replica_set = replica_set,
+                                data_volume_size = data_volume_size,
+                                mongodb_version = mongodb_package_version)
 
-        else:
+    node.autorun()
 
-            print '\nIt looks like chef failed to finish running.'
-            exit(1)
+    clear()
+
+    print 'Awesome work, {user}!'.format(user = os.getlogin())
+
+    print '\nNow we\'re going to SSH into the server and wait until chef client has finished. Ready?'
+
+    if interactive:
+        confirm()
+
+    print '\n'
+
+    baked = node.baked()
+
+    if baked:
+
+        return node
+
+    else:
+
+        print '\nIt looks like chef failed to finish running.'
+        exit(1)
 
 def registered_in_stackdriver(stackdriver_username, stackdriver_api_key, instance_id):
 
@@ -240,13 +242,14 @@ def registered_in_stackdriver(stackdriver_username, stackdriver_api_key, instanc
 
     return r.status_code != 404
 
-def set_maintenance_mode(stackdriver_username, stackdriver_api_key, instance_id):
+def set_maintenance_mode(stackdriver_username, stackdriver_api_key, instance_id, interactive):
 
     clear()
 
     print 'The next step is to put the server into maintenance mode in StackDriver.'
 
-    confirm()
+    if interactive:
+        confirm()
 
     while not registered_in_stackdriver(stackdriver_username,
                                         stackdriver_api_key, instance_id):
@@ -283,15 +286,17 @@ def set_maintenance_mode(stackdriver_username, stackdriver_api_key, instance_id)
 
         print 'Placed the node in maintenance mode.'
 
-    confirm()
+    if interactive:
+        confirm()
 
-def unset_maintenance_mode(stackdriver_username, stackdriver_api_key, instance_id):
+def unset_maintenance_mode(stackdriver_username, stackdriver_api_key, instance_id, interactive):
 
     clear()
 
     print 'The next step is to take the server out off maintenance mode in StackDriver.'
 
-    confirm()
+    if interactive:
+        confirm()
 
     headers = {
         'x-stackdriver-apikey': stackdriver_api_key,
@@ -322,45 +327,51 @@ def unset_maintenance_mode(stackdriver_username, stackdriver_api_key, instance_i
 
         print 'Removed the node from maintenance mode.'
 
-    confirm()
+    if interactive:
+        confirm()
 
-def add_to_replica_set(replica_set, node):
+def add_to_replica_set(replica_set, node, interactive):
 
     clear()
 
     print 'Now we\'re going to add the new server to the replica set.'
 
-    confirm()
+    if interactive:
+        confirm()
 
     replica_set.add_member(node.hostname)
 
     print '\nThe server has been added to the replica set. Onto the next step...'
 
-    confirm()
+    if interactive:
+        confirm()
 
-def remove_arbiter_from_replica_set(replica_set, address):
+def remove_arbiter_from_replica_set(replica_set, address, interactive):
 
     clear()
 
     print 'In this part we\'ll be be removing the arbiter, from the replica set.'
     print 'We\'re using {address} as the arbiter'.format(address = address)
 
-    confirm()
+    if interactive:
+        confirm()
 
     replica_set.remove_member(address, arbiter=True)
 
     print 'The arbiter has been successfully removed. Great job!'
 
-    confirm()
+    if interactive:
+        confirm()
 
-def wait_for_sync(node):
+def wait_for_sync(node, interactive):
 
     clear()
 
     print 'This next step is pretty simple - wait for the server to finish syncing.'
     print 'We\'ll check the status every ten minutes and let you know when it\'s ready.'
 
-    confirm()
+    if interactive:
+        confirm()
 
     while True:
 
@@ -390,37 +401,42 @@ def wait_for_sync(node):
     print '\nLooks like the server finished syncing. Awesome work {user}!'.format(
                                                         user = os.getlogin())
 
-    confirm()
+    if interactive:
+        confirm()
 
-def add_arbiter_to_replica_set(replica_set, arbiter):
+def add_arbiter_to_replica_set(replica_set, arbiter, interactive):
 
     clear()
 
     print 'In this part we\'ll be re-adding the arbiter to the replica set.'
 
-    confirm()
+    if interactive:
+        confirm()
 
     replica_set.add_member(arbiter, arbiter=True)
 
     print 'Awesome, the arbiter is back in the replica set!'
 
-    confirm()
+    if interactive:
+        confirm()
 
-def remove_decommissioned_node(replica_set, decommission):
+def remove_decommissioned_node(replica_set, decommission, interactive):
 
     clear()
 
     print 'Now we\'re going to remove the decommissioned node from the replica set. Almost done!'
 
-    confirm()
+    if interactive:
+        confirm()
 
     replica_set.remove_member(decommission)
 
     print 'The server has been removed.'
 
-    confirm()
+    if interactive:
+        confirm()
 
-def terminate_decommissioned_node(address):
+def terminate_decommissioned_node(address, interactive):
 
     clear()
 
@@ -431,7 +447,8 @@ def terminate_decommissioned_node(address):
     print 'Final step - terminating the old instance - {instance_id}.'.format(
                                                     instance_id = instance_id)
 
-    confirm()
+    if interactive:
+        confirm()
 
     conn = boto.ec2.connect_to_region('us-east-1')
 
@@ -457,9 +474,11 @@ def terminate_decommissioned_node(address):
 @click.option('--mongodb-package-version', default='2.4.13', help='MongoDB package version.')
 @click.option('--member', help='Hostname of a server in the replica set')
 @click.option('--replace', is_flag=True, help='Replace existing member')
+@click.option('--interactive', is_flag=True, help='Prompt user for feedback.')
 def replace_server(environment, group, instance_type, availability_zone,
                     replica_set, data_volume_size, data_volume_iops,
-                    mongodb_package_version, member, replace, node_type):
+                    mongodb_package_version, member, replace, node_type,
+                    interactive):
 
     stackdriver_api_key = os.environ.get('STACKDRIVER_API_KEY')
 
@@ -477,41 +496,49 @@ def replace_server(environment, group, instance_type, availability_zone,
 
     node = launch_server(environment, group, instance_type, availability_zone,
                             replica_set, data_volume_size, data_volume_iops,
-                            mongodb_package_version, node_type)
+                            mongodb_package_version, node_type, interactive)
 
     set_maintenance_mode(stackdriver_username, stackdriver_api_key,
-                            node.instance.id)
+                            node.instance.id, interactive)
 
     replica_set = ReplicaSet(member)
 
-    add_to_replica_set(replica_set, node)
+    add_to_replica_set(replica_set, node, interactive)
 
     arbiter = replica_set.arbiter
 
     if arbiter is not None:
 
-        remove_arbiter_from_replica_set(replica_set, arbiter)
+        remove_arbiter_from_replica_set(replica_set, arbiter, interactive)
 
-    wait_for_sync(node)
+    wait_for_sync(node, interactive)
 
     unset_maintenance_mode(stackdriver_username, stackdriver_api_key,
-                            node.instance.id)
+                            node.instance.id, interactive)
 
     if arbiter is not None:
 
-        add_arbiter_to_replica_set(replica_set, arbiter)
+        add_arbiter_to_replica_set(replica_set, arbiter, interactive)
 
     if replica_set.primary == member:
 
-        print 'The server you want to replace is the primary.'
-        print 'The replica set will need to fail over.'
+        choice = None
 
-        print '\nHow should we proceed?'
-        print '(a)utomatic failover'
-        print '(m)anual failover'
-        print '(q)uit'
+        if interactive:
 
-        choice = raw_input('\nChoice: ')
+            print 'The server you want to replace is the primary.'
+            print 'The replica set will need to fail over.'
+
+            print '\nHow should we proceed?'
+            print '(a)utomatic failover'
+            print '(m)anual failover'
+            print '(q)uit'
+
+            choice = raw_input('\nChoice: ')
+
+        else:
+
+            choice = 'a'
 
         if choice.lower() == 'a':
 
@@ -530,5 +557,5 @@ def replace_server(environment, group, instance_type, availability_zone,
             exit(1)
 
     if replace:
-        remove_decommissioned_node(replica_set, member)
-        terminate_decommissioned_node(member)
+        remove_decommissioned_node(replica_set, member, interactive)
+        terminate_decommissioned_node(member, interactive)
