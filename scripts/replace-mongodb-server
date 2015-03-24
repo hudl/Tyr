@@ -156,11 +156,17 @@ def run_mongo_command(address, command):
 
 def launch_server(environment, group, instance_type, availability_zone,
                     replica_set, data_volume_size, data_volume_iops,
-                    mongodb_package_version):
+                    mongodb_package_version, node_type):
 
     clear()
 
+    mongodb_node_type = 'MongoDB Data Node'
+
+    if node_type == 'datawarehousing':
+        mongodb_node_type = 'MongoDB Data Warehousing Node'
+
     print 'We\'re going to create a server with the following properties:\n'
+    print 'Node Type: {node_type}'.format(node_type = mongodb_node_type)
     print 'Environment: {environment}'.format(environment = environment)
     print 'Group: {group}'.format(group = group)
     print 'Instance Type: {instance_type}'.format(instance_type = instance_type)
@@ -175,13 +181,25 @@ def launch_server(environment, group, instance_type, availability_zone,
 
         print '\n'
 
-        node = MongoDataNode(group = group, instance_type = instance_type,
-                                environment = environment,
-                                availability_zone = availability_zone,
-                                replica_set = replica_set,
-                                data_volume_size = data_volume_size,
-                                data_volume_iops = data_volume_iops,
-                                mongodb_version = mongodb_package_version)
+        node = None
+
+        if node_type == 'data':
+            node = MongoDataNode(group = group, instance_type = instance_type,
+                                    environment = environment,
+                                    availability_zone = availability_zone,
+                                    replica_set = replica_set,
+                                    data_volume_size = data_volume_size,
+                                    data_volume_iops = data_volume_iops,
+                                    mongodb_version = mongodb_package_version)
+
+        elif node_type == 'datawarehousing':
+            node = MongoDataWarehousingNode(group = group, instance_type = instance_type,
+                                    environment = environment,
+                                    availability_zone = availability_zone,
+                                    replica_set = replica_set,
+                                    data_volume_size = data_volume_size,
+                                    mongodb_version = mongodb_package_version)
+
         node.autorun()
 
         clear()
@@ -342,6 +360,9 @@ def terminate_decommissioned_node(address):
                 type=click.Choice(['test', 'stage', 'prod']),
                 help='Server environment.')
 @click.option('--group', default='monolith', help='Server group.')
+@click.option('--node-type', default='data',
+                type=click.Choice(['data', 'datawarehousing']),
+                help='MongoDB node type.')
 @click.option('--instance-type', default='m3.medium', help='EC2 instance type.')
 @click.option('--availability-zone', default='c', help='EC2 availability zone.')
 @click.option('--replica-set', default=1, help='MongoDB replica set.')
@@ -352,14 +373,14 @@ def terminate_decommissioned_node(address):
 @click.option('--replace', is_flag=True, help='Replace existing member')
 def replace_server(environment, group, instance_type, availability_zone,
                     replica_set, data_volume_size, data_volume_iops,
-                    mongodb_package_version, member, replace):
+                    mongodb_package_version, member, replace, node_type):
 
     print member
     print replace
 
     node = launch_server(environment, group, instance_type, availability_zone,
                     replica_set, data_volume_size, data_volume_iops,
-                    mongodb_package_version)
+                    mongodb_package_version, node_type)
 
     set_maintenance_mode(node)
 
