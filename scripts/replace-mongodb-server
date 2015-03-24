@@ -1,5 +1,0 @@
-from tyr.utilities.replace_mongo_server import replace_server
-
-if __name__ == '__main__':
-
-    replace_server()
