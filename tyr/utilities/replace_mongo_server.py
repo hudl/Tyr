@@ -1,5 +1,4 @@
 import os
-import click
 import sys
 from tyr.servers.mongo import MongoDataNode
 import json
@@ -460,27 +459,6 @@ def terminate_decommissioned_node(address, interactive):
 
         print 'Successfully terminated the instance!'
 
-@click.command()
-@click.option('--environment', default='stage',
-                type=click.Choice(['test', 'stage', 'prod']),
-                help='Server environment.')
-@click.option('--group', default='monolith', help='Server group.')
-@click.option('--node-type', default='data',
-                type=click.Choice(['data', 'datawarehousing']),
-                help='MongoDB node type.')
-@click.option('--instance-type', default='m3.medium', help='EC2 instance type.')
-@click.option('--availability-zone', default='c', help='EC2 availability zone.')
-@click.option('--replica-set', default=1, help='MongoDB replica set.')
-@click.option('--data-volume-size', default=400, help='Data volume size (GB).')
-@click.option('--data-volume-iops', default=3000, help='Data volume IOPS.')
-@click.option('--mongodb-package-version', default='2.4.13', help='MongoDB package version.')
-@click.option('--member', help='Hostname of a server in the replica set')
-@click.option('--replace', is_flag=True, help='Replace existing member')
-@click.option('--interactive', is_flag=True, help='Prompt user for feedback.')
-def replace_server(environment, group, instance_type, availability_zone,
-                    replica_set, data_volume_size, data_volume_iops,
-                    mongodb_package_version, member, replace, node_type,
-                    interactive):
 
     stackdriver_api_key = os.environ.get('STACKDRIVER_API_KEY')
 
