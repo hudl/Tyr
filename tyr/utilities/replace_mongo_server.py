@@ -1,6 +1,6 @@
 import os
 import sys
-from tyr.servers.mongo import MongoDataNode
+from tyr.servers.mongo import MongoDataNode, MongoDataWarehousingNode, MongoArbiterNode
 import json
 import time
 from paramiko.client import AutoAddPolicy, SSHClient
@@ -202,6 +202,12 @@ def launch_server(environment, group, instance_type, availability_zone,
                                 availability_zone = availability_zone,
                                 replica_set = replica_set,
                                 data_volume_size = data_volume_size,
+                                mongodb_version = mongodb_package_version)
+    elif node_type == 'arbiter':
+        node = MongoArbiterNode(group = group, instance_type = instance_type,
+                                environment = environment,
+                                availability_zone = availability_zone,
+                                replica_set = replica_set,
                                 mongodb_version = mongodb_package_version)
 
     node.autorun()
@@ -470,6 +476,25 @@ def replace_server(environment = 'test', group = 'monolith',
 
         print 'An existing replica set member is required.'
         exit(1)
+
+    if node_type == 'arbiter':
+
+        node = launch_server(environment, group, instance_type, availability_zone,
+                                replica_set, data_volume_size, data_volume_iops,
+                                mongodb_package_version, node_type, interactive)
+
+        arbiter = replica_set.arbiter
+
+        if arbiter is not None:
+
+            remove_arbiter_from_replica_set(replica_set, arbiter, interactive)
+
+        add_arbiter_to_replica_set(replica_set, node.hostname, interactive)
+
+        if replace:
+            terminate_decommissioned_node(member, interactive)
+
+        return
 
     stackdriver_api_key = os.environ.get('STACKDRIVER_API_KEY')
 
