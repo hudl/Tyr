@@ -134,6 +134,8 @@ def run_command(address, command):
                 time.sleep(10)
 
     print 'Successfully established SSH connection'
+    print 'Running "{command}" on "{address}"'.format(command=command,
+                                                        address=address)
 
     stdin, stdout, sterr = connection.exec_command(command)
 
