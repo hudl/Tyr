@@ -575,3 +575,7 @@ def replace_server(environment = 'test', group = 'monolith',
     if replace:
         remove_decommissioned_node(replica_set, member, interactive)
         terminate_decommissioned_node(member, interactive)
+
+    print 'All done!'
+    print 'Here\'s the current state of the replica set:'
+    print json.dumps(replica_set.status(), indent=4, sort_keys=True)
