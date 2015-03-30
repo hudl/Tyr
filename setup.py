@@ -13,5 +13,8 @@ setup(
         'boto',
         'pyChef',
         'paramiko'
+    ],
+    scripts = [
+        'scripts/replace-mongodb-servers'
     ]
 )
