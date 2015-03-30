@@ -644,7 +644,7 @@ def replace_server(environment = 'test', group = 'monolith',
 
             confirm()
 
-            replica_set.determine_primary()
+            replica_set.determine_primary(member)
 
         else:
 
