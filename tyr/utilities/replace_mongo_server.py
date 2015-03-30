@@ -519,6 +519,84 @@ def replace_server(environment = 'test', group = 'monolith',
 
     replica_set = ReplicaSet(member)
 
+    if replica_set.primary[:2] == 'ip':
+
+        print 'The replica set\'s primary is {primary}'.format(
+                                                primary = replica_set.primary)
+
+        print 'We\'ll need to failover in order to continue.'
+
+        choice = None
+
+        if interactive:
+
+            print '\nHow should we proceed?'
+            print '(a)utomatic failover'
+            print '(m)anual failover'
+            print '(q)uit'
+
+            choice = raw_input('\nChoice: ')
+
+        else:
+
+            choice = 'a'
+
+        if choice.lower() == 'a':
+
+            conn = boto.ec2.connect_to_region('us-east-1')
+
+            components = replica_set.primary.split('-')
+            old_primary = replica_set.primary
+
+            private_ip = '.'.join(components[1], components[2], components[3],
+                                    components[4])
+
+            reserverations = conn.get_all_instances(
+                                    filters={'private-ip-address': private_ip})
+
+            instances = reservations[0].instances[0]
+
+            public_address = None
+
+            if 'Name' in instances.tags:
+
+                public_address = instance.tags['Name']
+
+                if environment == 'test':
+                    public_address += '.thorhudl.com'
+                elif environment == 'stage':
+                    public_address += '.app.staghudl.com'
+                elif environment == 'prod':
+                    public_address += '.app.hudl.com'
+
+            else:
+
+                public_address = instance.public_dns_name
+
+            run_mongo_command(public_address, 'rs.stepDown()')
+
+            time.sleep(120)
+
+            replica_set.determine_primary(member)
+
+            replica_set.remove_member(old_primary)
+
+            time.sleep(120)
+
+            replica_set.add_member(public_address)
+
+        elif choice.lower() == 'm':
+
+            print '\n Continue once the primary has stepped down.'
+
+            confirm()
+
+            replica_set.determine_primary(member)
+
+        else:
+
+            exit(1)
+
     add_to_replica_set(replica_set, node, interactive)
 
     arbiter = replica_set.arbiter
