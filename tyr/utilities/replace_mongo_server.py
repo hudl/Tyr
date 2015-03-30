@@ -159,7 +159,8 @@ def run_mongo_command(address, command):
 
 def launch_server(environment, group, instance_type, availability_zone,
                     replica_set, data_volume_size, data_volume_iops,
-                    mongodb_package_version, node_type, interactive):
+                    mongodb_package_version, node_type, interactive,
+                    replica_set_template):
 
     clear()
 
@@ -209,6 +210,9 @@ def launch_server(environment, group, instance_type, availability_zone,
                                 availability_zone = availability_zone,
                                 replica_set = replica_set,
                                 mongodb_version = mongodb_package_version)
+
+    if replica_set_template is not None:
+        node.REPLICA_SET_TEMPLATE = replica_set_template
 
     node.autorun()
 
@@ -470,7 +474,7 @@ def replace_server(environment = 'test', group = 'monolith',
                     replica_set = 1, data_volume_size = 400,
                     data_volume_iops = 2000, mongodb_package_version = '2.4.13',
                     member = None, replace = False, node_type = 'data',
-                    interactive = True):
+                    interactive = True, replica_set_template=None):
 
     if member is None:
 
@@ -481,7 +485,8 @@ def replace_server(environment = 'test', group = 'monolith',
 
         node = launch_server(environment, group, instance_type, availability_zone,
                                 replica_set, data_volume_size, data_volume_iops,
-                                mongodb_package_version, node_type, interactive)
+                                mongodb_package_version, node_type, interactive,
+                                replica_set_template)
 
         arbiter = replica_set.arbiter
 
