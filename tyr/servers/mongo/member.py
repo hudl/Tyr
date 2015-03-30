@@ -2,6 +2,8 @@ from node import MongoNode
 
 class MongoReplicaSetMember(MongoNode):
 
+    REPLICA_SET_TEMPLATE = '{group}-rs{set_}'
+
     def __init__(self, group = None, server_type = None, instance_type = None,
                     environment = None, ami = None, region = None, role = None,
                     keypair = None, availability_zone = None,
@@ -35,7 +37,7 @@ class MongoReplicaSetMember(MongoNode):
 
         with self.chef_api:
 
-            replica_set = '{group}-rs{set_}'.format(group = self.group,
+            replica_set = REPLICA_SET_TEMPLATE.format(group = self.group,
                                                     set_ = self.replica_set)
 
             self.chef_node.attributes.set_dotted(
