@@ -473,7 +473,7 @@ def terminate_decommissioned_node(address, interactive):
 
 def replace_server(environment = 'test', group = 'monolith',
                     instance_type = 'm3.medium', availability_zone = 'c',
-                    replica_set = 1, data_volume_size = 400,
+                    replica_set_index = 1, data_volume_size = 400,
                     data_volume_iops = 2000, mongodb_package_version = '2.4.13',
                     member = None, replace = False, node_type = 'data',
                     interactive = True, replica_set_template=None):
