@@ -514,8 +514,8 @@ def replace_server(environment = 'test', group = 'monolith',
             components = replica_set.primary.split('-')
             old_primary = replica_set.primary
 
-            private_ip = '.'.join(components[1], components[2], components[3],
-                                    components[4])
+            private_ip = '.'.join([components[1], components[2], components[3],
+                                    components[4]])
 
             reservations = conn.get_all_instances(
                                     filters={'private-ip-address': private_ip})
