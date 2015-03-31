@@ -392,8 +392,11 @@ def wait_for_sync(node, interactive):
 
         if status['ok'] != 1:
 
-            print 'There was a problem getting the replica set status'
-            exit(1)
+            print 'The replica set was not okay.'
+            print 'Trying again in 30 seconds'
+
+            time.sleep(30)
+            continue
 
         state = ''
 
