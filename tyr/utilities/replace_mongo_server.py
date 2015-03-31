@@ -176,6 +176,8 @@ def launch_server(environment, group, instance_type, availability_zone,
     print 'Instance Type: {instance_type}'.format(instance_type = instance_type)
     print 'Availability Zone: {zone}'.format(zone = availability_zone)
     print 'Replica Set: {replica_set}'.format(replica_set = replica_set)
+    print 'Replica Set Name: {replica_set_template}'.format(
+                                    replica_set_template = replica_set_template)
     print 'Data Volume Size: {size}'.format(size = data_volume_size)
     print 'Data Volume IOPS: {iops}'.format(iops = data_volume_iops)
     print 'MongoDB Package Version: {version}'.format(
