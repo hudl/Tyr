@@ -37,7 +37,7 @@ class MongoReplicaSetMember(MongoNode):
 
         with self.chef_api:
 
-            replica_set = REPLICA_SET_TEMPLATE.format(group = self.group,
+            replica_set = self.REPLICA_SET_TEMPLATE.format(group = self.group,
                                                     set_ = self.replica_set)
 
             self.chef_node.attributes.set_dotted(
