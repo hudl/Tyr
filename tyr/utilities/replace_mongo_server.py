@@ -517,14 +517,14 @@ def replace_server(environment = 'test', group = 'monolith',
             private_ip = '.'.join(components[1], components[2], components[3],
                                     components[4])
 
-            reserverations = conn.get_all_instances(
+            reservations = conn.get_all_instances(
                                     filters={'private-ip-address': private_ip})
 
-            instances = reservations[0].instances[0]
+            instance = reservations[0].instances[0]
 
             public_address = None
 
-            if 'Name' in instances.tags:
+            if 'Name' in instance.tags:
 
                 public_address = instance.tags['Name']
 
