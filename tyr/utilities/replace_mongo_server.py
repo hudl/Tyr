@@ -481,47 +481,6 @@ def replace_server(environment = 'test', group = 'monolith',
         print 'An existing replica set member is required.'
         exit(1)
 
-    if node_type == 'arbiter':
-
-        node = launch_server(environment, group, instance_type, availability_zone,
-                                replica_set, data_volume_size, data_volume_iops,
-                                mongodb_package_version, node_type, interactive,
-                                replica_set_template)
-
-        arbiter = replica_set.arbiter
-
-        if arbiter is not None:
-
-            remove_arbiter_from_replica_set(replica_set, arbiter, interactive)
-
-        add_arbiter_to_replica_set(replica_set, node.hostname, interactive)
-
-        if replace:
-            terminate_decommissioned_node(member, interactive)
-
-        return
-
-    stackdriver_api_key = os.environ.get('STACKDRIVER_API_KEY')
-
-    if stackdriver_api_key is None:
-
-        print 'The environment variable \'STACKDRIVER_API_KEY\' isn\'t set.'
-        exit(1)
-
-    stackdriver_username = os.environ.get('STACKDRIVER_USERNAME')
-
-    if stackdriver_username is None:
-
-        print 'The environment variable \'STACKDRIVER_USERNAME\' isn\'t set.'
-        exit(1)
-
-    node = launch_server(environment, group, instance_type, availability_zone,
-                            replica_set, data_volume_size, data_volume_iops,
-                            mongodb_package_version, node_type, interactive)
-
-    set_maintenance_mode(stackdriver_username, stackdriver_api_key,
-                            node.instance.id, interactive)
-
     replica_set = ReplicaSet(member)
 
     if replica_set.primary[:2] == 'ip':
@@ -601,6 +560,51 @@ def replace_server(environment = 'test', group = 'monolith',
         else:
 
             exit(1)
+
+
+    replica_set_name = replica_set.status['set']
+
+    if node_type == 'arbiter':
+
+        node = launch_server(environment, group, instance_type, availability_zone,
+                                replica_set_index, data_volume_size, data_volume_iops,
+                                mongodb_package_version, node_type, interactive,
+                                replica_set_template=replica_set_name)
+
+        arbiter = replica_set.arbiter
+
+        if arbiter is not None:
+
+            remove_arbiter_from_replica_set(replica_set, arbiter, interactive)
+
+        add_arbiter_to_replica_set(replica_set, node.hostname, interactive)
+
+        if replace:
+            terminate_decommissioned_node(member, interactive)
+
+        return
+
+    stackdriver_api_key = os.environ.get('STACKDRIVER_API_KEY')
+
+    if stackdriver_api_key is None:
+
+        print 'The environment variable \'STACKDRIVER_API_KEY\' isn\'t set.'
+        exit(1)
+
+    stackdriver_username = os.environ.get('STACKDRIVER_USERNAME')
+
+    if stackdriver_username is None:
+
+        print 'The environment variable \'STACKDRIVER_USERNAME\' isn\'t set.'
+        exit(1)
+
+    node = launch_server(environment, group, instance_type, availability_zone,
+                            replica_set_index, data_volume_size, data_volume_iops,
+                            mongodb_package_version, node_type, interactive,
+                            replica_set_template=replica_set_name)
+
+    set_maintenance_mode(stackdriver_username, stackdriver_api_key,
+                            node.instance.id, interactive)
 
     add_to_replica_set(replica_set, node, interactive)
 
