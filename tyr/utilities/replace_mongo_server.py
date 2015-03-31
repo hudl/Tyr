@@ -667,4 +667,4 @@ def replace_server(environment = 'test', group = 'monolith',
 
     print 'All done!'
     print 'Here\'s the current state of the replica set:'
-    print json.dumps(replica_set.status(), indent=4, sort_keys=True)
+    print json.dumps(replica_set.status, indent=4, sort_keys=True)
