@@ -12,7 +12,10 @@ setup(
     install_requires = [
         'boto',
         'pyChef',
-        'paramiko'
+        'paramiko',
+        'click',
+        'PyYAML',
+        'requests'
     ],
     scripts = [
         'scripts/replace-mongodb-servers'
