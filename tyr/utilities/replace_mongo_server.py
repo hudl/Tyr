@@ -358,25 +358,6 @@ def unset_maintenance_mode(stackdriver_username, stackdriver_api_key, instance_i
 
         log.debug('Removed the node from maintenance mode.')
 
-def add_to_replica_set(replica_set, node, interactive):
-
-    log.debug('Adding {hostname} to the replica set'.format(
-                                                hostname = node.hostname))
-    replica_set.add_member(node.hostname)
-
-    log.debug('Added {hostname} to the replica set'.format(
-                                                hostname = node.hostname))
-
-def remove_arbiter_from_replica_set(replica_set, address, interactive):
-
-    log.debug('Removing the arbiter {address} from the replica set'.format(
-                                                            address = address))
-
-    replica_set.remove_member(address, arbiter=True)
-
-    log.debug('Removed the arbiter {address} from the replica set'.format(
-                                                            address = address))
-
 def wait_for_sync(node, interactive):
 
     log.debug('Waiting for the node to finish syncing')
@@ -412,24 +393,6 @@ def wait_for_sync(node, interactive):
         time.sleep(60)
 
     log.debug('The node has finished syncing')
-
-def add_arbiter_to_replica_set(replica_set, arbiter, interactive):
-
-    log.debug('Adding the arbiter {arbiter} to the replica set'.format(
-                                                            arbiter = arbiter))
-
-    replica_set.add_member(arbiter, arbiter=True)
-
-    log.debug('Added the arbiter {arbiter} to the replica set'.format(
-                                                            arbiter = arbiter))
-
-def remove_decommissioned_node(replica_set, decommission, interactive):
-
-    log.debug('Removing the previous node from the replica set')
-
-    replica_set.remove_member(decommission)
-
-    log.debug('Removed the previous node from the replica set')
 
 def terminate_decommissioned_node(address, interactive):
 
@@ -573,12 +536,12 @@ def replace_server(environment = 'test', group = 'monolith',
         if arbiter is not None:
             log.info('The current arbiter is {arbiter}'.format(arbiter = arbiter))
             log.info('Removing the old arbiter from the replica set')
-            remove_arbiter_from_replica_set(replica_set, arbiter, interactive)
+            replica_set.remove_member(arbiter, arbiter=True)
         else:
             log.info('The replica set does not have an arbiter')
 
         log.info('Adding the new arbiter to the replica set')
-        add_arbiter_to_replica_set(replica_set, node.hostname, interactive)
+        replica_set.add_member(node.hostname, arbiter=True)
 
         if replace:
             log.info('Terminating the previous arbiter')
@@ -599,7 +562,7 @@ def replace_server(environment = 'test', group = 'monolith',
                             node.instance.id, interactive)
 
     log.info('Adding the new node to the replica set')
-    add_to_replica_set(replica_set, node, interactive)
+    replica_set.add_member(node.hostname)
 
     log.info('Retreiving the replica set\'s arbiter')
     arbiter = replica_set.arbiter
@@ -607,7 +570,7 @@ def replace_server(environment = 'test', group = 'monolith',
     if arbiter is not None:
         log.debug('The arbiter is {arbiter}'.format(arbiter = arbiter))
         log.info('(Temporarily) removing the arbiter from the replica set')
-        remove_arbiter_from_replica_set(replica_set, arbiter, interactive)
+        replica_set.remove_member(arbiter, arbiter=True)
     else:
         log.debug('There is no arbiter')
 
@@ -620,7 +583,7 @@ def replace_server(environment = 'test', group = 'monolith',
 
     if arbiter is not None:
         log.info('Adding the arbiter back into the replica set')
-        add_arbiter_to_replica_set(replica_set, arbiter, interactive)
+        replica_set.add_member(arbiter, arbiter=True)
 
     if replace:
 
@@ -634,7 +597,7 @@ def replace_server(environment = 'test', group = 'monolith',
             replica_set.failover()
 
         log.info('Removing the previous node from the replica set')
-        remove_decommissioned_node(replica_set, member, interactive)
+        replica_set.remove_member(member)
 
         log.info('Terminating the previous node')
         terminate_decommissioned_node(member, interactive)
