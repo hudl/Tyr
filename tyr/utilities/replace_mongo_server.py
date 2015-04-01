@@ -474,7 +474,7 @@ def replace_server(environment = 'stage', group = 'monolith',
                     replica_set_index = 1, data_volume_size = 400,
                     data_volume_iops = 2000, mongodb_package_version = '2.4.13',
                     member = None, replace = False, node_type = 'data',
-                    replica_set_template=None, reroute=True):
+                    replica_set_template=None, reroute=False):
 
     if member is None:
 
