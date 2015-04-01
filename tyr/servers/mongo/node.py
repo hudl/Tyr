@@ -71,14 +71,11 @@ class MongoNode(Server):
             self.log.info('Set the cluster name to "{group}"'.format(
                                         group = self.group))
 
-            mongodb_version = '{version}-mongodb_1'.format(
-                                                version = self.mongodb_version)
-
             self.chef_node.attributes.set_dotted(
-                                    'mongodb.package_version', mongodb_version)
+                                'mongodb.package_version', self.mongodb_version)
 
             self.log.info('Set the MongoDB package version to {version}'.format(
-                                                    version = mongodb_version))
+                                                version = self.mongodb_version))
 
             if self.chef_node.chef_environment == 'prod':
                 self.chef_node.run_list.append('role[RoleSumoLogic]')
