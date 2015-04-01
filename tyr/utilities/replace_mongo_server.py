@@ -6,6 +6,7 @@ from paramiko.client import AutoAddPolicy, SSHClient
 import requests
 import boto.ec2
 import boto.route53
+import logging
 
 log = logging.getLogger('Tyr.Utilities.ReplaceMongoServer')
 log.setLevel(logging.DEBUG)
