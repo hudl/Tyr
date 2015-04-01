@@ -9,6 +9,21 @@ import boto.ec2
 import boto.route53
 import logging
 
+def timeit(method):
+
+    def timed(*args, **kwargs):
+        start = time.time()
+        response = method(*args, **kwargs)
+        end = time.time()
+
+        log.debug('Executed {name} in {elapsed} seconds'.format(
+                                                        name = method.__name__,
+                                                        elapsed = end-start))
+
+        return response
+
+    return timed
+
 log = logging.getLogger('Tyr.Utilities.ReplaceMongoServer')
 log.setLevel(logging.DEBUG)
 ch = logging.StreamHandler()
@@ -28,6 +43,7 @@ class ReplicaSet(object):
         log.debug('Determing the primary for the replica set')
         self.determine_primary(member)
 
+    @timeit
     def determine_primary(self, member):
 
         log.debug('Using db.isMaster() to determine the primary')
@@ -39,6 +55,7 @@ class ReplicaSet(object):
         log.debug('The primary is {primary}'.format(primary = self.primary))
 
     @property
+    @timeit
     def status(self):
 
         log.debug('Retrieving the replica set\'s status using rs.status()')
@@ -49,6 +66,7 @@ class ReplicaSet(object):
         return status
 
     @property
+    @timeit
     def arbiter(self):
 
         log.debug('Retrieving the replica set\'s arbiter')
@@ -66,6 +84,7 @@ class ReplicaSet(object):
 
         return arbiter
 
+    @timeit
     def failover(self):
 
         log.debug('Preparing to fail over the replica set')
@@ -81,6 +100,7 @@ class ReplicaSet(object):
         log.debug('Determing the new primary')
         self.determine_primary(member)
 
+    @timeit
     def add_member(self, address, arbiter=False):
 
         log.debug('Adding {address} to the replica set'.format(address=address))
@@ -101,6 +121,7 @@ class ReplicaSet(object):
             log.critical('The response was not okay')
             sys.exit(1)
 
+    @timeit
     def remove_member(self, address, arbiter=False):
 
         log.debug('Removing {address} from the replica set'.format(address=address))
@@ -136,6 +157,7 @@ class ReplicaSet(object):
             run_command(address, 'sudo rm -rf /volr/*')
             run_command(address, 'sudo service mongod start')
 
+@timeit
 def run_command(address, command):
 
     connection = SSHClient()
@@ -167,6 +189,7 @@ def run_command(address, command):
 
     return stdout
 
+@timeit
 def run_mongo_command(address, command):
 
     log.debug('Running the mongo command {command} on {address}'.format(
@@ -185,6 +208,7 @@ def run_mongo_command(address, command):
     except ValueError:
         return response
 
+@timeit
 def launch_server(environment, group, instance_type, availability_zone,
                     replica_set, data_volume_size, data_volume_iops,
                     mongodb_package_version, node_type, replica_set_template):
@@ -246,6 +270,7 @@ def launch_server(environment, group, instance_type, availability_zone,
         log.critical('chef-client failed to finish running')
         sys.exit(1)
 
+@timeit
 def registered_in_stackdriver(stackdriver_username, stackdriver_api_key, instance_id):
 
     log.debug('Checking if {instance_id} is listed in Stackdriver'.format(
@@ -277,6 +302,7 @@ def registered_in_stackdriver(stackdriver_username, stackdriver_api_key, instanc
 
     return listed
 
+@timeit
 def set_maintenance_mode(stackdriver_username, stackdriver_api_key, instance_id):
 
     log.debug('Placing {instance_id} into maintenance mode'.format(
@@ -323,6 +349,7 @@ def set_maintenance_mode(stackdriver_username, stackdriver_api_key, instance_id)
     else:
         log.debug('Placed the node into maintenance mode')
 
+@timeit
 def unset_maintenance_mode(stackdriver_username, stackdriver_api_key, instance_id):
 
     log.debug('Removing {instance_id} from maintenance mode'.format(
@@ -364,6 +391,7 @@ def unset_maintenance_mode(stackdriver_username, stackdriver_api_key, instance_i
 
         log.debug('Removed the node from maintenance mode.')
 
+@timeit
 def wait_for_sync(node):
 
     log.debug('Waiting for the node to finish syncing')
@@ -400,6 +428,7 @@ def wait_for_sync(node):
 
     log.debug('The node has finished syncing')
 
+@timeit
 def terminate_decommissioned_node(address):
 
     log.debug('Terminating the node at {address}'.format(
@@ -427,6 +456,7 @@ def terminate_decommissioned_node(address):
         log.debug('Failed to terminate {instance}'.format(
                                                         instance = instance_id))
 
+@timeit
 def replace_server(environment = 'stage', group = 'monolith',
                     instance_type = 'm3.medium', availability_zone = 'c',
                     replica_set_index = 1, data_volume_size = 400,
