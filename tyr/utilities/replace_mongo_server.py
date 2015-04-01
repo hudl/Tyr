@@ -88,6 +88,9 @@ class ReplicaSet(object):
     @timeit
     def failover(self):
 
+        log.debug('Re-determining the replica set primary')
+        self.determine_primary(self.primary)
+
         log.debug('Preparing to fail over the replica set')
 
         member = self.primary
@@ -103,6 +106,9 @@ class ReplicaSet(object):
 
     @timeit
     def add_member(self, address, arbiter=False):
+
+        log.debug('Re-determining the replica set primary')
+        self.determine_primary(self.primary)
 
         log.debug('Adding {address} to the replica set'.format(address=address))
 
@@ -124,6 +130,9 @@ class ReplicaSet(object):
 
     @timeit
     def remove_member(self, address, arbiter=False):
+
+        log.debug('Re-determining the replica set primary')
+        self.determine_primary(self.primary)
 
         log.debug('Removing {address} from the replica set'.format(address=address))
 
