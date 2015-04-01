@@ -25,14 +25,15 @@ def timeit(method):
     return timed
 
 log = logging.getLogger('Tyr.Utilities.ReplaceMongoServer')
-log.setLevel(logging.DEBUG)
-ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
-formatter = logging.Formatter(
-        '%(asctime)s [%(name)s] %(levelname)s: %(message)s',
-        datefmt='%H:%M:%S')
-ch.setFormatter(formatter)
-log.addHandler(ch)
+if not log.handlers:
+    log.setLevel(logging.DEBUG)
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(
+            '%(asctime)s [%(name)s] %(levelname)s: %(message)s',
+            datefmt='%H:%M:%S')
+    ch.setFormatter(formatter)
+    log.addHandler(ch)
 
 class ReplicaSet(object):
 
