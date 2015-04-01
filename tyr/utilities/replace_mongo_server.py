@@ -7,10 +7,6 @@ from paramiko.client import AutoAddPolicy, SSHClient
 import requests
 import boto.ec2
 
-def clear():
-
-    os.system('cls' if os.name == 'nt' else 'clear')
-
 def exit(code):
 
     print '\nExiting.'
@@ -150,8 +146,6 @@ def launch_server(environment, group, instance_type, availability_zone,
                     mongodb_package_version, node_type, interactive,
                     replica_set_template):
 
-    clear()
-
     mongodb_node_type = 'MongoDB Data Node'
 
     if node_type == 'datawarehousing':
@@ -203,8 +197,6 @@ def launch_server(environment, group, instance_type, availability_zone,
 
     node.autorun()
 
-    clear()
-
     print 'Awesome work, {user}!'.format(user = os.getlogin())
 
     print '\nNow we\'re going to SSH into the server and wait until chef client has finished. Ready?'
@@ -238,8 +230,6 @@ def registered_in_stackdriver(stackdriver_username, stackdriver_api_key, instanc
     return r.status_code != 404
 
 def set_maintenance_mode(stackdriver_username, stackdriver_api_key, instance_id, interactive):
-
-    clear()
 
     print 'The next step is to put the server into maintenance mode in StackDriver.'
 
@@ -280,8 +270,6 @@ def set_maintenance_mode(stackdriver_username, stackdriver_api_key, instance_id,
 
 def unset_maintenance_mode(stackdriver_username, stackdriver_api_key, instance_id, interactive):
 
-    clear()
-
     print 'The next step is to take the server out off maintenance mode in StackDriver.'
 
     headers = {
@@ -315,8 +303,6 @@ def unset_maintenance_mode(stackdriver_username, stackdriver_api_key, instance_i
 
 def add_to_replica_set(replica_set, node, interactive):
 
-    clear()
-
     print 'Now we\'re going to add the new server to the replica set.'
 
     replica_set.add_member(node.hostname)
@@ -324,8 +310,6 @@ def add_to_replica_set(replica_set, node, interactive):
     print '\nThe server has been added to the replica set. Onto the next step...'
 
 def remove_arbiter_from_replica_set(replica_set, address, interactive):
-
-    clear()
 
     print 'In this part we\'ll be be removing the arbiter, from the replica set.'
     print 'We\'re using {address} as the arbiter'.format(address = address)
@@ -335,8 +319,6 @@ def remove_arbiter_from_replica_set(replica_set, address, interactive):
     print 'The arbiter has been successfully removed. Great job!'
 
 def wait_for_sync(node, interactive):
-
-    clear()
 
     print 'This next step is pretty simple - wait for the server to finish syncing.'
     print 'We\'ll check the status every ten minutes and let you know when it\'s ready.'
@@ -374,8 +356,6 @@ def wait_for_sync(node, interactive):
 
 def add_arbiter_to_replica_set(replica_set, arbiter, interactive):
 
-    clear()
-
     print 'In this part we\'ll be re-adding the arbiter to the replica set.'
 
     replica_set.add_member(arbiter, arbiter=True)
@@ -384,8 +364,6 @@ def add_arbiter_to_replica_set(replica_set, arbiter, interactive):
 
 def remove_decommissioned_node(replica_set, decommission, interactive):
 
-    clear()
-
     print 'Now we\'re going to remove the decommissioned node from the replica set. Almost done!'
 
     replica_set.remove_member(decommission)
@@ -393,8 +371,6 @@ def remove_decommissioned_node(replica_set, decommission, interactive):
     print 'The server has been removed.'
 
 def terminate_decommissioned_node(address, interactive):
-
-    clear()
 
     command = 'curl http://169.254.169.254/latest/meta-data/instance-id'
 
