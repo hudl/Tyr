@@ -653,7 +653,7 @@ def replace_server(environment = 'stage', group = 'monolith',
         log.info('Terminating the previous node')
         terminate_decommissioned_node(member)
 
-        if node_type == 'data' and environment == 'stage' and reroute:
+        if node_type == 'data' and reroute:
             log.info('Redirecting previous DNS entry')
 
             log.debug('Establishing a connect to AWS Route53 us-east-1')
