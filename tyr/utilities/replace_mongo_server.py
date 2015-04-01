@@ -399,6 +399,20 @@ def replace_server(environment = 'test', group = 'monolith',
         print 'An existing replica set member is required.'
         exit(1)
 
+    stackdriver_api_key = os.environ.get('STACKDRIVER_API_KEY')
+
+    if stackdriver_api_key is None:
+
+        print 'The environment variable \'STACKDRIVER_API_KEY\' isn\'t set.'
+        exit(1)
+
+    stackdriver_username = os.environ.get('STACKDRIVER_USERNAME')
+
+    if stackdriver_username is None:
+
+        print 'The environment variable \'STACKDRIVER_USERNAME\' isn\'t set.'
+        exit(1)
+
     replica_set = ReplicaSet(member)
 
     if replica_set.primary[:2] == 'ip':
@@ -471,20 +485,6 @@ def replace_server(environment = 'test', group = 'monolith',
             terminate_decommissioned_node(member, interactive)
 
         return
-
-    stackdriver_api_key = os.environ.get('STACKDRIVER_API_KEY')
-
-    if stackdriver_api_key is None:
-
-        print 'The environment variable \'STACKDRIVER_API_KEY\' isn\'t set.'
-        exit(1)
-
-    stackdriver_username = os.environ.get('STACKDRIVER_USERNAME')
-
-    if stackdriver_username is None:
-
-        print 'The environment variable \'STACKDRIVER_USERNAME\' isn\'t set.'
-        exit(1)
 
     node = launch_server(environment, group, instance_type, availability_zone,
                             replica_set_index, data_volume_size, data_volume_iops,
