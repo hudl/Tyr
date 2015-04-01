@@ -179,9 +179,20 @@ def run_command(address, command):
 
     stdin, stdout, stderr = connection.exec_command(command)
 
-    stdin = stdin.read()
-    stdout = stdout.read()
-    stderr = stderr.read()
+    try:
+        stdin = stdin.read()
+    except IOError:
+        stdin = None
+
+    try:
+        stdout = stdout.read()
+    except IOError:
+        stdout = None
+
+    try:
+        stderr = stderr.read()
+    except IOError:
+        stderr = None
 
     log.debug('STDIN: {stdin}'.format(stdin = stdin))
     log.debug('STDOUT: {stdout}'.format(stdout = stdout))
