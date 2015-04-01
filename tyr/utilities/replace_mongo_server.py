@@ -425,7 +425,7 @@ def replace_server(environment = 'test', group = 'monolith',
                     replica_set_index = 1, data_volume_size = 400,
                     data_volume_iops = 2000, mongodb_package_version = '2.4.13',
                     member = None, replace = False, node_type = 'data',
-                    replica_set_template=None):
+                    replica_set_template=None, reroute=True):
 
     if member is None:
 
@@ -600,3 +600,18 @@ def replace_server(environment = 'test', group = 'monolith',
 
         log.info('Terminating the previous node')
         terminate_decommissioned_node(member)
+
+        if node_type == 'data' and environmnet == 'stage' and reroute:
+            log.info('Redirecting previous DNS entry')
+
+            log.debug('Establishing a connect to AWS Route53 us-east-1')
+            conn = boto.route53.connect_to_region('us-east-1')
+
+            log.debug('Retrieving the zone app.staghudl.com.')
+            zone = conn.get_zone('app.staghudl.com.')
+
+            if zone.get_cname(member+'.') is None:
+                log.debug('An existing DNS record does not exist')
+            else:
+                log.debug('Updating the DNS CNAME record')
+                zone.update_cname(member+'.', node.instance.public_dns_name)
