@@ -1,4 +1,5 @@
 import os
+import sys
 from tyr.servers.mongo import MongoDataNode, MongoDataWarehousingNode, MongoArbiterNode
 import json
 import time
@@ -98,6 +99,7 @@ class ReplicaSet(object):
 
         if response['ok'] == 0:
             log.critical('The response was not okay')
+            sys.exit(1)
 
     def remove_member(self, address, arbiter=False):
 
@@ -126,6 +128,7 @@ class ReplicaSet(object):
 
         if isMember:
             log.critical('The node is still a member of the replica set')
+            sys.exit(1)
 
         if arbiter:
             log.debug('The node is an arbiter - wiping it clean')
@@ -241,6 +244,7 @@ def launch_server(environment, group, instance_type, availability_zone,
 
     else:
         log.critical('chef-client failed to finish running')
+        sys.exit(1)
 
 def registered_in_stackdriver(stackdriver_username, stackdriver_api_key, instance_id):
 
@@ -314,6 +318,7 @@ def set_maintenance_mode(stackdriver_username, stackdriver_api_key, instance_id)
     if r.status_code != 200:
         log.critical('Failed to put the node into maintenance mode. Received code {code}'.format(
                                                     code = r.status_code))
+        sys.exit(1)
 
     else:
         log.debug('Placed the node into maintenance mode')
@@ -353,6 +358,7 @@ def unset_maintenance_mode(stackdriver_username, stackdriver_api_key, instance_i
 
         log.critical('Failed to remove the node from maintenance mode. Received code {code}'.format(
                                                     code = r.status_code))
+        sys.exit(1)
 
     else:
 
@@ -431,18 +437,21 @@ def replace_server(environment = 'stage', group = 'monolith',
     if member is None:
 
         log.critical('No existing member defined.')
+        sys.exit(1)
 
     stackdriver_api_key = os.environ.get('STACKDRIVER_API_KEY', False)
 
     if not stackdriver_api_key:
 
         log.critical('The environment variable STACKDRIVER_API_KEY is undefined')
+        sys.exit(1)
 
     stackdriver_username = os.environ.get('STACKDRIVER_USERNAME', False)
 
     if not stackdriver_username:
 
         log.critical('The environment variable STACKDRIVER_USERNAME is undefined')
+        sys.exit(1)
 
     replica_set = ReplicaSet(member)
 
