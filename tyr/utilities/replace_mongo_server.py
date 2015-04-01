@@ -16,18 +16,6 @@ def exit(code):
     print '\nExiting.'
     sys.exit(code)
 
-def confirm():
-
-    print '\a'
-
-    response = ''
-
-    while response != 'y' and response != 'n':
-        response = raw_input('\nContinue? (y/n) ')
-
-    if response == 'y': return True
-    elif response == 'n': exit(1)
-
 class ReplicaSet(object):
 
     primary = None
@@ -183,9 +171,6 @@ def launch_server(environment, group, instance_type, availability_zone,
     print 'MongoDB Package Version: {version}'.format(
                                             version = mongodb_package_version)
 
-    if interactive:
-        confirm()
-
     print '\n'
 
     node = None
@@ -224,9 +209,6 @@ def launch_server(environment, group, instance_type, availability_zone,
 
     print '\nNow we\'re going to SSH into the server and wait until chef client has finished. Ready?'
 
-    if interactive:
-        confirm()
-
     print '\n'
 
     baked = node.baked()
@@ -260,9 +242,6 @@ def set_maintenance_mode(stackdriver_username, stackdriver_api_key, instance_id,
     clear()
 
     print 'The next step is to put the server into maintenance mode in StackDriver.'
-
-    if interactive:
-        confirm()
 
     while not registered_in_stackdriver(stackdriver_username,
                                         stackdriver_api_key, instance_id):
@@ -299,17 +278,11 @@ def set_maintenance_mode(stackdriver_username, stackdriver_api_key, instance_id,
 
         print 'Placed the node in maintenance mode.'
 
-    if interactive:
-        confirm()
-
 def unset_maintenance_mode(stackdriver_username, stackdriver_api_key, instance_id, interactive):
 
     clear()
 
     print 'The next step is to take the server out off maintenance mode in StackDriver.'
-
-    if interactive:
-        confirm()
 
     headers = {
         'x-stackdriver-apikey': stackdriver_api_key,
@@ -340,24 +313,15 @@ def unset_maintenance_mode(stackdriver_username, stackdriver_api_key, instance_i
 
         print 'Removed the node from maintenance mode.'
 
-    if interactive:
-        confirm()
-
 def add_to_replica_set(replica_set, node, interactive):
 
     clear()
 
     print 'Now we\'re going to add the new server to the replica set.'
 
-    if interactive:
-        confirm()
-
     replica_set.add_member(node.hostname)
 
     print '\nThe server has been added to the replica set. Onto the next step...'
-
-    if interactive:
-        confirm()
 
 def remove_arbiter_from_replica_set(replica_set, address, interactive):
 
@@ -366,15 +330,9 @@ def remove_arbiter_from_replica_set(replica_set, address, interactive):
     print 'In this part we\'ll be be removing the arbiter, from the replica set.'
     print 'We\'re using {address} as the arbiter'.format(address = address)
 
-    if interactive:
-        confirm()
-
     replica_set.remove_member(address, arbiter=True)
 
     print 'The arbiter has been successfully removed. Great job!'
-
-    if interactive:
-        confirm()
 
 def wait_for_sync(node, interactive):
 
@@ -382,9 +340,6 @@ def wait_for_sync(node, interactive):
 
     print 'This next step is pretty simple - wait for the server to finish syncing.'
     print 'We\'ll check the status every ten minutes and let you know when it\'s ready.'
-
-    if interactive:
-        confirm()
 
     while True:
 
@@ -417,24 +372,15 @@ def wait_for_sync(node, interactive):
     print '\nLooks like the server finished syncing. Awesome work {user}!'.format(
                                                         user = os.getlogin())
 
-    if interactive:
-        confirm()
-
 def add_arbiter_to_replica_set(replica_set, arbiter, interactive):
 
     clear()
 
     print 'In this part we\'ll be re-adding the arbiter to the replica set.'
 
-    if interactive:
-        confirm()
-
     replica_set.add_member(arbiter, arbiter=True)
 
     print 'Awesome, the arbiter is back in the replica set!'
-
-    if interactive:
-        confirm()
 
 def remove_decommissioned_node(replica_set, decommission, interactive):
 
@@ -442,15 +388,9 @@ def remove_decommissioned_node(replica_set, decommission, interactive):
 
     print 'Now we\'re going to remove the decommissioned node from the replica set. Almost done!'
 
-    if interactive:
-        confirm()
-
     replica_set.remove_member(decommission)
 
     print 'The server has been removed.'
-
-    if interactive:
-        confirm()
 
 def terminate_decommissioned_node(address, interactive):
 
@@ -462,9 +402,6 @@ def terminate_decommissioned_node(address, interactive):
 
     print 'Final step - terminating the old instance - {instance_id}.'.format(
                                                     instance_id = instance_id)
-
-    if interactive:
-        confirm()
 
     conn = boto.ec2.connect_to_region('us-east-1')
 
@@ -495,77 +432,47 @@ def replace_server(environment = 'test', group = 'monolith',
 
         print 'We\'ll need to failover in order to continue.'
 
-        choice = None
+        conn = boto.ec2.connect_to_region('us-east-1')
 
-        if interactive:
+        components = replica_set.primary.split('-')
+        old_primary = replica_set.primary
 
-            print '\nHow should we proceed?'
-            print '(a)utomatic failover'
-            print '(m)anual failover'
-            print '(q)uit'
-
-            choice = raw_input('\nChoice: ')
-
-        else:
-
-            choice = 'a'
-
-        if choice.lower() == 'a':
-
-            conn = boto.ec2.connect_to_region('us-east-1')
-
-            components = replica_set.primary.split('-')
-            old_primary = replica_set.primary
-
-            private_ip = '.'.join([components[1], components[2], components[3],
+        private_ip = '.'.join([components[1], components[2], components[3],
                                     components[4]])
 
-            reservations = conn.get_all_instances(
+        reservations = conn.get_all_instances(
                                     filters={'private-ip-address': private_ip})
 
-            instance = reservations[0].instances[0]
+        instance = reservations[0].instances[0]
 
-            public_address = None
+        public_address = None
 
-            if 'Name' in instance.tags:
+        if 'Name' in instance.tags:
 
-                public_address = instance.tags['Name']
+            public_address = instance.tags['Name']
 
-                if environment == 'test':
-                    public_address += '.thorhudl.com'
-                elif environment == 'stage':
-                    public_address += '.app.staghudl.com'
-                elif environment == 'prod':
-                    public_address += '.app.hudl.com'
-
-            else:
-
-                public_address = instance.public_dns_name
-
-            run_mongo_command(public_address, 'rs.stepDown()')
-
-            time.sleep(120)
-
-            replica_set.determine_primary(member)
-
-            replica_set.remove_member(old_primary)
-
-            time.sleep(120)
-
-            replica_set.add_member(public_address)
-
-        elif choice.lower() == 'm':
-
-            print '\n Continue once the primary has stepped down.'
-
-            confirm()
-
-            replica_set.determine_primary(member)
+            if environment == 'test':
+                public_address += '.thorhudl.com'
+            elif environment == 'stage':
+                public_address += '.app.staghudl.com'
+            elif environment == 'prod':
+                public_address += '.app.hudl.com'
 
         else:
 
-            exit(1)
+            public_address = instance.public_dns_name
 
+        run_mongo_command(public_address, 'rs.stepDown()')
+
+        time.sleep(120)
+
+        replica_set.determine_primary(member)
+
+        replica_set.remove_member(old_primary)
+
+        time.sleep(120)
+
+        replica_set.add_member(public_address)
 
     replica_set_name = replica_set.status['set']
 
@@ -630,39 +537,10 @@ def replace_server(environment = 'test', group = 'monolith',
 
     if replica_set.primary == member:
 
-        choice = None
+        print 'The server you want to replace is the primary.'
+        print 'The replica set will need to fail over.'
 
-        if interactive:
-
-            print 'The server you want to replace is the primary.'
-            print 'The replica set will need to fail over.'
-
-            print '\nHow should we proceed?'
-            print '(a)utomatic failover'
-            print '(m)anual failover'
-            print '(q)uit'
-
-            choice = raw_input('\nChoice: ')
-
-        else:
-
-            choice = 'a'
-
-        if choice.lower() == 'a':
-
-            replica_set.failover()
-
-        elif choice.lower() == 'm':
-
-            print '\n Continue once the primary has stepped down.'
-
-            confirm()
-
-            replica_set.determine_primary(member)
-
-        else:
-
-            exit(1)
+        replica_set.failover()
 
     if replace:
         remove_decommissioned_node(replica_set, member, interactive)
