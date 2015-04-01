@@ -183,8 +183,7 @@ def run_mongo_command(address, command):
 
 def launch_server(environment, group, instance_type, availability_zone,
                     replica_set, data_volume_size, data_volume_iops,
-                    mongodb_package_version, node_type, interactive,
-                    replica_set_template):
+                    mongodb_package_version, node_type, replica_set_template):
 
     log.debug('Preparing to launch a new node with the following properties:')
 
@@ -273,7 +272,7 @@ def registered_in_stackdriver(stackdriver_username, stackdriver_api_key, instanc
 
     return listed
 
-def set_maintenance_mode(stackdriver_username, stackdriver_api_key, instance_id, interactive):
+def set_maintenance_mode(stackdriver_username, stackdriver_api_key, instance_id):
 
     log.debug('Placing {instance_id} into maintenance mode'.format(
                                                     instance_id = instance_id))
@@ -318,7 +317,7 @@ def set_maintenance_mode(stackdriver_username, stackdriver_api_key, instance_id,
     else:
         log.debug('Placed the node into maintenance mode')
 
-def unset_maintenance_mode(stackdriver_username, stackdriver_api_key, instance_id, interactive):
+def unset_maintenance_mode(stackdriver_username, stackdriver_api_key, instance_id):
 
     log.debug('Removing {instance_id} from maintenance mode'.format(
                                                     instance_id = instance_id))
@@ -358,7 +357,7 @@ def unset_maintenance_mode(stackdriver_username, stackdriver_api_key, instance_i
 
         log.debug('Removed the node from maintenance mode.')
 
-def wait_for_sync(node, interactive):
+def wait_for_sync(node):
 
     log.debug('Waiting for the node to finish syncing')
 
@@ -394,7 +393,7 @@ def wait_for_sync(node, interactive):
 
     log.debug('The node has finished syncing')
 
-def terminate_decommissioned_node(address, interactive):
+def terminate_decommissioned_node(address):
 
     log.debug('Terminating the node at {address}'.format(
                                                         address = address))
@@ -426,7 +425,7 @@ def replace_server(environment = 'test', group = 'monolith',
                     replica_set_index = 1, data_volume_size = 400,
                     data_volume_iops = 2000, mongodb_package_version = '2.4.13',
                     member = None, replace = False, node_type = 'data',
-                    interactive = True, replica_set_template=None):
+                    replica_set_template=None):
 
     if member is None:
 
@@ -527,7 +526,7 @@ def replace_server(environment = 'test', group = 'monolith',
         log.info('Launching the new node')
         node = launch_server(environment, group, instance_type, availability_zone,
                                 replica_set_index, data_volume_size, data_volume_iops,
-                                mongodb_package_version, node_type, interactive,
+                                mongodb_package_version, node_type,
                                 replica_set_template=replica_set_name)
 
         log.info('Retreiving the replica set\'s current arbiter')
@@ -545,7 +544,7 @@ def replace_server(environment = 'test', group = 'monolith',
 
         if replace:
             log.info('Terminating the previous arbiter')
-            terminate_decommissioned_node(member, interactive)
+            terminate_decommissioned_node(member)
 
         return
 
@@ -554,12 +553,12 @@ def replace_server(environment = 'test', group = 'monolith',
     log.info('Launching the new node')
     node = launch_server(environment, group, instance_type, availability_zone,
                             replica_set_index, data_volume_size, data_volume_iops,
-                            mongodb_package_version, node_type, interactive,
+                            mongodb_package_version, node_type,
                             replica_set_template=replica_set_name)
 
     log.info('Placing the new node in maintenance mode')
     set_maintenance_mode(stackdriver_username, stackdriver_api_key,
-                            node.instance.id, interactive)
+                            node.instance.id)
 
     log.info('Adding the new node to the replica set')
     replica_set.add_member(node.hostname)
@@ -575,11 +574,11 @@ def replace_server(environment = 'test', group = 'monolith',
         log.debug('There is no arbiter')
 
     log.info('Waiting for the node to finish syncing')
-    wait_for_sync(node, interactive)
+    wait_for_sync(node)
 
     log.info('Removing the node from maintenance mode')
     unset_maintenance_mode(stackdriver_username, stackdriver_api_key,
-                            node.instance.id, interactive)
+                            node.instance.id)
 
     if arbiter is not None:
         log.info('Adding the arbiter back into the replica set')
@@ -600,4 +599,4 @@ def replace_server(environment = 'test', group = 'monolith',
         replica_set.remove_member(member)
 
         log.info('Terminating the previous node')
-        terminate_decommissioned_node(member, interactive)
+        terminate_decommissioned_node(member)
