@@ -671,6 +671,14 @@ def replace_server(environment = 'stage', group = 'monolith',
             log.debug('Retrieving the zone app.staghudl.com.')
             zone = conn.get_zone('app.staghudl.com.')
 
+            if environment == 'prod':
+                log.debug('Retrieving the zone app.hudl.com.')
+                zone = conn.get_zone('app.hudl.com.')
+
+            if environment == 'test':
+                log.debug('Retrieving the zone thorhudl.com.')
+                zone = conn.get_zone('thorhudl.com.')
+
             if zone.get_cname(member+'.') is None:
                 log.debug('An existing DNS record does not exist')
             else:
