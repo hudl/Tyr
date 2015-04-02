@@ -1,4 +1,4 @@
-import os
+mmport os
 import sys
 from tyr.servers.mongo import MongoDataNode, MongoDataWarehousingNode, MongoArbiterNode
 import json
@@ -466,9 +466,9 @@ def wait_for_sync(node):
     log.debug('The node has finished syncing')
 
 @timeit
-def terminate_decommissioned_node(address):
+def stop_decommissioned_node(address, terminate=False):
 
-    log.debug('Terminating the node at {address}'.format(
+    log.debug('Stopping or terminating the node at {address}'.format(
                                                         address = address))
 
     log.debug('Retrieving the instance ID')
@@ -481,20 +481,31 @@ def terminate_decommissioned_node(address):
     log.debug('Establishing a connection to AWS EC2 us-east-1')
     conn = boto.ec2.connect_to_region('us-east-1')
 
-    log.debug('Terminating {instance}'.format(instance = instance_id))
-    response = conn.terminate_instances(instance_ids=[instance_id])
+    if terminate:
+        log.debug('Terminating {instance}'.format(instance = instance_id))
+        response = conn.terminate_instances(instance_ids=[instance_id])
+    else:
+        log.debug('Stopping `{instance}'.format(instance = instance_id))
+        response = conn.stop_instances(instance_ids=[instance_id])
 
     log.debug('Received the response {response}'.format(response = response))
 
     terminated = [instance.id for instance in response]
 
     if instance_id in terminated:
-        log.debug('Successfully terminated {instance}'.format(
+        if terminate:
+            log.debug('Successfully terminated {instance}'.format(
+                                                        instance = instance_id))
+        else:
+            log.debug('Successfully stopped {instance}'.format(
                                                         instance = instance_id))
     else:
-        log.debug('Failed to terminate {instance}'.format(
+        if terminate:
+            log.debug('Failed to terminate {instance}'.format(
                                                         instance = instance_id))
-
+        else:
+            log.debug('Failed to stop {instance}'.format(
+                                                        instance = instance_id))
 @timeit
 def replace_server(environment = 'stage', group = 'monolith',
                     instance_type = 'm3.medium', availability_zone = 'c',
@@ -624,7 +635,7 @@ def replace_server(environment = 'stage', group = 'monolith',
 
         if replace:
             log.info('Terminating the previous arbiter')
-            terminate_decommissioned_node(member)
+            stop_decommissioned_node(member, terminate=terminate)
 
         return
 
@@ -687,9 +698,8 @@ def replace_server(environment = 'stage', group = 'monolith',
         log.info('Removing the previous node from the replica set')
         replica_set.remove_member(member)
 
-        if terminate:
-            log.info('Terminating the previous node')
-            terminate_decommissioned_node(member)
+        log.info('Terminating the previous node')
+        stop_decommissioned_node(member, terminate=terminate)
 
         if node_type == 'data' and reroute:
             log.info('Redirecting previous DNS entry')
