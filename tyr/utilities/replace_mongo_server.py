@@ -128,8 +128,9 @@ class ReplicaSet(object):
 
             id_ = max(ids) + 1
 
-            command = 'rs.add({_id:{id_}, host:\'{name}\', priority:0, hidden: true})'.format(
-                                                                    id_ = id_)
+            command = 'rs.add({{_id:{id_}, host:\'{name}\', priority:0, hidden: true}})'.format(
+                                                                    id_ = id_,
+                                                                    name=name)
 
         log.debug('Using the command {command}'.format(command = command))
         response = run_mongo_command(self.primary, command)
