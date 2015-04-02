@@ -110,6 +110,10 @@ class ReplicaSet(object):
         log.debug('Re-determining the replica set primary')
         self.determine_primary(self.primary)
 
+        log.debug('Starting the mongo service on {address}'.format(
+                                                        address = address))
+        run_command(address, 'sudo service mongod start')
+
         log.debug('Adding {address} to the replica set'.format(address=address))
 
         name = '{address}:27018'.format(address = address)
@@ -129,10 +133,14 @@ class ReplicaSet(object):
             sys.exit(1)
 
     @timeit
-    def remove_member(self, address, arbiter=False):
+    def remove_member(self, address, clean=False):
 
         log.debug('Re-determining the replica set primary')
         self.determine_primary(self.primary)
+
+        log.debug('Stopping the mongo service on {address}'.format(
+                                                            address = address))
+        run_command(address, 'sudo service mongod stop')
 
         log.debug('Removing {address} from the replica set'.format(address=address))
 
@@ -161,11 +169,10 @@ class ReplicaSet(object):
             log.critical('The node is still a member of the replica set')
             sys.exit(1)
 
-        if arbiter:
-            log.debug('The node is an arbiter - wiping it clean')
-            run_command(address, 'sudo service mongod stop')
+        if clean:
+            log.debug('Removing an mongo data from {address}'.format(
+                                                        address = address))
             run_command(address, 'sudo rm -rf /volr/*')
-            run_command(address, 'sudo service mongod start')
 
 @timeit
 def run_command(address, command):
@@ -596,7 +603,7 @@ def replace_server(environment = 'stage', group = 'monolith',
         if arbiter is not None:
             log.info('The current arbiter is {arbiter}'.format(arbiter = arbiter))
             log.info('Removing the old arbiter from the replica set')
-            replica_set.remove_member(arbiter, arbiter=True)
+            replica_set.remove_member(arbiter, clean=True)
         else:
             log.info('The replica set does not have an arbiter')
 
@@ -630,7 +637,7 @@ def replace_server(environment = 'stage', group = 'monolith',
     if arbiter is not None:
         log.debug('The arbiter is {arbiter}'.format(arbiter = arbiter))
         log.info('(Temporarily) removing the arbiter from the replica set')
-        replica_set.remove_member(arbiter, arbiter=True)
+        replica_set.remove_member(arbiter, clean=True)
     else:
         log.debug('There is no arbiter')
 
