@@ -639,7 +639,11 @@ def replace_server(environment = 'stage', group = 'monolith',
                             node.instance.id)
 
     log.info('Adding the new node to the replica set')
-    replica_set.add_member(node.hostname)
+
+    if node_type == 'datawarehousing':
+        replica_set.add_member(node.hostname, hidden=True)
+    else:
+        replica_set.add_member(node.hostname)
 
     log.info('Retreiving the replica set\'s arbiter')
     arbiter = replica_set.arbiter
