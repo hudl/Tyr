@@ -105,7 +105,7 @@ class ReplicaSet(object):
         self.determine_primary(member)
 
     @timeit
-    def add_member(self, address, arbiter=False):
+    def add_member(self, address, arbiter=False, hidden=False):
 
         log.debug('Re-determining the replica set primary')
         self.determine_primary(self.primary)
@@ -122,6 +122,14 @@ class ReplicaSet(object):
 
         if arbiter:
             command = 'rs.addArb(\'{name}\')'.format(name = name)
+
+        if hidden:
+            ids = [int(member['_id']) for member in self.status['members']]
+
+            id_ = max(ids) + 1
+
+            command = 'rs.add({_id:{id_}, host:\'{name}\', priority:0, hidden: true})'.format(
+                                                                    id_ = id_)
 
         log.debug('Using the command {command}'.format(command = command))
         response = run_mongo_command(self.primary, command)
