@@ -490,7 +490,7 @@ def replace_server(environment = 'stage', group = 'monolith',
                     replica_set_index = 1, data_volume_size = 400,
                     data_volume_iops = 2000, mongodb_package_version = '2.4.13',
                     member = None, replace = False, node_type = 'data',
-                    replica_set_template=None, reroute=False):
+                    replica_set_template=None, reroute=False, terminate=False):
 
     if member is None:
 
@@ -666,8 +666,9 @@ def replace_server(environment = 'stage', group = 'monolith',
         log.info('Removing the previous node from the replica set')
         replica_set.remove_member(member)
 
-        log.info('Terminating the previous node')
-        terminate_decommissioned_node(member)
+        if terminate:
+            log.info('Terminating the previous node')
+            terminate_decommissioned_node(member)
 
         if node_type == 'data' and reroute:
             log.info('Redirecting previous DNS entry')
