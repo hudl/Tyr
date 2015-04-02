@@ -1,4 +1,4 @@
-mmport os
+import os
 import sys
 from tyr.servers.mongo import MongoDataNode, MongoDataWarehousingNode, MongoArbiterNode
 import json
