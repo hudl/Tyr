@@ -466,17 +466,20 @@ def wait_for_sync(node):
     log.debug('The node has finished syncing')
 
 @timeit
-def stop_decommissioned_node(address, terminate=False):
+def stop_decommissioned_node(address, terminate=False,
+                                stackdriver_username=None,
+                                stackdriver_api_key=None):
 
     log.debug('Stopping or terminating the node at {address}'.format(
                                                         address = address))
 
     log.debug('Retrieving the instance ID')
     command = 'curl http://169.254.169.254/latest/meta-data/instance-id'
-
     instance_id = run_command(address, command)
 
     log.debug('The instance ID is {id_}'.format(id_ = instance_id))
+
+    set_maintenance_mode(stackdriver_username, stackdriver_api_key, instance_id)
 
     log.debug('Establishing a connection to AWS EC2 us-east-1')
     conn = boto.ec2.connect_to_region('us-east-1')
@@ -635,7 +638,9 @@ def replace_server(environment = 'stage', group = 'monolith',
 
         if replace:
             log.info('Terminating the previous arbiter')
-            stop_decommissioned_node(member, terminate=terminate)
+            stop_decommissioned_node(member, terminate=terminate,
+                                        stackdriver_username=stackdriver_username,
+                                        stackdriver_api_key=stackdriver_api_key)
 
         return
 
@@ -699,7 +704,9 @@ def replace_server(environment = 'stage', group = 'monolith',
         replica_set.remove_member(member)
 
         log.info('Terminating the previous node')
-        stop_decommissioned_node(member, terminate=terminate)
+        stop_decommissioned_node(member, terminate=terminate,
+                                    stackdriver_username=stackdriver_username,
+                                    stackdriver_api_key = stackdriver_api_key)
 
         if node_type == 'data' and reroute:
             log.info('Redirecting previous DNS entry')
