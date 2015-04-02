@@ -500,7 +500,8 @@ def replace_server(environment = 'stage', group = 'monolith',
                     replica_set_index = 1, data_volume_size = 400,
                     data_volume_iops = 2000, mongodb_package_version = '2.4.13',
                     member = None, replace = False, node_type = 'data',
-                    replica_set_template=None, reroute=False, terminate=False):
+                    replica_set_template=None, reroute=False, terminate=False,
+                    prompt_before_replace=True):
 
     if member is None:
 
@@ -669,6 +670,11 @@ def replace_server(environment = 'stage', group = 'monolith',
     if replace:
 
         log.info('Preparing to remove the previous node')
+
+        if prompt_before_replace:
+
+            print '\a'
+            _ = rawinput('Press enter to continue')
 
         if replica_set.primary == member:
 
