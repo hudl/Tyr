@@ -691,7 +691,7 @@ def replace_server(environment = 'stage', group = 'monolith',
         if prompt_before_replace:
 
             print '\a'
-            _ = rawinput('Press enter to continue')
+            _ = raw_input('Press enter to continue')
 
         if replica_set.primary == member:
 
