@@ -477,7 +477,9 @@ def terminate_decommissioned_node(address):
 
     log.debug('Received the response {response}'.format(response = response))
 
-    if instance_id in response:
+    terminated = [instance.id for instance in response]
+
+    if instance_id in terminated:
         log.debug('Successfully terminated {instance}'.format(
                                                         instance = instance_id))
     else:
