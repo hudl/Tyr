@@ -385,31 +385,55 @@ named {name}""".format(path = d['path'], name = d['name']))
 
     def resolve_iam_role(self):
 
-        try:
-            instance_profile = self.iam.create_instance_profile(self.role)
-            self.log.info('Created IAM Profile {profile}'.format(
-                            profile = self.role))
+        role_exists = False
+        profile_exists = False
 
+        try:
+            profiles = self.iam.list_instance_profiles()
+            profiles = profiles['list_instance_profiles_response']
+            profiles = profiles['list_instance_profiles_result']
+            profiles = profiles['instance_profiles']
+            profiles = [profile['instance_profile_name'] for profile in profiles]
+
+            if self.role in profiles:
+                profile_exists = True
         except Exception, e:
-            if 'EntityAlreadyExists' in str(e):
-                self.log.info('IAM Profile {profile} already exists'.format(
-                            profile = self.role))
-            else:
+            self.log.error(str(e))
+            raise e
+
+        if not profile_exists:
+            try:
+                instance_profile = self.iam.create_instance_profile(self.role)
+                self.log.info('Created IAM Profile {profile}'.format(
+                                profile = self.role))
+
+            except Exception, e:
                 self.log.error(str(e))
                 raise e
 
         try:
-            role = self.iam.create_role(self.role)
-            self.log.info('Created IAM Role {role}'.format(role = self.role))
-            self.iam.add_role_to_instance_profile(self.role, self.role)
-            self.log.info('Attached Role {role} to Profile {profile}'.format(
+            roles = self.iam.list_roles()
+            roles = roles['list_roles_response']
+            roles = roles['list_roles_result']
+            roles = roles['roles']
+            roles = [role['role_name'] for role in roles]
+
+            if self.role in roles:
+                role_exists = True
+        except Exception, e:
+            self.log.error(str(e))
+            raise e
+
+        if not role_exists:
+
+            try:
+                role = self.iam.create_role(self.role)
+                self.log.info('Created IAM Role {role}'.format(role = self.role))
+                self.iam.add_role_to_instance_profile(self.role, self.role)
+                self.log.info('Attached Role {role} to Profile {profile}'.format(
                             role = self.role, profile = self.role))
 
-        except Exception, e:
-            if 'EntityAlreadyExists' in str(e):
-                self.log.info('IAM Role {role} already exists'.format(
-                                role = self.role))
-            else:
+            except Exception, e:
                 self.log.error(str(e))
                 raise e
 
