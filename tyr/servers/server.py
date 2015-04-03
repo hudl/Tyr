@@ -389,17 +389,14 @@ named {name}""".format(path = d['path'], name = d['name']))
         profile_exists = False
 
         try:
-            profiles = self.iam.list_instance_profiles()
-            profiles = profiles['list_instance_profiles_response']
-            profiles = profiles['list_instance_profiles_result']
-            profiles = profiles['instance_profiles']
-            profiles = [profile['instance_profile_name'] for profile in profiles]
-
-            if self.role in profiles:
-                profile_exists = True
+            profile = self.iam.get_instance_profile(self.role)
+            profile_exists = True
         except Exception, e:
-            self.log.error(str(e))
-            raise e
+            if '404 Not Found' in str(e):
+                pass
+            else:
+                self.log.error(str(e))
+                raise e
 
         if not profile_exists:
             try:
@@ -412,17 +409,14 @@ named {name}""".format(path = d['path'], name = d['name']))
                 raise e
 
         try:
-            roles = self.iam.list_roles()
-            roles = roles['list_roles_response']
-            roles = roles['list_roles_result']
-            roles = roles['roles']
-            roles = [role['role_name'] for role in roles]
-
-            if self.role in roles:
-                role_exists = True
+            role = self.iam.get_role(self.role)
+            role_exists = True
         except Exception, e:
-            self.log.error(str(e))
-            raise e
+            if '404 Not Found' in str(e):
+                pass
+            else:
+                self.log.error(str(e))
+                raise e
 
         if not role_exists:
 
