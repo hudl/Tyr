@@ -53,7 +53,7 @@ allow_download_script_s3_stage_updater = """{
                 "s3:ListBucket"
             ],
             "Resource": [
-                "arn:aws:s3:::hudl-config/*"
+                "arn:aws:s3:::hudl-config/s-mongo/*"
             ]
         },
         {
@@ -63,7 +63,7 @@ allow_download_script_s3_stage_updater = """{
                 "s3:GetObject"
             ],
             "Resource": [
-                "arn:aws:s3:::hudl-config/*"
+                "arn:aws:s3:::hudl-config/s-mongo/*"
             ]
         }
     ]
