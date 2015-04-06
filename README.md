@@ -8,9 +8,6 @@ To do this, it interacts with [Amazon Web Servers](https://aws.amazon.com) and
 
 ## Installation
 
-Tyr is not open source and is therefore not available on
-[PyPi](https://pypi.python.org/pypi).
-
 ```
 $ git clone git@github.com:hudl/Tyr.git
 $ cd Tyr
@@ -54,3 +51,7 @@ Yep, that's it. Magical, right?
 4. Push to the new branch
 5. Open a pull request
 6. Await feedback
+
+## License
+
+Tyr is dedicated to the Public Domain. For more information, read the [license](https://github.com/hudl/Tyr/blob/master/LICENSE).
