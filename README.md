@@ -27,6 +27,9 @@ At this point, the only dependencies are
 - [boto](https://github.com/boto/boto)
 - [PyChef](https://github.com/coderanger/pychef)
 - [paramiko](http://www.paramiko.org/)
+- [click](http://click.pocoo.org)
+- [requests](http://docs.python-requests.org/en/latest/)
+- [PyYAML](http://pyyaml.org)
 
 These are specified in the `setup.py` file and will automatically be installed.
 

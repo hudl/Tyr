@@ -385,31 +385,49 @@ named {name}""".format(path = d['path'], name = d['name']))
 
     def resolve_iam_role(self):
 
-        try:
-            instance_profile = self.iam.create_instance_profile(self.role)
-            self.log.info('Created IAM Profile {profile}'.format(
-                            profile = self.role))
+        role_exists = False
+        profile_exists = False
 
+        try:
+            profile = self.iam.get_instance_profile(self.role)
+            profile_exists = True
         except Exception, e:
-            if 'EntityAlreadyExists' in str(e):
-                self.log.info('IAM Profile {profile} already exists'.format(
-                            profile = self.role))
+            if '404 Not Found' in str(e):
+                pass
             else:
                 self.log.error(str(e))
                 raise e
 
+        if not profile_exists:
+            try:
+                instance_profile = self.iam.create_instance_profile(self.role)
+                self.log.info('Created IAM Profile {profile}'.format(
+                                profile = self.role))
+
+            except Exception, e:
+                self.log.error(str(e))
+                raise e
+
         try:
-            role = self.iam.create_role(self.role)
-            self.log.info('Created IAM Role {role}'.format(role = self.role))
-            self.iam.add_role_to_instance_profile(self.role, self.role)
-            self.log.info('Attached Role {role} to Profile {profile}'.format(
+            role = self.iam.get_role(self.role)
+            role_exists = True
+        except Exception, e:
+            if '404 Not Found' in str(e):
+                pass
+            else:
+                self.log.error(str(e))
+                raise e
+
+        if not role_exists:
+
+            try:
+                role = self.iam.create_role(self.role)
+                self.log.info('Created IAM Role {role}'.format(role = self.role))
+                self.iam.add_role_to_instance_profile(self.role, self.role)
+                self.log.info('Attached Role {role} to Profile {profile}'.format(
                             role = self.role, profile = self.role))
 
-        except Exception, e:
-            if 'EntityAlreadyExists' in str(e):
-                self.log.info('IAM Role {role} already exists'.format(
-                                role = self.role))
-            else:
+            except Exception, e:
                 self.log.error(str(e))
                 raise e
 
