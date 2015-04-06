@@ -32,6 +32,10 @@ class MongoDataNode(MongoReplicaSetMember):
 
         super(MongoDataNode, self).configure()
 
+        if self.environment == 'stage':
+            self.IAM_ROLE_POLICIES.append('allow-download-script-s3-stage-updater')
+            self.resolve_iam_role()
+
         if self.data_volume_size is None:
             self.log.warn('No data volume size provided')
             self.data_volume_size = 400
