@@ -110,9 +110,21 @@ class ReplicaSet(object):
         log.debug('Re-determining the replica set primary')
         self.determine_primary(self.primary)
 
-        log.debug('Starting the mongo service on {address}'.format(
+        log.debug('Checking if mongod is running on {address}'.format(
                                                         address = address))
-        run_command(address, 'sudo service mongod start')
+
+        output = run_command(address, 'pgrep mongod')
+
+        if len(output) == 0:
+            log.debug('mongod is not running on {address}'.format(
+                                                        address = address))
+            log.debug('Starting the mongo service on {address}'.format(
+                                                        address = address))
+            run_command(address, 'sudo service mongod start')
+
+        else:
+            log.debug('mongod is already running on {address}'.format(
+                                                        address = address))
 
         log.debug('Adding {address} to the replica set'.format(address=address))
 
