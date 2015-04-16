@@ -21,7 +21,7 @@ class Server(object):
     def __init__(self, group=None, server_type=None, instance_type=None,
                     environment=None, ami=None, region=None, role=None,
                     keypair=None, availability_zone=None, security_groups=None,
-                    block_devices=None, chef_path=None):
+                    block_devices=None, chef_path=None, vpc_id=None, subnet_id=None):
 
         self.instance_type = instance_type
         self.group = group
@@ -35,6 +35,8 @@ class Server(object):
         self.security_groups = security_groups
         self.block_devices = block_devices
         self.chef_path = chef_path
+        self.vpc_id = vpc_id
+        self.subnet_id = subnet_id
 
     def establish_logger(self):
 
@@ -148,20 +150,18 @@ class Server(object):
 
         if self.availability_zone is None:
             self.log.warn('No EC2 availability zone provided')
-            self.availability_zone = 'c'
-
-        if len(self.availability_zone) == 1:
+        elif len(self.availability_zone) == 1:
             self.availability_zone = self.region+self.availability_zone
 
         valid = lambda z: z in [zone.name for zone in self.ec2.get_all_zones()]
 
-        if not valid(self.availability_zone):
-            error = '"{zone}" is not a valid EC2 availability zone'.format(
-                    zone = self.availability_zone)
-            raise InvalidAvailabilityZone(error)
+       # if not valid(self.availability_zone):
+       #     error = '"{zone}" is not a valid EC2 availability zone'.format(
+       #             zone = self.availability_zone)
+       #     raise InvalidAvailabilityZone(error)
 
-        self.log.info('Using EC2 Availability Zone "{zone}"'.format(
-                        zone = self.availability_zone))
+       # self.log.info('Using EC2 Availability Zone "{zone}"'.format(
+       #                 zone = self.availability_zone))
 
         if self.security_groups is None:
             self.log.warn('No EC2 security groups provided')
@@ -521,16 +521,30 @@ named {name}""".format(path = d['path'], name = d['name']))
             raise e
 
     def launch(self, wait=False):
+        
+        self.security_group_ids = ['sg-50691334','sg-437a0027','sg-b7057fd3','sg-32691356']
 
         parameters = {
                 'image_id': self.ami,
                 'instance_profile_name': self.role,
                 'key_name': self.keypair,
                 'instance_type': self.instance_type,
-                'security_groups': self.security_groups,
+                'security_group_ids': self.security_group_ids,
                 'block_device_map': self.blockdevicemapping,
-                'user_data': self.user_data,
-                'placement': self.availability_zone}
+                'user_data': self.user_data}
+
+        if self.subnet_id is None:
+            parameters.update({
+                'placement': self.availability_zone
+            })
+        else:
+            interface = self.ec2.networkinterface.NetworkInterfaceSpecification(subnet_id=self.subnet_id,
+                groups = self.security_group_ids,
+                associate_public_ip_address=True)
+            interfaces = self.ec2.networkinterface.NetworkInterfaceCollection(interface)
+            parameters.update({
+                'network_interfaces': interfaces
+            })
 
         reservation = self.ec2.run_instances(**parameters)
 
