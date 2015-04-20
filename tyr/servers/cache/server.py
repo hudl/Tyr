@@ -36,4 +36,18 @@ class CacheServer(Server):
 
         self.resolve_security_groups()
 
+    def bake(self):
 
+        super(CacheServer, self).bake()
+
+        with self.chef_api:
+
+            if self.chef_node.chef_environment == 'prod':
+                self.chef_node.run_list.append('role[RoleSumoLogic]')
+
+            self.log.info('Set the run list to "{runlist}"'.format(
+                                            runlist = self.chef_node.run_list))
+
+            self.chef_node.save()
+
+            self.log.info('Saved the Chef Node configuration')
