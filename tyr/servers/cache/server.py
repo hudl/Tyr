@@ -19,4 +19,21 @@ class CacheServer(Server):
                                             security_groups, block_devices,
                                             chef_path)
 
+    def configure(self):
+
+        super(CacheServer, self).configure()
+
+        # This is just a temporary fix to override the default security
+        # groups for Cache servers until the security_groups argument is
+        # removed.
+
+        self.security_groups = [
+            'management',
+            'chef-nodes',
+            self.envcl,
+            '{env}-cache-management'.format(env=self.environment[0])
+        ]
+
+        self.resolve_security_groups()
+
 
