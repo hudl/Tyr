@@ -701,6 +701,9 @@ named {name}""".format(path = d['path'], name = d['name']))
 
             self.chef_node.run_list = self.CHEF_RUNLIST
 
+            if self.chef_node.chef_environment == 'prod':
+                self.chef_node.run_list.append('role[RoleSumoLogic]')
+
             self.log.info('Set Chef run list to {list}'.format(
                                             list = self.chef_node.run_list))
 
