@@ -14,14 +14,14 @@ class MongoArbiterNode(MongoReplicaSetMember):
                     keypair = None, availability_zone = None,
                     security_groups = None, block_devices = None,
                     chef_path = None, replica_set = None,
-                    mongodb_version = None, vpc_id = None, subnet_id = None):
+                    mongodb_version = None, subnet_id = None):
 
         super(MongoArbiterNode, self).__init__(group, server_type, instance_type,
                                                 environment, ami, region, role,
                                                 keypair, availability_zone,
                                                 security_groups, block_devices,
                                                 chef_path, replica_set,
-                                                mongodb_version)
+                                                mongodb_version, subnet_id)
 
     def bake(self):
 

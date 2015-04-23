@@ -15,7 +15,7 @@ class MongoNode(Server):
                     keypair = None, availability_zone = None,
                     security_groups = None, block_devices = None,
                     chef_path = None, mongodb_version=None,
-                    vpc_id = None, subnet_id = None):
+                    subnet_id = None):
 
         self.mongodb_version = mongodb_version
 
@@ -25,7 +25,7 @@ class MongoNode(Server):
                                         environment, ami, region, role,
                                         keypair, availability_zone,
                                         security_groups, block_devices,
-                                        chef_path, vpc_id, subnet_id)
+                                        chef_path, subnet_id)
 
     def configure(self):
 

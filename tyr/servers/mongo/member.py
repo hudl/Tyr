@@ -10,7 +10,7 @@ class MongoReplicaSetMember(MongoNode):
                     security_groups = None, block_devices = None,
                     chef_path = None, replica_set = None,
                     mongodb_version = None,
-                    vpc_id = None, subnet_id = None):
+                    subnet_id = None):
 
         super(MongoReplicaSetMember, self).__init__(group, server_type, instance_type,
                                                     environment, ami, region,
@@ -19,7 +19,6 @@ class MongoReplicaSetMember(MongoNode):
                                                     security_groups,
                                                     block_devices, chef_path,
                                                     mongodb_version,
-                                                    vpc_id,
                                                     subnet_id)
 
         self.replica_set = replica_set
