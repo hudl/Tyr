@@ -126,3 +126,9 @@ class CacheServer(Server):
                 self.log.error('Recieved response {response}'.format(
                                                         response = r.json()))
 
+    def autorun(self):
+
+        super(CacheServer, self).autorun()
+        if self.baked():
+            self.configure_couchbase()
+
