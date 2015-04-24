@@ -13,13 +13,15 @@ class CacheServer(Server):
                     environment=None, ami=None, region=None, role=None,
                     keypair=None, availability_zone=None, security_groups=None,
                     block_devices=None, chef_path=None, couchbase_version=None,
-                    couchbase_username=None, couchbase_password=None):
+                    couchbase_username=None, couchbase_password=None,
+                    bucket_name=None):
 
         if server_type is None: server_type = self.SERVER_TYPE
 
         self.couchbase_version = couchbase_version
         self.couchbase_username = couchbase_username
         self.couchbase_password = couchbase_password
+        self.bucket_name = bucket_name
 
         super(CacheServer, self).__init__(group, server_type, instance_type,
                                             environment, ami, region, role,
@@ -33,10 +35,14 @@ class CacheServer(Server):
 
         if self.environment == 'prod':
             self.instance_type = 'r3.large'
-            self.bucket = 'hudl'
         else:
             self.instance_type = 'm3.large'
-            self.bucket = 'hudl-stage'
+
+        if not self.bucket_name:
+            if self.environment == 'prod':
+                self.bucket_name = 'hudl'
+            else:
+                self.bucket_name = 'hudl-stage'
 
         # This is just a temporary fix to override the default security
         # groups for Cache servers until the security_groups argument is
@@ -108,7 +114,7 @@ class CacheServer(Server):
             payload = {
                 'authType': 'sasl',
                 'bucketType': 'memcached',
-                'name': self.bucket,
+                'name': self.bucket_name,
                 'ramQuotaMB': memory_quota
             }
 
