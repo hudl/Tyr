@@ -117,7 +117,15 @@ class CacheServer(Server):
 
             auth = (username, password)
 
-            r = requests.post(uri, auth=auth, data=payload)
+            while True:
+                try:
+                    r = requests.post(uri, auth=auth, data=payload)
+                    break
+                except requests.exceptions.ConnectionError:
+                    self.log.error('Failed to connect to Couchbase')
+                    self.log.debug('Re-trying in 10 seconds')
+
+                    time.sleep(10)
 
             if r.status_code == 202:
 
