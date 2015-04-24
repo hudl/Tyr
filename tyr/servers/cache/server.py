@@ -28,6 +28,11 @@ class CacheServer(Server):
 
         super(CacheServer, self).configure()
 
+        if self.environment == 'prod':
+            self.instance_type = 'r3.large'
+        else:
+            self.instance_type = 'm3.large'
+
         # This is just a temporary fix to override the default security
         # groups for Cache servers until the security_groups argument is
         # removed.
