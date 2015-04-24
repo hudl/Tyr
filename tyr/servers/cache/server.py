@@ -1,4 +1,7 @@
 from tyr.servers.server import Server
+import chef
+import requests
+import time
 
 class CacheServer(Server):
 
@@ -79,4 +82,47 @@ class CacheServer(Server):
 
             self.chef_node.save()
             self.log.info('Saved the Chef Node configuration')
+
+    def configure_couchbase(self):
+
+        with self.chef_api:
+
+            self.chef_node = chef.Node(self.name)
+
+            username = self.chef_node.attributes.get_dotted(
+                                                'couchbase.server.username')
+            password = self.chef_node.attributes.get_dotted(
+                                                'couchbase.server.password')
+
+            memory_quota = self.chef_node.attributes.get_dotted(
+                                             'couchbase.server.memory_quota_mb')
+
+            port = self.chef_node.attributes.get_dotted('couchbase.server.port')
+
+            uri = 'http://{hostname}:{port}/pools/default/buckets'.format(
+                                                hostname = self.hostname,
+                                                port = port)
+
+            payload = {
+                'authType': 'sasl',
+                'bucketType': 'memcached',
+                'name': 'hudl',
+                'ramQuotaMB': memory_quota
+            }
+
+            auth = (username, password)
+
+            r = requests.post(uri, auth=auth, data=payload)
+
+            if r.status_code == 202:
+
+                self.log.info('Created memcached bucket hudl')
+
+            else:
+
+                self.log.error('Failed to create memcached bucket hudl')
+                self.log.error('Recieved status code {code} for Couchbase'.format(
+                                                        code = r.status_code))
+                self.log.error('Recieved response {response}'.format(
+                                                        response = r.json()))
 
