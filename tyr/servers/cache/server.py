@@ -33,8 +33,10 @@ class CacheServer(Server):
 
         if self.environment == 'prod':
             self.instance_type = 'r3.large'
+            self.bucket = 'hudl'
         else:
             self.instance_type = 'm3.large'
+            self.bucket = 'hudl-stage'
 
         # This is just a temporary fix to override the default security
         # groups for Cache servers until the security_groups argument is
@@ -103,15 +105,10 @@ class CacheServer(Server):
                                                 hostname = self.hostname,
                                                 port = port)
 
-            if self.environment == 'prod':
-                bucket = 'hudl'
-            else:
-                bucket = 'hudl-stage'
-
             payload = {
                 'authType': 'sasl',
                 'bucketType': 'memcached',
-                'name': bucket,
+                'name': self.bucket,
                 'ramQuotaMB': memory_quota
             }
 
