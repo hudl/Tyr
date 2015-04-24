@@ -103,10 +103,15 @@ class CacheServer(Server):
                                                 hostname = self.hostname,
                                                 port = port)
 
+            if self.environment == 'prod':
+                bucket = 'hudl'
+            else:
+                bucket = 'hudl-stage'
+
             payload = {
                 'authType': 'sasl',
                 'bucketType': 'memcached',
-                'name': 'hudl',
+                'name': bucket,
                 'ramQuotaMB': memory_quota
             }
 
