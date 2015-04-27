@@ -132,11 +132,13 @@ class CacheServer(Server):
 
             if r.status_code == 202:
 
-                self.log.info('Created memcached bucket hudl')
+                self.log.info('Created memcached bucket {bucket}'.format(
+                                                    bucket = self.bucket_name))
 
             else:
 
-                self.log.error('Failed to create memcached bucket hudl')
+                self.log.error('Failed to create memcached bucket {bucket}'.format(
+                                                    bucket = self.bucket_name))
                 self.log.error('Recieved status code {code} for Couchbase'.format(
                                                         code = r.status_code))
                 self.log.error('Recieved response {response}'.format(
