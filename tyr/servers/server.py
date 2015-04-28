@@ -7,7 +7,9 @@ import os.path
 import chef
 import time
 from boto.ec2.networkinterface import NetworkInterfaceSpecification
+import json
 from boto.ec2.networkinterface import NetworkInterfaceCollection
+import urllib
 from boto.vpc import VPCConnection
 from paramiko.client import AutoAddPolicy, SSHClient
 from tyr.policies import policies
@@ -49,14 +51,16 @@ class Server(object):
             pass
 
         log = logging.getLogger(self.__class__.__name__)
-        log.setLevel(logging.DEBUG)
-        ch = logging.StreamHandler()
-        ch.setLevel(logging.DEBUG)
-        formatter = logging.Formatter(
-                '%(asctime)s [%(name)s] %(levelname)s: %(message)s',
-                datefmt='%H:%M:%S')
-        ch.setFormatter(formatter)
-        log.addHandler(ch)
+
+        if not log.handlers:
+            log.setLevel(logging.DEBUG)
+            ch = logging.StreamHandler()
+            ch.setLevel(logging.DEBUG)
+            formatter = logging.Formatter(
+                    '%(asctime)s [%(name)s] %(levelname)s: %(message)s',
+                    datefmt='%H:%M:%S')
+            ch.setFormatter(formatter)
+            log.addHandler(ch)
 
         self.log = log
 
@@ -513,8 +517,16 @@ named {name}""".format(path = d['path'], name = d['name']))
                 self.log.info('Policy "{policy}" already exists'.format(
                                         policy = policy))
 
-                if policies[policy] == self.iam.get_role_policy(self.role, policy):
+                tyr_copy = json.loads(policies[policy])
 
+                aws_copy = self.iam.get_role_policy(self.role, policy)
+                aws_copy = aws_copy['get_role_policy_response']
+                aws_copy = aws_copy['get_role_policy_result']
+                aws_copy = aws_copy['policy_document']
+                aws_copy = urllib.unquote(aws_copy)
+                aws_copy = json.loads(aws_copy)
+
+                if tyr_copy == aws_copy:
                     self.log.info('Policy "{policy}" is accurate'.format(
                                         policy = policy))
 
