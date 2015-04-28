@@ -382,21 +382,58 @@ named {name}""".format(path = d['path'], name = d['name']))
 
         return bdm
 
+    def get_subnet_vpc_id(self, subnet_id):
+        vpcConn = VPCConnection()
+        subnets = vpcConn.get_all_subnets(
+            filters={'subnet_id': subnet_id})
+        if len(subnets) == 1:
+            vpc_id = subnets[0].vpc_id
+            return vpc_id
+        else:
+            self.log.error("None or greater then 1 subnet returned")
+            exit(1)  # should probably throw an exception, if I knew how
+
+    def get_vpc_suffix(self, vpc_id):
+            vpcConn = VPCConnection()
+            vpc = vpcConn.get_all_vpcs(filters={'vpc_id': vpc_id})
+            if len(vpc) == 1:
+                vpc_suffix = vpc[0].tags['vpcSuffix']
+                if vpc_suffix is None:
+                    return "vpc"
+                else:
+                    return vpc_suffix
+            else:
+                self.log.error("None or greater then 1 vpc returned")
+                exit(1)  # should probably throw an exception, if I knew how
+
     def resolve_security_groups(self):
+        # If the server is being spun up in a subnet, append a vpc suffix
+        if self.subnet_id is not None:
+            vpc_id = self.get_subnet_vpc_id(self.subnet_id)
+            vpc_suffix = self.get_vpc_suffix(vpc_id)
 
         exists = lambda s: s in [group.name for group in
-                self.ec2.get_all_security_groups()]
+                                 self.ec2.get_all_security_groups()]
 
-        for group in self.security_groups:
+        for index, group in enumerate(self.security_groups):
+            if self.subnet_id is not None:
+                if not group.endswith("-" + vpc_suffix):
+                    group = group + "-" + vpc_suffix
+                    self.security_groups[index] = group
             if not exists(group):
                 self.log.info('Security Group {group} does not exist'.format(
-                                group = group))
-                self.ec2.create_security_group(group, group)
+                                group=group))
+                if self.subnet_id is None:
+                    self.ec2.create_security_group(group, group)
+                else:
+                    vpcConn = VPCConnection()
+                    vpcConn.create_security_group(
+                        group, group, vpc_id=vpc_id)
                 self.log.info('Created security group {group}'.format(
-                                group = group))
+                                group=group))
             else:
                 self.log.info('Security Group {group} already exists'.format(
-                                group = group))
+                                group=group))
 
     def resolve_iam_role(self):
 

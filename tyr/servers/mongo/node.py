@@ -49,8 +49,6 @@ class MongoNode(Server):
         # groups for MongoDB nodes until the security_groups argument
         # is removed.
 
-
-
         self.resolve_security_groups()
 
     def run_mongo(self, command):
