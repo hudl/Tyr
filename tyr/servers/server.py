@@ -563,8 +563,10 @@ named {name}""".format(path = d['path'], name = d['name']))
 
         if len(subnets) == 1:
             availability_zone = subnets[0].availability_zone
-            self.log.info("""subnet {subnet_id} is in
-                 availability zone {availability_zone}""".format(
+
+            log_message = 'subnet {subnet_id} is in ' \
+                          'availability zone {availability_zone}'
+            self.log.info(log_message.format(
                             subnet_id=subnet_id,
                             availability_zone=availability_zone))
             return availability_zone
