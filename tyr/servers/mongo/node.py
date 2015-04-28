@@ -30,10 +30,10 @@ class MongoNode(Server):
     def configure(self):
 
         self.security_groups = [
-            'management-testvpc',
-            'chef-nodes-testvpc',
-            '{envcl}-testvpc'.format(envcl=self.envcl),
-            '{env}-mongo-management-testvpc'.format(env = self.environment[0])
+            'management',
+            'chef-nodes',
+            '{envcl}'.format(envcl=self.envcl),
+            '{env}-mongo-management'.format(env=self.environment[0])
         ]
 
         super(MongoNode, self).configure()

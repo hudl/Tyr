@@ -8,6 +8,7 @@ import chef
 import time
 from boto.ec2.networkinterface import NetworkInterfaceSpecification
 from boto.ec2.networkinterface import NetworkInterfaceCollection
+from boto.vpc import VPCConnection
 from paramiko.client import AutoAddPolicy, SSHClient
 from tyr.policies import policies
 
@@ -22,13 +23,13 @@ class Server(object):
     CHEF_RUNLIST=['role[RoleBase]']
 
     def __init__(self, group=None, server_type=None, instance_type=None,
-                    environment=None, ami=None, region=None, role=None,
-                    keypair=None, availability_zone=None, security_groups=None,
-                    block_devices=None, chef_path=None, subnet_id=None):
+                 environment=None, ami=None, region=None, role=None,
+                 keypair=None, availability_zone=None, security_groups=None,
+                 block_devices=None, chef_path=None, subnet_id=None):
 
         self.instance_type = instance_type
         self.group = group
-        self.server_type= server_type
+        self.server_type = server_type
         self.environment = environment
         self.ami = ami
         self.region = region
@@ -144,14 +145,26 @@ class Server(object):
 
         if not valid(self.keypair):
             error = '"{keypair}" is not a valid EC2 keypair'.format(
-                        keypair = self.keypair)
+                        keypair=self.keypair)
             raise InvalidKeyPair(error)
 
         self.log.info('Using EC2 Key Pair "{keypair}"'.format(
-                        keypair = self.keypair))
+                        keypair=self.keypair))
 
         if self.availability_zone is None:
             self.log.warn('No EC2 availability zone provided')
+            if self.subnet_id is None:
+                self.log.warn(
+                    'No EC2 availability zone provided, using zone c')
+                self.availability_zone = 'c'
+            else:
+                self.availability_zone = self.get_subnet_availability_zone(
+                    self.subnet_id)
+                self.log.info(
+                    "Using VPC, using availability zone " +
+                    "{availability_zone}".format(
+                        availability_zone=self.availability_zone))
+
         elif len(self.availability_zone) == 1:
             self.availability_zone = self.region+self.availability_zone
 
@@ -504,6 +517,21 @@ named {name}""".format(path = d['path'], name = d['name']))
             self.log.error(str(e))
             raise e
 
+    def get_subnet_availability_zone(self, subnet_id):
+        self.log.info(
+            "getting zone for subnet {subnet_id}".format(subnet_id=subnet_id))
+        VpcConn = VPCConnection()
+        filters = {'subnet-id': subnet_id}
+        subnets = VpcConn.get_all_subnets(filters=filters)
+
+        if len(subnets) == 1:
+            availability_zone = subnets[0].availability_zone
+            self.log.info("""subnet {subnet_id} is in
+                 availability zone {availability_zone}""".format(
+                            subnet_id=subnet_id,
+                            availability_zone=availability_zone))
+            return availability_zone
+
     def establish_iam_connection(self):
 
         try:
@@ -529,7 +557,6 @@ named {name}""".format(path = d['path'], name = d['name']))
                 filters = {'group-name': group}
                 security_groups = ec2Conn.get_all_security_groups(
                     filters=filters)
-                self.log.info(security_groups)
 
                 if len(security_groups) == 1:
                     security_group_ids.append(
@@ -571,7 +598,7 @@ named {name}""".format(path = d['path'], name = d['name']))
         else:
             interface = NetworkInterfaceSpecification(
                 subnet_id=self.subnet_id,
-                groups=elf.security_group_ids,
+                groups=self.security_group_ids,
                 associate_public_ip_address=True)
             interfaces = NetworkInterfaceCollection(
                 interface)
