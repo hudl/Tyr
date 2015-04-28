@@ -170,13 +170,13 @@ class Server(object):
 
         valid = lambda z: z in [zone.name for zone in self.ec2.get_all_zones()]
 
-       # if not valid(self.availability_zone):
-       #     error = '"{zone}" is not a valid EC2 availability zone'.format(
-       #             zone = self.availability_zone)
-       #     raise InvalidAvailabilityZone(error)
+        if not valid(self.availability_zone):
+            error = '"{zone}" is not a valid EC2 availability zone'.format(
+                    zone=self.availability_zone)
+            raise InvalidAvailabilityZone(error)
 
-       # self.log.info('Using EC2 Availability Zone "{zone}"'.format(
-       #                 zone = self.availability_zone))
+        self.log.info('Using EC2 Availability Zone "{zone}"'.format(
+                        zone=self.availability_zone))
 
         if self.security_groups is None:
             self.log.warn('No EC2 security groups provided')
