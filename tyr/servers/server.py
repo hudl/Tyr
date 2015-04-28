@@ -6,6 +6,8 @@ import logging
 import os.path
 import chef
 import time
+from boto.ec2.networkinterface import NetworkInterfaceSpecification
+from boto.ec2.networkinterface import NetworkInterfaceCollection
 from paramiko.client import AutoAddPolicy, SSHClient
 from tyr.policies import policies
 
@@ -520,10 +522,38 @@ named {name}""".format(path = d['path'], name = d['name']))
             self.log.error(str(e))
             raise e
 
-    def launch(self, wait=False):
+    def get_security_group_ids(self, security_groups):
+            ec2Conn = self.ec2
+            security_group_ids = list()
+            for group in self.security_groups:
+                filters = {'group-name': group}
+                security_groups = ec2Conn.get_all_security_groups(
+                    filters=filters)
+                self.log.info(security_groups)
 
-        self.security_group_ids = ['sg-50691334', 'sg-437a0027',
-                                   'sg-b7057fd3', 'sg-32691356']
+                if len(security_groups) == 1:
+                    security_group_ids.append(
+                        security_groups[0].id)
+                elif len(security_groups) > 1:
+                    self.log.error(
+                        "Multiple security groups match {group}".format(
+                            group=group))
+                    exit(1)
+                else:
+                    self.log.error(
+                        "No security groups match {group}".format(
+                            group=group))
+                    exit(1)
+
+            return security_group_ids
+
+    def launch(self, wait=False):
+        self.security_group_ids = self.get_security_group_ids(
+            self.security_groups)
+
+        self.log.info(
+            "Using Security group ids: {ids}".format(
+                ids=self.security_group_ids))
 
         parameters = {
                 'image_id': self.ami,
@@ -539,10 +569,12 @@ named {name}""".format(path = d['path'], name = d['name']))
                 'security_group_ids': self.security_group_ids,
             })
         else:
-            interface = boto.ec2.networkinterface.NetworkInterfaceSpecification(subnet_id=self.subnet_id,
-                groups = self.security_group_ids,
+            interface = NetworkInterfaceSpecification(
+                subnet_id=self.subnet_id,
+                groups=elf.security_group_ids,
                 associate_public_ip_address=True)
-            interfaces = boto.ec2.networkinterface.NetworkInterfaceCollection(interface)
+            interfaces = NetworkInterfaceCollection(
+                interface)
             parameters.update({
                 'network_interfaces': interfaces
             })
@@ -570,7 +602,7 @@ named {name}""".format(path = d['path'], name = d['name']))
 
     def tag(self):
         self.ec2.create_tags([self.instance.id], self.tags)
-        self.log.info('Tagged instance with {tags}'.format(tags = self.tags))
+        self.log.info('Tagged instance with {tags}'.format(tags=self.tags))
 
     def route(self):
         zone_address = self.hostname[len(self.name)+1:]
