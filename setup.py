@@ -5,9 +5,9 @@ setup(
     version = '0.0.1',
     author = 'Mihir Singh (@citruspi)',
     author_email = 'mihir.singh@hudl.com',
-    include_package_data = True,
     packages = ['tyr'],
     zip_safe = False,
+    include_package_data = True,
     platforms = 'any',
     install_requires = [
         'boto',
