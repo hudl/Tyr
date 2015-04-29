@@ -2,6 +2,7 @@ import time
 import logging
 from tyr.servers.cache import CacheServer
 import requests
+import boto.ec2
 
 def timeit(method):
 
@@ -147,12 +148,31 @@ class Cluster(object):
             log.debug('Re-trying in 10 seconds')
 
             time.sleep(10)
+        for node in response['nodes']:
 
-            r = self.request('/pools/{pool}/nodes/'.format(pool=self.pool))
+            if node['hostname'].split('.')[0] == '10':
+                reservations = conn.get_all_instances(filters={
+                            'private-ip-address': node['hostname'].split(':')[0]
+                                                              })
 
-        response = r.json()
+                instance = reservations[0].instances[0]
 
-        return [node['otpNode'] for node in response['nodes']]
+                yield {
+                        'otpNode': node['otpNode'],
+                        'address': {
+                            'public': instance.public_dns_name,
+                            'private': node['hostname'].split(':')[0]
+                        }
+                      }
+
+            else:
+                yield {
+                        'otpNode': node['otpNode'],
+                        'address': {
+                            'public': node['hostname'].split(':')[0],
+                            'private': node['hostname'].split(':')[0],
+                        }
+                      }
 
     def add_node(self, hostname):
 
