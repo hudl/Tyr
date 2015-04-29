@@ -1,6 +1,7 @@
 import time
 import logging
 from tyr.servers.cache import CacheServer
+import requests
 
 def timeit(method):
 
