@@ -37,32 +37,44 @@ class Cluster(object):
         self.username = username
         self.password = password
 
-    def request(self, path, method='GET', payload=None):
+    def request(self, path, method='GET', payload=None,
+                success=lambda r: r.status_code == 200, retry=True):
 
         uri = 'http://{hostname}:8091{path}'.format(hostname = self.member,
                                                         path = path)
 
+        log.debug('Using URI {uri}'.format(uri=uri))
+
         auth = (self.username, self.password)
 
+        log.debug('Using HTTP auth {auth}'.format(auth=auth))
+
+        log.debug('Using HTTP method {method}'.format(method=method))
+
         if method == 'GET':
-            return requests.get(uri, auth=auth)
+            r = requests.get(uri, auth=auth)
 
         elif method == 'POST':
-            return requests.post(uri, auth=auth, data=payload)
+            r = requests.post(uri, auth=auth, data=payload)
+
+        while not success(r):
+
+            log.error('Failed to make the request to {uri}'.format(uri=uri))
+            log.debug('Received status code {code}'.format(code=r.status_code))
+            log.debug('Received response {body}'.format(body=r.text))
+
+            if not retry:
+                break
+
+            log.debug('Retrying in 10 seconds')
+            time.sleep(10)
+
+        return (r, success(r))
 
     @property
     def pool(self):
 
-        r = self.request('/pools/')
-
-        while r.status_code != 200:
-
-            log.error('Received {code} from the API'.format(code=r.status_code))
-            log.debug('Re-trying in 10 seconds')
-
-            time.sleep(10)
-
-            r = self.request('/pools/')
+        r = self.request('/pools/')[0]
 
         pools = r.json()['pools']
 
@@ -73,16 +85,7 @@ class Cluster(object):
 
         path = '/pools/{pool}/buckets/'.format(pool = self.pool)
 
-        r = self.request(path)
-
-        while r.status_code != 200:
-
-            log.error('Received {code} from the API'.format(code=r.status_code))
-            log.debug('Re-trying in 10 seconds')
-
-            time.sleep(10)
-
-            r = self.request(path)
+        r = self.request(path)[0]
 
         buckets = r.json()
 
@@ -107,31 +110,11 @@ class Cluster(object):
 
         r = self.request('/controller/rebalance', method='POST', payload=data)
 
-        while r.status_code != 200:
-
-            log.error('Received {code} from the API'.format(code=r.status_code))
-            log.debug('Re-trying in 10 seconds')
-
-            time.sleep(10)
-
-            r = self.request('/controller/rebalance', method='POST',
-                                payload=data)
-
     @property
     def is_rebalancing(self):
 
         r = self.request('/pools/{pool}/rebalanceProgress/'.format(
-                                                            pool = self.pool))
-
-        while r.status_code != 200:
-
-            log.error('Received {code} from the API'.format(code=r.status_code))
-            log.debug('Re-trying in 10 seconds')
-
-            time.sleep(10)
-
-            r = self.request('/pools/{pool}/rebalanceProgress/'.format(
-                                                            pool = self.pool))
+                                                        pool = self.pool))[0]
 
         progress = r.json()
 
@@ -140,14 +123,12 @@ class Cluster(object):
     @property
     def nodes(self):
 
-        r = self.request('/pools/{pool}/nodes/'.format(pool=self.pool))
+        r = self.request('/pools/nodes/')[0]
 
-        while r.status_code != 200:
+        response = r.json()
 
-            log.error('Received {code} from the API'.format(code=r.status_code))
-            log.debug('Re-trying in 10 seconds')
+        conn = boto.ec2.connect_to_region('us-east-1')
 
-            time.sleep(10)
         for node in response['nodes']:
 
             if node['hostname'].split('.')[0] == '10':
@@ -182,17 +163,8 @@ class Cluster(object):
                     'password': self.password
                   }
 
-        r = self.request('/controller/addNode/', method='POST', payload=payload)
-
-        if r.status_code > 400:
-
-            log.error('Received {code} from the API'.format(code=r.status_code))
-            log.debug('Re-trying in 10 seconds')
-
-            time.sleep(10)
-
-            r = self.request('/controller/addNode/', method='POST',
-                                payload=payload)
+        r = self.request('/controller/addNode/', method='POST', payload=payload,
+                            success=lambda r: r.status_code >= 400)[0]
 
         log.info('{hostname} successfully added as {otpNode}'.format(
                                                 hostname = hostname,
@@ -206,19 +178,6 @@ class Cluster(object):
 
         r = self.request('/controller/ejectNode/', method='POST',
                             payload=payload)
-
-        while r.status_code > 400:
-
-            log.error('Received {code} from the API'.format(code=r.status_code))
-            log.debug('Re-trying in 10 seconds')
-
-            time.sleep(10)
-
-            r = self.request('/controller/ejectNode/', method='POST',
-                             payload=payload)
-
-            log.info('{hostname} successfully removed'.format(
-                                                hostname = hostname))
 
 def replace_couchbase_server(member, group=None, environment=None,
                                 availability_zone=None, couchbase_username=None,
