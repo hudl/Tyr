@@ -47,3 +47,21 @@ class Cluster(object):
         elif method == 'POST':
             return requests.post(uri, auth=auth, data=payload)
 
+    @property
+    def pool(self):
+
+        r = self.request('/pools/')
+
+        while r.status_code != 200:
+
+            log.error('Received {code} from the API'.format(code=r.status_code))
+            log.debug('Re-trying in 10 seconds')
+
+            time.sleep(10)
+
+            r = self.request('/pools/')
+
+        pools = r.json()['pools']
+
+        return pools[0]['name']
+
