@@ -188,7 +188,21 @@ def replace_couchbase_server(member, group=None, environment=None,
                                 couchbase_password=None, replace=True,
                                 reroute=True, terminate=False):
 
-    cluster = Cluster(member, username=couchbase_username,
+    public_address = member
+
+    if member.split('.')[0] == '10':
+
+        conn = boto.ec2.connect_to_region('us-east-1')
+
+        reservations = conn.get_all_instances(filters={
+                                                    'private-ip-address': member
+                                                       })
+
+        instance = reservations[0].instances[0]
+
+        public_address = instance.public_dns_name
+
+    cluster = Cluster(public_address, username=couchbase_username,
                         password=couchbase_password)
 
     node = CacheServer(group=group, environment=environment,
