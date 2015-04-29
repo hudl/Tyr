@@ -34,3 +34,16 @@ class Cluster(object):
         self.username = username
         self.password = password
 
+    def request(self, path, method='GET', payload=None):
+
+        uri = 'http://{hostname}:8091{path}'.format(hostname = self.member,
+                                                        path = path)
+
+        auth = (self.username, self.password)
+
+        if method == 'GET':
+            return requests.get(uri, auth=auth)
+
+        elif method == 'POST':
+            return requests.post(uri, auth=auth, data=payload)
+
