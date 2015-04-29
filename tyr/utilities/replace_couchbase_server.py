@@ -1,5 +1,6 @@
 import time
 import logging
+from tyr.servers.cache import CacheServer
 
 def timeit(method):
 
@@ -198,3 +199,36 @@ class Cluster(object):
             log.info('{hostname} successfully removed'.format(
                                                 hostname = hostname))
 
+def replace_couchbase_server(member, group=None, environment=None,
+                                availability_zone=None, couchbase_username=None,
+                                couchbase_password=None, replace=True,
+                                reroute=True, terminate=False):
+
+    cluster = Cluster(member, username=couchbase_username,
+                        password=couchbase_password)
+
+    node = CacheServer(group=group, environment=environment,
+                        availability_zone=availability_zone,
+                        couchbase_username=couchbase_username,
+                        couchbase_password=couchbase_password,
+                        bucket_name = cluster.bucket)
+    node.autorun()
+
+    cluster.add_node(node.hostname)
+
+    cluster.rebalance(known_nodes=cluster.nodes)
+
+    while cluster.is_rebalancing:
+        pass
+
+    if not replace:
+        return
+
+    cluster.member = node.hostname
+
+    cluster.remove_node(member)
+
+    cluster.rebalance(known_nodes=cluster.nodes, ejected_nodes=member)
+
+    while cluster.is_rebalancing:
+        pass
