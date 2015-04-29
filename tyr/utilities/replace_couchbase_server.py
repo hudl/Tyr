@@ -3,6 +3,8 @@ import logging
 from tyr.servers.cache import CacheServer
 import requests
 import boto.ec2
+import socket
+import boto.route53
 
 def timeit(method):
 
@@ -229,6 +231,33 @@ def replace_couchbase_server(member, group=None, environment=None,
         return
 
     cluster.member = node.hostname
+
+    if reroute:
+
+        conn = boto.route53.connect_to_region('us-east-1')
+
+        zone = 'app.hudl.com.'
+
+        if node.environment == 'stage':
+            zone = 'app.staghudl.com.'
+        elif node.environment == 'test':
+            zone = 'thorhudl.com.'
+
+        name = '{name}.{zone}'.format(name=instance.tags['Name'], zone=zone)
+
+        zone = conn.get_zone(zone)
+
+        status = zone.update_cname(name, node.hostname)
+
+        while status.update() != 'INSYNC':
+            log.debug('The DNS update is not in sync yet. Retrying in 10 ' \
+                        'seconds')
+            time.sleep(10)
+
+        while socket.gethostbyname(name) != node.instance.ip_address:
+            log.debug('The DNS update has not propagated out yet. Retrying ' \
+                        'in 10 seconds.')
+            time.sleep(10)
 
     cluster.rebalance(ejected_nodes=['ns_1@{member}'.format(member=member)])
 
