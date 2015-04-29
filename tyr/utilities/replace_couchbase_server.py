@@ -172,6 +172,10 @@ class Cluster(object):
 
     def remove_node(self, hostname):
 
+        log.warn('The removal of an active node from a cluster should be ' \
+                    'performed using rebalance() with the ejected_nodes ' \
+                    'argument')
+
         payload = {
                     'otpNode': 'ns_1@{hostname}'.format(hostname=hostname)
                   }
