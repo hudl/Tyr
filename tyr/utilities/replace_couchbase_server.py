@@ -190,10 +190,9 @@ def replace_couchbase_server(member, group=None, environment=None,
 
     public_address = member
 
+    conn = boto.ec2.connect_to_region('us-east-1')
+
     if member.split('.')[0] == '10':
-
-        conn = boto.ec2.connect_to_region('us-east-1')
-
         reservations = conn.get_all_instances(filters={
                                                     'private-ip-address': member
                                                        })
@@ -201,6 +200,13 @@ def replace_couchbase_server(member, group=None, environment=None,
         instance = reservations[0].instances[0]
 
         public_address = instance.public_dns_name
+
+    else:
+        reservations = conn.get_all_instances(filters={
+                                                'tag:Name': member.split('.')[0]
+                                                      })
+
+        instance = reservations[0].instances[0]
 
     cluster = Cluster(public_address, username=couchbase_username,
                         password=couchbase_password)
