@@ -152,3 +152,27 @@ class Cluster(object):
 
         return [node['otpNode'] for node in response['nodes']]
 
+    def add_node(self, hostname):
+
+        payload = {
+                    'hostname': hostname,
+                    'user': self.username,
+                    'password': self.password
+                  }
+
+        r = self.request('/controller/addNode/', method='POST', payload=payload)
+
+        if r.status_code > 400:
+
+            log.error('Received {code} from the API'.format(code=r.status_code))
+            log.debug('Re-trying in 10 seconds')
+
+            time.sleep(10)
+
+            r = self.request('/controller/addNode/', method='POST',
+                                payload=payload)
+
+        log.info('{hostname} successfully added as {otpNode}'.format(
+                                                hostname = hostname,
+                                                otpNode = r.json()['otpNode']))
+
