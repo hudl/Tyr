@@ -263,3 +263,6 @@ def replace_couchbase_server(member, group=None, environment=None,
 
     while cluster.is_rebalancing:
         pass
+
+    log.info('{old} has been replaced with {new}.'.format(old=member,
+                                                            new=node.hostname))
