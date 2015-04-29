@@ -101,7 +101,7 @@ class Cluster(object):
         if known_nodes:
             known_nodes = ','.join(known_nodes)
         else:
-            known_nodes = ''
+            known_nodes = ','.join([node['otpNode'] for node in  self.nodes])
 
         data = {
                 'ejectedNodes': ejected_nodes,
