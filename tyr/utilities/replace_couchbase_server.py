@@ -85,3 +85,31 @@ class Cluster(object):
 
         return buckets[0]['name']
 
+    def rebalance(self, ejected_nodes=None, known_nodes=None):
+
+        if ejected_nodes:
+            ejected_nodes = ','.join(ejected_nodes)
+        else:
+            ejected_nodes = ''
+
+        if known_nodes:
+            known_nodes = ','.join(known_nodes)
+        else:
+            known_nodes = ''
+
+        data = {
+                'ejectedNodes': ejected_nodes,
+                'knownNodes': known_nodes
+        }
+
+        r = self.request('/controller/rebalance', method='POST', payload=data)
+
+        while r.status_code != 200:
+
+            log.error('Received {code} from the API'.format(code=r.status_code))
+            log.debug('Re-trying in 10 seconds')
+
+            time.sleep(10)
+
+            r = self.request('/controller/rebalance', method='POST',
+                                payload=data)
