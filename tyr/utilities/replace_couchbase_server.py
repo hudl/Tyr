@@ -39,6 +39,7 @@ class Cluster(object):
         self.username = username
         self.password = password
 
+    @timeit
     def request(self, path, method='GET', payload=None,
                 success=lambda r: r.status_code == 200, retry=True):
 
@@ -74,6 +75,7 @@ class Cluster(object):
         return (r, success(r))
 
     @property
+    @timeit
     def pool(self):
 
         r = self.request('/pools/')[0]
@@ -83,6 +85,7 @@ class Cluster(object):
         return pools[0]['name']
 
     @property
+    @timeit
     def bucket(self):
 
         path = '/pools/{pool}/buckets/'.format(pool = self.pool)
@@ -93,6 +96,7 @@ class Cluster(object):
 
         return buckets[0]['name']
 
+    @timeit
     def rebalance(self, ejected_nodes=None, known_nodes=None):
 
         if ejected_nodes:
@@ -113,6 +117,7 @@ class Cluster(object):
         r = self.request('/controller/rebalance', method='POST', payload=data)
 
     @property
+    @timeit
     def is_rebalancing(self):
 
         r = self.request('/pools/{pool}/rebalanceProgress/'.format(
@@ -123,6 +128,7 @@ class Cluster(object):
         return (progress['status'] == 'running')
 
     @property
+    @timeit
     def nodes(self):
 
         r = self.request('/pools/nodes/')[0]
@@ -157,6 +163,7 @@ class Cluster(object):
                         }
                       }
 
+    @timeit
     def add_node(self, hostname):
 
         payload = {
@@ -172,6 +179,7 @@ class Cluster(object):
                                                 hostname = hostname,
                                                 otpNode = r.json()['otpNode']))
 
+    @timeit
     def remove_node(self, hostname):
 
         log.warn('The removal of an active node from a cluster should be ' \
@@ -185,6 +193,7 @@ class Cluster(object):
         r = self.request('/controller/ejectNode/', method='POST',
                             payload=payload)
 
+@timeit
 def replace_couchbase_server(member, group=None, environment=None,
                                 availability_zone=None, couchbase_username=None,
                                 couchbase_password=None, replace=True,
