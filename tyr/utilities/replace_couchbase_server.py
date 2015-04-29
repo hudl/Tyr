@@ -163,8 +163,8 @@ class Cluster(object):
                     'password': self.password
                   }
 
-        r = self.request('/controller/addNode/', method='POST', payload=payload,
-                            success=lambda r: r.status_code >= 400)[0]
+        r = self.request('/controller/addNode/', method='POST',
+                            payload=payload)[0]
 
         log.info('{hostname} successfully added as {otpNode}'.format(
                                                 hostname = hostname,
