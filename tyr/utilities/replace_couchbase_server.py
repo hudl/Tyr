@@ -176,3 +176,25 @@ class Cluster(object):
                                                 hostname = hostname,
                                                 otpNode = r.json()['otpNode']))
 
+    def remove_node(self, hostname):
+
+        payload = {
+                    'otpNode': 'ns_1@{hostname}'.format(hostname=hostname)
+                  }
+
+        r = self.request('/controller/ejectNode/', method='POST',
+                            payload=payload)
+
+        while r.status_code > 400:
+
+            log.error('Received {code} from the API'.format(code=r.status_code))
+            log.debug('Re-trying in 10 seconds')
+
+            time.sleep(10)
+
+            r = self.request('/controller/ejectNode/', method='POST',
+                             payload=payload)
+
+            log.info('{hostname} successfully removed'.format(
+                                                hostname = hostname))
+
