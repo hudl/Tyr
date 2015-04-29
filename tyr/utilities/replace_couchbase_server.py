@@ -133,3 +133,22 @@ class Cluster(object):
         progress = r.json()
 
         return (progress['status'] == 'running')
+
+    @property
+    def nodes(self):
+
+        r = self.request('/pools/{pool}/nodes/'.format(pool=self.pool))
+
+        while r.status_code != 200:
+
+            log.error('Received {code} from the API'.format(code=r.status_code))
+            log.debug('Re-trying in 10 seconds')
+
+            time.sleep(10)
+
+            r = self.request('/pools/{pool}/nodes/'.format(pool=self.pool))
+
+        response = r.json()
+
+        return [node['otpNode'] for node in response['nodes']]
+
