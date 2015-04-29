@@ -27,3 +27,10 @@ if not log.handlers:
     ch.setFormatter(formatter)
     log.addHandler(ch)
 
+class Cluster(object):
+
+    def __init__(self, member, username='Administrator', password=None):
+        self.member = member
+        self.username = username
+        self.password = password
+
