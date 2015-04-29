@@ -65,3 +65,23 @@ class Cluster(object):
 
         return pools[0]['name']
 
+    @property
+    def bucket(self):
+
+        path = '/pools/{pool}/buckets/'.format(pool = self.pool)
+
+        r = self.request(path)
+
+        while r.status_code != 200:
+
+            log.error('Received {code} from the API'.format(code=r.status_code))
+            log.debug('Re-trying in 10 seconds')
+
+            time.sleep(10)
+
+            r = self.request(path)
+
+        buckets = r.json()
+
+        return buckets[0]['name']
+
