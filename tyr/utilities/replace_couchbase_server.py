@@ -200,7 +200,7 @@ def replace_couchbase_server(member, group=None, environment=None,
 
     cluster.add_node(node.hostname)
 
-    cluster.rebalance(known_nodes=cluster.nodes)
+    cluster.rebalance()
 
     while cluster.is_rebalancing:
         pass
@@ -210,9 +210,7 @@ def replace_couchbase_server(member, group=None, environment=None,
 
     cluster.member = node.hostname
 
-    cluster.remove_node(member)
-
-    cluster.rebalance(known_nodes=cluster.nodes, ejected_nodes=member)
+    cluster.rebalance(ejected_nodes=['ns_1@{member}'.format(member=member)])
 
     while cluster.is_rebalancing:
         pass
