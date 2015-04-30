@@ -5,6 +5,9 @@ import requests
 import boto.ec2
 import socket
 import boto.route53
+from tyr.utilities.replace_mongo_server import set_maintenance_mode
+import sys
+import os
 
 def timeit(method):
 
@@ -199,6 +202,20 @@ def replace_couchbase_server(member, group=None, environment=None,
                                 couchbase_password=None, replace=True,
                                 reroute=True, terminate=False):
 
+    stackdriver_username = os.environ.get('STACKDRIVER_USERNAME')
+
+    if not stackdriver_username:
+        log.critical('The environment variable STACKDRIVER_USERNAME is ' \
+                        'undefined')
+        sys.exit(1)
+
+    stackdriver_api_key = os.environ.get('STACKDRIVER_API_KEY')
+
+    if not stackdriver_api_key:
+        log.critical('The environment variable STACKDRIVER_API_KEY is ' \
+                        'undefined')
+        sys.exit(1)
+
     public_address = member
 
     conn = boto.ec2.connect_to_region('us-east-1')
@@ -273,5 +290,30 @@ def replace_couchbase_server(member, group=None, environment=None,
     while cluster.is_rebalancing:
         pass
 
+    set_maintenance_mode(stackdriver_username, stackdriver_api_key, instance.id)
+
+    conn = boto.ec2.connect_to_region('us-east-1')
+
+    if terminate:
+        response = conn.terminate_instances(instance_ids=[instance.id])
+    else:
+        response = conn.stop_instances(instance_ids=[instance.id])
+
+    if instance.id in [i.id for i in response]:
+        if terminate:
+            log.debug('Successfully terminated {instance}'.format(
+                                                        instance=instance.id))
+        else:
+            log.debug('Successfully stopped {instance}'.format(
+                                                        instance=instance.id))
+    else:
+        if terminate:
+            log.debug('Failed to terminate {instance}'.format(
+                                                        instance=instance.id))
+        else:
+            log.debug('Failed to stop {instance}'.format(
+                                                        instance=instance.id))
+
     log.info('{old} has been replaced with {new}.'.format(old=member,
                                                             new=node.hostname))
+
