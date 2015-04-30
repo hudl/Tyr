@@ -2,8 +2,8 @@ from member import MongoReplicaSetMember
 
 class MongoArbiterNode(MongoReplicaSetMember):
 
-    NAME_TEMPLATE = '{envcl}-rs{replica_set}-{zone}-arb'
-    NAME_SEARCH_PREFIX = '{envcl}-rs{replica_set}-{zone}-'
+    NAME_TEMPLATE = '{envcl}-rs{replica_set}-{location}-arb'
+    NAME_SEARCH_PREFIX = '{envcl}-rs{replica_set}-{location}-'
     NAME_AUTO_INDEX=False
 
     CHEF_RUNLIST = ['role[RoleMongo]']

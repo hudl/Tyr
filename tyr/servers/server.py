@@ -12,8 +12,8 @@ from tyr.policies import policies
 
 class Server(object):
 
-    NAME_TEMPLATE='{envcl}-{zone}-{index}'
-    NAME_SEARCH_PREFIX='{envcl}-{zone}-'
+    NAME_TEMPLATE='{envcl}-{location}-{index}'
+    NAME_SEARCH_PREFIX='{envcl}-{location}-'
     NAME_AUTO_INDEX=True
 
     IAM_ROLE_POLICIES = []
@@ -199,7 +199,23 @@ class Server(object):
         self.log.info('Using Chef path "{path}"'.format(
                                 path = self.chef_path))
 
+    @property
+    def location(self):
 
+        region_map = {
+                'ap-northeast-1': 'apne1',
+                'ap-southeast-1': 'apse1',
+                'ap-southeast-2': 'apse2',
+                'eu-central-1': 'euc1',
+                'eu-west-1': 'euw1',
+                'sa-east-1': 'sae1',
+                'us-east-1': 'use1',
+                'us-west-1': 'usw1',
+                'us-west-2': 'usw2',
+        }
+
+        return '{region}{zone}'.format(region=region_map[self.region],
+                                        zone=self.availability_zone[-1:])
 
     def next_index(self, supplemental={}):
 
@@ -267,8 +283,8 @@ class Server(object):
 
         supplemental = self.__dict__.copy()
 
-        supplemental['zone'] = self.availability_zone[-1:]
         supplemental['envcl'] = self.envcl
+        supplemental['location'] = self.location
 
         if self.NAME_AUTO_INDEX:
 
