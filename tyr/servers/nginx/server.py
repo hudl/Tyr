@@ -2,6 +2,7 @@ from tyr.servers.server import Server
 import chef
 import requests
 import time
+import os.path
 
 class NginxServer(Server):
 
@@ -29,51 +30,52 @@ class NginxServer(Server):
             'chef-nodes',
         ]
 
-        self.IAM_ROLE_POLICIES.append('allow_describe_tags')
-        self.IAM_ROLE_POLICIES.append('allow_get_nginx_config')
-        self.IAM_ROLE_POLICIES.append('allow_describe_elbs')
+        self.IAM_ROLE_POLICIES.append('allow-describe-tags')
+        self.IAM_ROLE_POLICIES.append('allow-get-nginx-config')
+        self.IAM_ROLE_POLICIES.append('allow-describe-elbs')
 
         if self.environment == 'stage':
-            self.IAM_ROLE_POLICIES.append('allow_update_route53_stage')
-            self.IAM_ROLE_POLICIES.append('allow_modify_nginx_elbs_stage')
+            self.IAM_ROLE_POLICIES.append('allow-update-route53-stage')
+            self.IAM_ROLE_POLICIES.append('allow-modify-nginx-elbs-stage')
             self.security_groups.append('s-nginx')
-        elif self.environment == 'prod'
-            self.IAM_ROLE_POLICIES.append('allow_update_route53_prod')
-            self.IAM_ROLE_POLICIES.append('allow_modify_nginx_elbs_prod')
+        elif self.environment == 'prod':
+            self.IAM_ROLE_POLICIES.append('allow-update-route53-prod')
+            self.IAM_ROLE_POLICIES.append('allow-modify-nginx-elbs-prod')
             self.security_groups.append('p-nginx')
         self.resolve_iam_role()
 
     def bake(self):
 
-    chef_path = os.path.expanduser(self.chef_path)
-    self.chef_api = chef.autoconfigure(chef_path)
+        chef_path = os.path.expanduser(self.chef_path)
+        self.chef_api = chef.autoconfigure(chef_path)
 
-    with self.chef_api:
-        try:
-            node = chef.Node(self.name)
-            node.delete()
+        with self.chef_api:
+            try:
+                node = chef.Node(self.name)
+                node.delete()
 
-            self.log.info('Removed previous chef node "{node}"'.format(
-                            node = self.name))
-        except chef.exceptions.ChefServerNotFoundError:
-            pass
-        except Exception as e:
-            self.log.error(str(e))
-            raise e
+                self.log.info('Removed previous chef node "{node}"'.format(
+                                node = self.name))
+            except chef.exceptions.ChefServerNotFoundError:
+                pass
+            except Exception as e:
+                self.log.error(str(e))
+                raise e
 
-        try:
-            client = chef.Client(self.name)
-            client = client.delete()
+            try:
+                client = chef.Client(self.name)
+                client = client.delete()
 
-            self.log.info('Removed previous chef client "{client}"'.format(
-                            client = self.name))
-        except chef.exceptions.ChefServerNotFoundError:
-            pass
-        except Exception as e:
-            self.log.error(str(e))
-            raise e
+                self.log.info('Removed previous chef client "{client}"'.format(
+                                client = self.name))
+            except chef.exceptions.ChefServerNotFoundError:
+                pass
+            except Exception as e:
+                self.log.error(str(e))
+                raise e
 
-        def user_data(self):
+    @property
+    def user_data(self):
 
         template = """#!/bin/bash
 
@@ -84,11 +86,11 @@ class NginxServer(Server):
 META_URL='http://169.254.169.254/latest/meta-data'
 MY_INSTANCE_ID=`/usr/bin/curl -s $META_URL/instance-id`
 MY_AZ=`/usr/bin/curl -s $META_URL/placement/availability-zone`
-MY_REGION="${MY_AZ%?}"
+MY_REGION="${{MY_AZ%?}}"
 MY_TAGS=`/usr/bin/aws ec2 describe-tags --region=$MY_REGION --output=text --filters Name=resource-id,Values=$MY_INSTANCE_ID`
-MY_HOSTNAME=`/bin/echo "$MY_TAGS"|awk 'tolower($2) ~ /name/ { print tolower($5) }'`
-MY_ROLE=`/bin/echo "$MY_TAGS"|awk 'tolower($2) ~ /role/ { print $5 }'`
-MY_ENV=`/bin/echo "$MY_TAGS"|awk 'tolower($2) ~ /environment/ { print tolower($5) }'`
+MY_HOSTNAME=`/bin/echo "$MY_TAGS"|awk 'tolower($2) ~ /name/ {{ print tolower($5) }}'`
+MY_ROLE=`/bin/echo "$MY_TAGS"|awk 'tolower($2) ~ /role/ {{ print $5 }}'`
+MY_ENV=`/bin/echo "$MY_TAGS"|awk 'tolower($2) ~ /environment/ {{ print tolower($5) }}'`
 
 # Our Route 53 zone IDs are hardcoded here.  We can adjust this if we want to
 # give nodes the ability to grab their own zone id with list-hosted-zones
@@ -127,24 +129,24 @@ META_URL='http://169.254.169.254/latest/meta-data'
 PUBLIC_HOSTNAME=`curl -s $META_URL/public-hostname`
 
 cat << EOT > /root/route53/upsert.json
-{
+{{
 "Comment": "Creating CNAME for $HOSTNAME",
 "Changes": [
-  {
+  {{
     "Action": "UPSERT",
-    "ResourceRecordSet": {
+    "ResourceRecordSet": {{
       "Name": "$HOSTNAME.",
       "Type": "CNAME",
       "TTL": 60,
       "ResourceRecords": [
-        {
+        {{
           "Value": "$PUBLIC_HOSTNAME"
-        }
+        }}
       ]
-    }
-  }
+    }}
+  }}
 ]
-}
+}}
 EOT
 EOF
 
@@ -182,7 +184,7 @@ chef-client --server '{chef_server}' --environment $MY_ENV --node-name $MY_HOSTN
         return template.format(hostname = self.hostname,
                                 fqdn = self.hostname,
                                 validation_key = validation_key,
-                                chef_server = 'http://chef.app.hudl.com/'
+                                chef_server = 'http://chef.app.hudl.com/',
                                 logfile = '/var/log/chef-client.log')
 
     def autorun(self):
