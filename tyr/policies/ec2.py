@@ -18,3 +18,18 @@ allow_volume_control = """{
         }
      ]
 }"""
+
+allow_describe_tags = """{
+    "Statement": [
+        {
+            "Sid": "Stmt1367531520228",
+            "Action": [
+                "ec2:DescribeTags"
+             ],
+             "Effect": "Allow",
+             "Resource": [
+                "*"
+             ]
+        }
+     ]
+}"""
