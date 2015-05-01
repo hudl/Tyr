@@ -30,6 +30,7 @@ class NginxServer(Server):
             'chef-nodes',
         ]
 
+        self.IAM_ROLE_POLICIES.append('allow-describe-instances')
         self.IAM_ROLE_POLICIES.append('allow-describe-tags')
         self.IAM_ROLE_POLICIES.append('allow-get-nginx-config')
         self.IAM_ROLE_POLICIES.append('allow-describe-elbs')

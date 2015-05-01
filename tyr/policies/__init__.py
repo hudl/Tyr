@@ -5,6 +5,7 @@ import route53
 
 policies = {
     'allow-volume-control': ec2.allow_volume_control,
+    'allow-describe-instances': ec2.allow_describe_instances,
     'allow-describe-tags': ec2.allow_describe_tags,
     'allow-upload-to-s3-fulla': s3.allow_upload_to_s3_fulla,
     'allow-download-scripts-s3-fulla': s3.allow_download_scripts_s3_fulla,

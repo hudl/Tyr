@@ -19,6 +19,21 @@ allow_volume_control = """{
      ]
 }"""
 
+allow_describe_instances = """{
+    "Statement": [
+        {
+            "Sid": "Stmt1367531529529",
+            "Action": [
+                "ec2:DescribeInstances"
+             ],
+             "Effect": "Allow",
+             "Resource": [
+                "*"
+             ]
+        }
+     ]
+}"""
+
 allow_describe_tags = """{
     "Statement": [
         {
