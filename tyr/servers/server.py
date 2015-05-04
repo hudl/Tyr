@@ -1,7 +1,6 @@
 from exceptions import *
 import boto.ec2
 import boto.route53
-import copy
 import logging
 import os.path
 import chef
@@ -400,13 +399,19 @@ named {name}""".format(path = d['path'], name = d['name']))
 
                     self.log.info('Adding rule {rule}'.format(rule=rule))
 
-                    params = copy.deepcopy(rule)
+                    params = {}
 
-                    if 'src_group' in params:
+                    params['ip_protocol'] = rule['ip_protocol']
+                    params['from_port'] = rule['from_port']
+                    params['to_port'] = rule['to_port']
+
+                    if 'src_group' in rule:
                         groups = self.ec2.get_all_security_groups(
-                                            groupnames=[params['src_group']])
+                                                groupnames=[rule['src_group']])
 
                         params['src_group'] = groups[0]
+                    else:
+                        params['cidr_ip'] = rule['cidr_ip']
 
                     g.authorize(**params)
 
