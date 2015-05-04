@@ -438,8 +438,16 @@ named {name}""".format(path = d['path'], name = d['name']))
                         complete_params = params.copy()
 
                         if not re.match(cidr_ip_pattern, source):
+
+                            name = source.format(env=self.environment[0],
+                                                 environment=self.environment,
+                                                 group=self.group,
+                                                 region=self.region,
+                                                 zone=self.availability_zone[:-1],
+                                                 type_=self.server_type)
+
                             groups = self.ec2.get_all_security_groups(
-                                                            groupnames=[source])
+                                                            groupnames=[name])
 
                             complete_params['src_group'] = groups[0]
                         else:
