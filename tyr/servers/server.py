@@ -410,7 +410,7 @@ named {name}""".format(path = d['path'], name = d['name']))
                         self.log.warning('No IP protocol defined. Using TCP.')
                         params['ip_protocol'] = 'tcp'
 
-                    if rule['port'] is int:
+                    if isinstance(rule['port'], (int, long)):
                         params['from_port'] = rule['port']
                         params['to_port'] = rule['port']
                     elif '-' in rule['port']:
@@ -431,7 +431,7 @@ named {name}""".format(path = d['path'], name = d['name']))
 
                     complete_rules = []
 
-                    if rule['source'] is str:
+                    if isinstance(rule['source'], str):
                         rule['source'] = [rule['source']]
 
                     for source in rule['source']:
