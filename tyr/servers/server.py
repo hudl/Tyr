@@ -440,14 +440,23 @@ named {name}""".format(path = d['path'], name = d['name']))
                     for source in rule['source']:
                         complete_params = params.copy()
 
-                        if re.match(cidr_ip_pattern, source):
-                            complete_params['cidr_ip'] = source
-                        elif re.match(ip_pattern, source):
-                            complete_params['cidr_ip'] = source+'/32'
+                        if isinstance(source, str):
+                            source = {
+                                        'value': source,
+                                        'rule': '.*'
+                                     }
+
+                        if not re.match(source['rule'], group): continue
+
+                        if re.match(cidr_ip_pattern, source['value']):
+                            complete_params['cidr_ip'] = source['value']
+                        elif re.match(ip_pattern, source['value']):
+                            complete_params['cidr_ip'] = source['value']+'/32'
                         else:
-                            name = source.format(env=self.environment[0],
-                                                 group=self.group,
-                                                 type_=self.server_type)
+                            name = source['value'].format(
+                                                        env=self.environment[0],
+                                                        group=self.group,
+                                                        type_=self.server_type)
 
                             groups = self.ec2.get_all_security_groups(
                                                             groupnames=[name])
