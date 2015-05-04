@@ -75,8 +75,8 @@ class MongoDataWarehousingNode(MongoReplicaSetMember):
                     'mount': '/volr'
                 },
                 {
-                    'user': 'mongod',
-                    'group': 'mongod',
+                    'user': 'ec2-user',
+                    'group': 'ec2-user',
                     'size': self.data_volume_size,
                     'iops': 0,
                     'device': '/dev/xvde',
