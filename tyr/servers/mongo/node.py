@@ -8,9 +8,7 @@ class MongoNode(Server):
     CHEF_RUNLIST = ['role[RoleMongo]']
     CHEF_MONGODB_TYPE = 'generic'
 
-    IAM_ROLE_POLICIES = ['allow-volume-control',
-                         'allow-mongo-backup-snapshot',
-                         'allow-mongo-snapshot-cleanup']
+    IAM_ROLE_POLICIES = ['allow-volume-control']
 
     def __init__(self, group = None, server_type = None, instance_type = None,
                     environment = None, ami = None, region = None, role = None,
@@ -31,6 +29,13 @@ class MongoNode(Server):
     def configure(self):
 
         super(MongoNode, self).configure()
+
+        if self.environment == "prod":
+            self.IAM_ROLE_POLICIES.append('allow-mongo-backup-snapshot')
+        elif self.environment == "stage":
+            self.IAM_ROLE_POLICIES.append('allow-mongo-snapshot-cleanup')
+
+        self.resolve_iam_role()
 
         if self.mongodb_version is None:
             self.log.warn('MongoDB version not set')
