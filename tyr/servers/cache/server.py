@@ -14,7 +14,7 @@ class CacheServer(Server):
                     keypair=None, availability_zone=None, security_groups=None,
                     block_devices=None, chef_path=None, couchbase_version=None,
                     couchbase_username=None, couchbase_password=None,
-                    bucket_name=None):
+                    bucket_name=None, subnet_id=None):
 
         if server_type is None: server_type = self.SERVER_TYPE
 
@@ -27,7 +27,7 @@ class CacheServer(Server):
                                             environment, ami, region, role,
                                             keypair, availability_zone,
                                             security_groups, block_devices,
-                                            chef_path)
+                                            chef_path, subnet_id)
 
     def configure(self):
 
