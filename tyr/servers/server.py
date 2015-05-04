@@ -427,15 +427,26 @@ named {name}""".format(path = d['path'], name = d['name']))
                     cidr_ip_pattern = '^((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.)' \
                     '{3}(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)/(3[0-2]|[1-2]?[0-9])$'
 
-                    if not re.match(cidr_ip_pattern, rule['source']):
-                        groups = self.ec2.get_all_security_groups(
-                                                 groupnames=[rule['source']])
+                    complete_rules = []
 
-                        params['src_group'] = groups[0]
-                    else:
-                        params['cidr_ip'] = rule['source']
+                    if rule['source'] is str:
+                        rule['source'] = [rule['source']]
 
-                    g.authorize(**params)
+                    for source in rule['source']:
+                        complete_params = params.copy()
+
+                        if not re.match(cidr_ip_pattern, source):
+                            groups = self.ec2.get_all_security_groups(
+                                                            groupnames=[source])
+
+                            complete_params['src_group'] = groups[0]
+                        else:
+                            complete_params['cidr_ip'] = source
+
+                        complete_rules.append(complete_params)
+
+                    for complete_params in complete_rules:
+                        g.authorize(**complete_params)
 
     def resolve_iam_role(self):
 
