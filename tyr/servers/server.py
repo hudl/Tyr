@@ -390,13 +390,15 @@ named {name}""".format(path = d['path'], name = d['name']))
                                 group = group))
 
         for group in self.security_groups:
-            if group in security_groups:
+            for key in security_groups.keys():
+                if not re.match(key, group): continue
+
                 self.log.info('Setting inbound rules for {group}'.format(
                                                             group = group))
 
                 g = self.ec2.get_all_security_groups(groupnames=[group])[0]
 
-                for rule in security_groups[group]['rules']:
+                for rule in security_groups[key]['rules']:
 
                     self.log.info('Adding rule {rule}'.format(rule=rule))
 
