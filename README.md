@@ -37,7 +37,7 @@ However, here's a quick sample. We're going to spin up a MongoDB data node.
 
 ``` python
 from tyr.servers.mongo import MongoDataNode
-node = MongoDataNode(cluster='monolith-mongo')
+node = MongoDataNode(group='monolith')
 node.autorun()
 ```
 

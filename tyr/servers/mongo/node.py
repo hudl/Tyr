@@ -79,12 +79,6 @@ class MongoNode(Server):
             self.log.info('Set the MongoDB package version to {version}'.format(
                                                 version = self.mongodb_version))
 
-            if self.chef_node.chef_environment == 'prod':
-                self.chef_node.run_list.append('role[RoleSumoLogic]')
-
-            self.log.info('Set the run list to "{runlist}"'.format(
-                                        runlist = self.chef_node.run_list))
-
             self.chef_node.attributes.set_dotted('mongodb.node_type', self.CHEF_MONGODB_TYPE)
             self.log.info('Set the MongoDB node type to "{type_}"'.format(
                                             type_ = self.CHEF_MONGODB_TYPE))
