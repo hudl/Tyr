@@ -401,7 +401,12 @@ named {name}""".format(path = d['path'], name = d['name']))
 
                     params = {}
 
-                    params['ip_protocol'] = rule['ip_protocol']
+                    try:
+                        params['ip_protocol'] = rule['ip_protocol']
+                    except KeyError:
+                        self.log.warning('No IP protocol defined. Using TCP.')
+                        params['ip_protocol'] = 'tcp'
+
                     params['from_port'] = rule['from_port']
                     params['to_port'] = rule['to_port']
 
