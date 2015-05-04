@@ -1,6 +1,7 @@
 from exceptions import *
 import boto.ec2
 import boto.route53
+import copy
 import logging
 import os.path
 import chef
@@ -9,6 +10,7 @@ import json
 import urllib
 from paramiko.client import AutoAddPolicy, SSHClient
 from tyr.policies import policies
+from tyr.security_groups import security_groups
 
 class Server(object):
 
@@ -386,6 +388,27 @@ named {name}""".format(path = d['path'], name = d['name']))
             else:
                 self.log.info('Security Group {group} already exists'.format(
                                 group = group))
+
+        for group in self.security_groups:
+            if group in security_groups:
+                self.log.info('Setting inbound rules for {group}'.format(
+                                                            group = group))
+
+                g = self.ec2.get_all_security_groups(groupnames=[group])[0]
+
+                for rule in security_groups[group]['rules']:
+
+                    self.log.info('Adding rule {rule}'.format(rule=rule))
+
+                    params = copy.deepcopy(rule)
+
+                    if 'src_group' in params:
+                        groups = self.ec2.get_all_security_groups(
+                                            groupnames=[params['src_group']])
+
+                        params['src_group'] = groups[0]
+
+                    g.authorize(**params)
 
     def resolve_iam_role(self):
 
