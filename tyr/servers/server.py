@@ -407,8 +407,21 @@ named {name}""".format(path = d['path'], name = d['name']))
                         self.log.warning('No IP protocol defined. Using TCP.')
                         params['ip_protocol'] = 'tcp'
 
-                    params['from_port'] = rule['from_port']
-                    params['to_port'] = rule['to_port']
+                    if rule['port'] is int:
+                        params['from_port'] = rule['port']
+                        params['to_port'] = rule['port']
+                    elif '-' in rule['port']:
+                        ports = [int(p) for p in rule['port'].split('-')]
+
+                        if ports[0] == ports[1]:
+                            params['from_port'] = ports[0]
+                            params['to_port'] = ports[0]
+                        else:
+                            params['from_port'] = min(ports)
+                            params['to_port'] = max(ports)
+                    else:
+                        params['from_port'] = int(rule['port'])
+                        params['to_port'] = int(rule['port'])
 
                     if 'src_group' in rule:
                         groups = self.ec2.get_all_security_groups(
