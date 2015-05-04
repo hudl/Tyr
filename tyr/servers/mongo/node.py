@@ -8,7 +8,8 @@ class MongoNode(Server):
     CHEF_RUNLIST = ['role[RoleMongo]']
     CHEF_MONGODB_TYPE = 'generic'
 
-    IAM_ROLE_POLICIES = ['allow-volume-control', 'allow-mongo-backup-snapshot',
+    IAM_ROLE_POLICIES = ['allow-volume-control',
+                         'allow-mongo-backup-snapshot',
                          'allow-mongo-snapshot-cleanup']
 
     def __init__(self, group = None, server_type = None, instance_type = None,
