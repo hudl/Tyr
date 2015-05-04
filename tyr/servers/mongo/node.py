@@ -29,14 +29,14 @@ class MongoNode(Server):
 
     def configure(self):
 
+        super(MongoNode, self).configure()
+
         self.security_groups = [
             'management',
             'chef-nodes',
-            '{envcl}'.format(envcl=self.envcl),
+            self.envcl,
             '{env}-mongo-management'.format(env=self.environment[0])
         ]
-
-        super(MongoNode, self).configure()
 
         if self.mongodb_version is None:
             self.log.warn('MongoDB version not set')

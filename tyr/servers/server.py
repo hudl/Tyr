@@ -387,28 +387,30 @@ named {name}""".format(path = d['path'], name = d['name']))
         return bdm
 
     def get_subnet_vpc_id(self, subnet_id):
-        vpcConn = VPCConnection()
-        subnets = vpcConn.get_all_subnets(
+        vpc_conn = VPCConnection()
+        subnets = vpc_conn.get_all_subnets(
             filters={'subnet_id': subnet_id})
         if len(subnets) == 1:
             vpc_id = subnets[0].vpc_id
             return vpc_id
+        elif len(subnets) == 0:
+            raise NoSubnetReturned("No subnets returned")
         else:
-            self.log.error("None or greater then 1 subnet returned")
-            exit(1)  # should probably throw an exception, if I knew how
+            raise Exception("More than 1 subnet returned")
 
     def get_vpc_suffix(self, vpc_id):
-            vpcConn = VPCConnection()
-            vpc = vpcConn.get_all_vpcs(filters={'vpc_id': vpc_id})
+            vpc_conn = VPCConnection()
+            vpc = vpc_conn.get_all_vpcs(filters={'vpc_id': vpc_id})
             if len(vpc) == 1:
                 vpc_suffix = vpc[0].tags['vpcSuffix']
                 if vpc_suffix is None:
                     return "vpc"
                 else:
                     return vpc_suffix
+            elif len(vpc) == 0:
+                raise NoVPCReturned("No VPC returned.")
             else:
-                self.log.error("None or greater then 1 vpc returned")
-                exit(1)  # should probably throw an exception, if I knew how
+                raise Exception("More than 1 VPC returned")
 
     def resolve_security_groups(self):
         # If the server is being spun up in a subnet, append a vpc suffix
@@ -430,8 +432,8 @@ named {name}""".format(path = d['path'], name = d['name']))
                 if self.subnet_id is None:
                     self.ec2.create_security_group(group, group)
                 else:
-                    vpcConn = VPCConnection()
-                    vpcConn.create_security_group(
+                    vpc_conn = VPCConnection()
+                    vpc_conn.create_security_group(
                         group, group, vpc_id=vpc_id)
                 self.log.info('Created security group {group}'.format(
                                 group=group))
@@ -569,14 +571,14 @@ named {name}""".format(path = d['path'], name = d['name']))
     def get_subnet_availability_zone(self, subnet_id):
         self.log.info(
             "getting zone for subnet {subnet_id}".format(subnet_id=subnet_id))
-        VpcConn = VPCConnection()
+        vpc_conn = VPCConnection()
         filters = {'subnet-id': subnet_id}
-        subnets = VpcConn.get_all_subnets(filters=filters)
+        subnets = vpc_conn.get_all_subnets(filters=filters)
 
         if len(subnets) == 1:
             availability_zone = subnets[0].availability_zone
 
-            log_message = 'subnet {subnet_id} is in ' \
+            log_message = 'Subnet {subnet_id} is in ' \
                           'availability zone {availability_zone}'
             self.log.info(log_message.format(
                             subnet_id=subnet_id,

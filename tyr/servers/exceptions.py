@@ -15,3 +15,9 @@ class InvalidAMI(Exception):
 
 class InvalidAvailabilityZone(Exception):
     pass
+
+class NoSubnetReturned(Exception):
+	pass
+
+class NoVPCReturned(Exception):
+	pass
