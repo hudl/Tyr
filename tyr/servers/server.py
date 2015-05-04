@@ -6,6 +6,7 @@ import os.path
 import chef
 import time
 import json
+import re
 import urllib
 from paramiko.client import AutoAddPolicy, SSHClient
 from tyr.policies import policies
@@ -423,13 +424,16 @@ named {name}""".format(path = d['path'], name = d['name']))
                         params['from_port'] = int(rule['port'])
                         params['to_port'] = int(rule['port'])
 
-                    if 'src_group' in rule:
+                    cidr_ip_pattern = '^((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.)' \
+                    '{3}(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)/(3[0-2]|[1-2]?[0-9])$'
+
+                    if not re.match(cidr_ip_pattern, rule['source']):
                         groups = self.ec2.get_all_security_groups(
-                                                groupnames=[rule['src_group']])
+                                                 groupnames=[rule['source']])
 
                         params['src_group'] = groups[0]
                     else:
-                        params['cidr_ip'] = rule['cidr_ip']
+                        params['cidr_ip'] = rule['source']
 
                     g.authorize(**params)
 
