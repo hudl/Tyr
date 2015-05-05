@@ -29,13 +29,6 @@ class MongoNode(Server):
 
     def configure(self):
 
-        self.security_groups = [
-            'management',
-            'chef-nodes',
-            self.envcl,
-            '{env}-mongo-management'.format(env=self.environment[0])
-        ]
-
         super(MongoNode, self).configure()
 
         if self.mongodb_version is None:
@@ -44,7 +37,13 @@ class MongoNode(Server):
 
         self.log.info('Using version {version} of MongoDB'.format(
                                                 version = self.mongodb_version))
-
+        self.security_groups = [
+            'management',
+            'chef-nodes',
+            self.envcl,
+            '{env}-mongo-management'.format(env=self.environment[0])
+        ]
+        self.resolve_security_groups()
 
     def run_mongo(self, command):
 
