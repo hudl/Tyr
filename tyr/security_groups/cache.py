@@ -19,7 +19,7 @@ definition = {
                     'rule': '[sp]-.+-cache'
                 },
                 {
-                    'value': '{env}-queues-job',
+                    'value': '{env}-queues-jobs',
                     'rule': 's-.+-cache'
                 },
                 {
@@ -60,7 +60,7 @@ definition = {
                 },
                 {
                     'rule': 's-.+-cache',
-                    'value': '{env}-queues-job'
+                    'value': '{env}-queues-jobs'
                 },
                 {
                     'rule': 'p-.+-cache',
