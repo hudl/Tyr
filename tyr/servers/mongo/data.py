@@ -3,8 +3,8 @@ import sys
 
 class MongoDataNode(MongoReplicaSetMember):
 
-    NAME_TEMPLATE = '{envcl}-rs{replica_set}-{zone}-{index}'
-    NAME_SEARCH_PREFIX = '{envcl}-rs{replica_set}-{zone}-'
+    NAME_TEMPLATE = '{envcl}-rs{replica_set}-{location}-{index}'
+    NAME_SEARCH_PREFIX = '{envcl}-rs{replica_set}-{location}-'
     NAME_AUTO_INDEX=True
 
     CHEF_RUNLIST = ['role[RoleMongo]']
