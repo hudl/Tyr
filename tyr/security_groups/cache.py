@@ -17,6 +17,14 @@ definition = {
                 {
                     'value': '{env}-mv-web',
                     'rule': '[sp]-.+-cache'
+                },
+                {
+                    'value': '{env}-queues-job',
+                    'rule': 's-.+-cache'
+                },
+                {
+                    'value': '{env}-queueproc-jobs',
+                    'rule': 'p-.+-cache',
                 }
             ]
         },
