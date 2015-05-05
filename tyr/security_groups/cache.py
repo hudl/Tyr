@@ -41,6 +41,14 @@ definition = {
                 {
                     'rule': 's-.+-cache',
                     'value': 'thors'
+                },
+                {
+                    'rule': 's-.+-cache',
+                    'value': '{env}-queues-job'
+                },
+                {
+                    'rule': 'p-.+-cache',
+                    'value': '{env}-queueproc-jobs'
                 }
             ]
         },
