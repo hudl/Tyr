@@ -78,7 +78,7 @@ definition = {
                 {
                     'rule': '[ts]-.+-cache',
                     'value': '24.106.8.210/32'
-                }
+                },
                 {
                     'rule': '[ts]-.+-cache',
                     'value': '74.51.218.230/32'
