@@ -29,14 +29,14 @@ class MongoNode(Server):
 
     def configure(self):
 
-        super(MongoNode, self).configure()
-
         self.security_groups = [
             'management',
             'chef-nodes',
             self.envcl,
             '{env}-mongo-management'.format(env=self.environment[0])
         ]
+
+        super(MongoNode, self).configure()
 
         if self.mongodb_version is None:
             self.log.warn('MongoDB version not set')
@@ -45,11 +45,6 @@ class MongoNode(Server):
         self.log.info('Using version {version} of MongoDB'.format(
                                                 version = self.mongodb_version))
 
-        # This is just a temporary fix to override the default security
-        # groups for MongoDB nodes until the security_groups argument
-        # is removed.
-
-        self.resolve_security_groups()
 
     def run_mongo(self, command):
 

@@ -21,3 +21,9 @@ class NoSubnetReturned(Exception):
 
 class NoVPCReturned(Exception):
 	pass
+
+class NoSecurityGroupsReturned(Exception):
+	pass
+
+class MultipleSecurityGroupsReturned(Exception):
+	pass

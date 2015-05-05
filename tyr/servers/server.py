@@ -604,26 +604,18 @@ named {name}""".format(path = d['path'], name = d['name']))
             raise e
 
     def get_security_group_ids(self, security_groups):
-            ec2Conn = self.ec2
-            security_group_ids = list()
+            security_group_ids = []
             for group in self.security_groups:
                 filters = {'group-name': group}
-                security_groups = ec2Conn.get_all_security_groups(
+                security_groups = self.ec2.get_all_security_groups(
                     filters=filters)
-
                 if len(security_groups) == 1:
-                    security_group_ids.append(
-                        security_groups[0].id)
-                elif len(security_groups) > 1:
-                    self.log.error(
-                        "Multiple security groups match {group}".format(
-                            group=group))
-                    exit(1)
+                    security_group_ids.append(security_groups[0].id)
+                elif len(security_groups) == 0:
+                    raise NoSecurityGroupsReturned("No VPC returned.")
                 else:
-                    self.log.error(
-                        "No security groups match {group}".format(
-                            group=group))
-                    exit(1)
+                    raise MultipleSecurityGroupsReturned(
+                        "More than 1 VPC returned")
 
             return security_group_ids
 
