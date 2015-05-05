@@ -466,7 +466,17 @@ named {name}""".format(path = d['path'], name = d['name']))
                         complete_rules.append(complete_params)
 
                     for complete_params in complete_rules:
-                        g.authorize(**complete_params)
+                        self.log.info('Adding inbound rule {rule}'.format(
+                                                        rule=complete_params))
+                        try:
+                            g.authorize(**complete_params)
+                            self.log.info('Added inbound rule')
+                        except Exception, e:
+                            self.log.warn('Failed to add inbound rule')
+                            if 'InvalidPermission.Duplicate' in str(e):
+                                self.log.info('Inbound rule already exists')
+                            else:
+                                raise e
 
     def resolve_iam_role(self):
 
