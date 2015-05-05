@@ -5,14 +5,20 @@ definition = {
         {
             'port': '11209 - 11211',
             'source': [
-                'thors',
+                {
+                    'value': 'thors',
+                    'rule': '[ts]-.+-cache'
+                },
                 '{env}-{group}-cache'
             ]
         },
         {
             'port': '21100 - 21199',
             'source': [
-                'thors',
+                {
+                    'value': 'thors',
+                    'rule': '[ts]-.+-cache'
+                },
                 '{env}-{group}-cache'
             ]
         },
