@@ -10,6 +10,10 @@ definition = {
                 {
                     'rule': '[ts]-.+-mongo',
                     'value': 'thors'
+                },
+                {
+                    'rule': 'p-.+-mongo',
+                    'value': '{env}-mms'
                 }
             ]
         }
