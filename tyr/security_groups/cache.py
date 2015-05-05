@@ -37,6 +37,10 @@ definition = {
                 {
                     'rule': '[sp]-.+-cache',
                     'value': '{env}-mv-web'
+                },
+                {
+                    'rule': 's-.+-cache',
+                    'value': 'thors'
                 }
             ]
         },
