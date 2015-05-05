@@ -28,7 +28,17 @@ definition = {
         },
         {
             'port': '8091 - 8092',
-            'source': '{env}-{group}-cache'
+            'source': [
+                '{env}-{group}-cache',
+                {
+                    'rule': '[sp]-.+-cache',
+                    'value': '{env}-web'
+                },
+                {
+                    'rule': '[sp]-.+-cache',
+                    'value': '{env}-mv-web'
+                }
+            ]
         },
         {
             'port': '11210 - 11211',
