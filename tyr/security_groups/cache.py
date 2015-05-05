@@ -9,7 +9,15 @@ definition = {
                     'value': 'thors',
                     'rule': '[ts]-.+-cache'
                 },
-                '{env}-{group}-cache'
+                '{env}-{group}-cache',
+                {
+                    'value': '{env}-web',
+                    'rule': '[sp]-.+-cache'
+                },
+                {
+                    'value': '{env}-mv-web',
+                    'rule': '[sp]-.+-cache'
+                }
             ]
         },
         {
