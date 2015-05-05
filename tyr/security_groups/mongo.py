@@ -6,7 +6,11 @@ definition = {
             'port': '27017 - 27019',
             'source': [
                 '{env}-{group}-mongo',
-                '{env}-{group}-web'
+                '{env}-{group}-web',
+                {
+                    'rule': '[ts]-.+-mongo',
+                    'value': 'thors'
+                }
             ]
         }
     ]
