@@ -113,7 +113,7 @@ class Server(object):
 
         if self.ami is None:
             self.log.warn('No AMI provided')
-            self.ami = 'ami-146e2a7c'
+            self.ami = 'ami-1ecae776'
 
         try:
             self.ec2.get_all_images(image_ids=[self.ami])
