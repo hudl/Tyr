@@ -221,6 +221,7 @@ class Server(object):
                 {
                     'id': {
                         'prod': 'Z1LKTAOOYM3H8T',
+                        'stage': 'Z24UEMQ8K6Z50Z',
                         'test': 'ZXXFTW7F1WFIS'
                     },
                     'records': [
