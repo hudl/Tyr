@@ -212,7 +212,7 @@ class Server(object):
                     'records': [
                         {
                             'type': 'CNAME',
-                            'name': '{hostname}.',
+                            'name': '{name}.external.{dns_zone}.',
                             'value': '{dns_name}',
                             'ttl': 60
                         }
