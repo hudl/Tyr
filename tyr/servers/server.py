@@ -226,9 +226,9 @@ class Server(object):
                     },
                     'records': [
                         {
-                            'type': 'A',
+                            'type': 'CNAME',
                             'name': '{hostname}.',
-                            'value': '{private_ip_address}',
+                            'value': '{private_dns_name}',
                             'ttl': 60
                         }
                     ]
