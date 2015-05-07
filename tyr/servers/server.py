@@ -155,21 +155,22 @@ class Server(object):
         self.log.info('Using EC2 Key Pair "{keypair}"'.format(
                         keypair=self.keypair))
 
-        if self.availability_zone is None:
-            self.log.warn('No EC2 availability zone provided')
-            if self.subnet_id is None:
-                self.log.warn(
-                    'No EC2 availability zone provided, using zone c')
+        if self.subnet_id is None: 
+            if self.availability_zone is None:
+                self.log.warn('No EC2 availability zone provided, using zone c')
                 self.availability_zone = 'c'
-            else:
-                self.availability_zone = self.get_subnet_availability_zone(
-                    self.subnet_id)
-                self.log.info(
-                    "Using VPC, using availability zone " +
-                    "{availability_zone}".format(
-                        availability_zone=self.availability_zone))
+        else:
+            if self.availability_zone not is None:
+                self.log.warn('Both availability zone and subnet set, '
+                              'using availability zone from subnet')
+            self.vpc_id = self.get_subnet_vpc_id(self.subnet_id)
+            self.availability_zone = self.get_subnet_availability_zone(
+                                        self.subnet_id)
+            self.log.info("Using VPC, using availability zone " +
+                          "{availability_zone}".format(
+                           availability_zone=self.availability_zone))
 
-        elif len(self.availability_zone) == 1:
+        if len(self.availability_zone) == 1:
             self.availability_zone = self.region+self.availability_zone
 
         valid = lambda z: z in [zone.name for zone in self.ec2.get_all_zones()]
@@ -603,10 +604,14 @@ named {name}""".format(path = d['path'], name = d['name']))
             self.log.error(str(e))
             raise e
 
-    def get_security_group_ids(self, security_groups):
+    def get_security_group_ids(self, security_groups, vpc_id=None):
             security_group_ids = []
-            for group in self.security_groups:
+            for group in security_groups:
                 filters = {'group-name': group}
+
+                if vpc_id is not None:
+                    filters['vpc_id'] = vpc_id
+
                 security_groups = self.ec2.get_all_security_groups(
                     filters=filters)
                 if len(security_groups) == 1:
@@ -621,7 +626,7 @@ named {name}""".format(path = d['path'], name = d['name']))
 
     def launch(self, wait=False):
         self.security_group_ids = self.get_security_group_ids(
-            self.security_groups)
+            self.security_groups, self.vpc_id)
 
         self.log.info(
             "Using Security group ids: {ids}".format(
