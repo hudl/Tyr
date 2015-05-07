@@ -23,7 +23,7 @@ class Server(object):
     def __init__(self, group=None, server_type=None, instance_type=None,
                     environment=None, ami=None, region=None, role=None,
                     keypair=None, availability_zone=None, security_groups=None,
-                    block_devices=None, chef_path=None):
+                    block_devices=None, chef_path=None, dns_zones=None):
 
         self.instance_type = instance_type
         self.group = group
@@ -37,6 +37,7 @@ class Server(object):
         self.security_groups = security_groups
         self.block_devices = block_devices
         self.chef_path = chef_path
+        self.dns_zones = dns_zones
 
     def establish_logger(self):
 
@@ -198,6 +199,25 @@ class Server(object):
 
         self.log.info('Using Chef path "{path}"'.format(
                                 path = self.chef_path))
+
+        if self.dns_zones is None:
+            self.log.warn('No DNS zones specified')
+            self.dns_zones = [
+                {
+                    'id': {
+                        'prod': 'ZDQ066NWSBGCZ',
+                        'stage': 'Z3ETV7KVCRERYL',
+                        'test': 'ZAH3O4H1900GY'
+                    },
+                    'records': [
+                        {
+                            'type': 'CNAME',
+                            'name': '{hostname}.',
+                            'value': '{dns_name}'
+                        }
+                    ]
+                }
+            ]
 
     @property
     def location(self):
@@ -586,35 +606,54 @@ named {name}""".format(path = d['path'], name = d['name']))
         self.log.info('Tagged instance with {tags}'.format(tags = self.tags))
 
     def route(self):
-        zone_address = self.hostname[len(self.name)+1:]
 
-        self.log.info('Using Zone Address {address}'.format(
-                            address = zone_address))
+        for dns_zone in self.dns_zones:
 
-        try:
-            zone = self.route53.get_zone(zone_address)
-            self.log.info('Retrieved zone from Route53')
-        except Exception, e:
-            self.log.error(str(e))
-            raise e
+            self.log.info('Routing Hosted Zone {zone}'.format(zone=dns_zone))
 
-        name = self.hostname + '.'
-        self.log.info('Using record name {name}'.format(name = name))
-        self.log.info('Using record value {value}'.format(
-                        value = self.instance.public_dns_name))
+            for z in self.route53.get_zones():
+                if z.id == dns_zone['id'][self.environment]:
+                    zone = z
+                    break
 
-        if zone.get_cname(name) is None:
-            self.log.info('The CNAME record does not exist')
-            try:
-                zone.add_cname(name, self.instance.public_dns_name)
-                self.log.info('Created new CNAME record')
-            except Exception, e:
-                self.log.error(str(e))
-                raise e
-        else:
-            self.log.info('The CNAME record already exists')
-            zone.update_cname(name, self.instance.public_dns_name)
-            self.log.info('Updated the CNAME record')
+            self.log.info('Using Zone Address {zone}'.format(zone=zone.name))
+
+            for record in dns_zone['records']:
+
+                self.log.info('Adding DNS record {record}'.format(
+                                                                record=record))
+
+                formatting_params = {
+                    'hostname': self.hostname,
+                    'name': self.name,
+                    'id': self.instance.id,
+                    'vpc_id': self.instance.vpc_id,
+                    'ip_address': self.instance.ip_address,
+                    'dns_name': self.instance.dns_name,
+                    'private_ip_address': self.instance.private_ip_address,
+                    'private_dns_name': self.instance.private_dns_name
+                }
+
+                name = record['name'].format(**formatting_params)
+                value = record['value'].format(**formatting_params)
+
+                self.log.info('Using record name {name}'.format(name=name))
+                self.log.info('Using record value {value}'.format(value=value))
+
+                existing_records = zone.find_records(name=name,
+                                                        type=record['type'])
+
+                if existing_records:
+                    self.log.info('The DNS record already exists')
+                    zone.delete_record(existing_records)
+                    self.log.info('The existing DNS record was deleted')
+
+                try:
+                    zone.add_record(record['type'], name, value)
+                    self.log.info('Added new DNS record')
+                except Exception, e:
+                    self.log.error(str(e))
+                    raise e
 
     @property
     def connection(self):
