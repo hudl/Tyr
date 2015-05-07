@@ -42,6 +42,7 @@ class Server(object):
         self.block_devices = block_devices
         self.chef_path = chef_path
         self.subnet_id = subnet_id
+        self.vpc_id = None
 
     def establish_logger(self):
 
@@ -163,7 +164,9 @@ class Server(object):
             if self.availability_zone is not None:
                 self.log.warn('Both availability zone and subnet set, '
                               'using availability zone from subnet')
+
             self.vpc_id = self.get_subnet_vpc_id(self.subnet_id)
+            self.log.info("Using VPC {vpc_id}".format(vpc_id=self.vpc_id))
             self.availability_zone = self.get_subnet_availability_zone(
                                         self.subnet_id)
             self.log.info("Using VPC, using availability zone " +
@@ -399,34 +402,17 @@ named {name}""".format(path = d['path'], name = d['name']))
         else:
             raise Exception("More than 1 subnet returned")
 
-    def get_vpc_suffix(self, vpc_id):
-            vpc_conn = VPCConnection()
-            vpc = vpc_conn.get_all_vpcs(filters={'vpc_id': vpc_id})
-            if len(vpc) == 1:
-                vpc_suffix = vpc[0].tags['vpcSuffix']
-                if vpc_suffix is None:
-                    return "vpc"
-                else:
-                    return vpc_suffix
-            elif len(vpc) == 0:
-                raise NoVPCReturned("No VPC returned.")
-            else:
-                raise Exception("More than 1 VPC returned")
-
     def resolve_security_groups(self):
-        # If the server is being spun up in a subnet, append a vpc suffix
-        if self.subnet_id is not None:
-            vpc_id = self.get_subnet_vpc_id(self.subnet_id)
-            vpc_suffix = self.get_vpc_suffix(vpc_id)
-
+        filters = {}
+        self.log.info("Resolving security groups")
+        
+        # If the server is being spun up in a vpc, search only that vpc
         exists = lambda s: s in [group.name for group in
-                                 self.ec2.get_all_security_groups()]
+                                 self.ec2.get_all_security_groups()
+                                 if self.vpc_id == group.vpc_id]
 
         for index, group in enumerate(self.security_groups):
-            if self.subnet_id is not None:
-                if not group.endswith("-" + vpc_suffix):
-                    group = group + "-" + vpc_suffix
-                    self.security_groups[index] = group
+            
             if not exists(group):
                 self.log.info('Security Group {group} does not exist'.format(
                                 group=group))
@@ -435,7 +421,7 @@ named {name}""".format(path = d['path'], name = d['name']))
                 else:
                     vpc_conn = VPCConnection()
                     vpc_conn.create_security_group(
-                        group, group, vpc_id=vpc_id)
+                        group, group, vpc_id=self.vpc_id)
                 self.log.info('Created security group {group}'.format(
                                 group=group))
             else:
@@ -609,18 +595,19 @@ named {name}""".format(path = d['path'], name = d['name']))
             for group in security_groups:
                 filters = {'group-name': group}
 
-                if vpc_id is not None:
-                    filters['vpc_id'] = vpc_id
+                security_groups = [group for group in
+                                   self.ec2.get_all_security_groups(
+                                    filters=filters)
+                                   if self.vpc_id == group.vpc_id]
 
-                security_groups = self.ec2.get_all_security_groups(
-                    filters=filters)
                 if len(security_groups) == 1:
                     security_group_ids.append(security_groups[0].id)
                 elif len(security_groups) == 0:
-                    raise NoSecurityGroupsReturned("No VPC returned.")
+                    raise NoSecurityGroupsReturned(
+                        "No security group returned.")
                 else:
                     raise MultipleSecurityGroupsReturned(
-                        "More than 1 VPC returned")
+                        "More than 1 security group returned")
 
             return security_group_ids
 
