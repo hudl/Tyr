@@ -213,7 +213,8 @@ class Server(object):
                         {
                             'type': 'CNAME',
                             'name': '{hostname}.',
-                            'value': '{dns_name}'
+                            'value': '{dns_name}',
+                            'ttl': 60
                         }
                     ]
                 },
@@ -226,7 +227,8 @@ class Server(object):
                         {
                             'type': 'A',
                             'name': '{hostname}.',
-                            'value': '{private_ip_address}'
+                            'value': '{private_ip_address}',
+                            'ttl': 60
                         }
                     ]
                 }
@@ -662,7 +664,8 @@ named {name}""".format(path = d['path'], name = d['name']))
                     self.log.info('The existing DNS record was deleted')
 
                 try:
-                    zone.add_record(record['type'], name, value)
+                    zone.add_record(record['type'], name, value,
+                                    ttl=record['ttl'])
                     self.log.info('Added new DNS record')
                 except Exception, e:
                     self.log.error(str(e))
