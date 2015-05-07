@@ -160,7 +160,7 @@ class Server(object):
                 self.log.warn('No EC2 availability zone provided, using zone c')
                 self.availability_zone = 'c'
         else:
-            if self.availability_zone not is None:
+            if self.availability_zone is not None:
                 self.log.warn('Both availability zone and subnet set, '
                               'using availability zone from subnet')
             self.vpc_id = self.get_subnet_vpc_id(self.subnet_id)
