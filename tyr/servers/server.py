@@ -215,6 +215,12 @@ class Server(object):
                             'name': '{name}.external.{dns_zone}.',
                             'value': '{dns_name}',
                             'ttl': 60
+                        },
+                        {
+                            'type': 'CNAME',
+                            'name': '{hostname}.',
+                            'value': '{private_dns_name}',
+                            'ttl': 60
                         }
                     ]
                 },
