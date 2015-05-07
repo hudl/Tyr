@@ -216,6 +216,19 @@ class Server(object):
                             'value': '{dns_name}'
                         }
                     ]
+                },
+                {
+                    'id': {
+                        'prod': 'Z1LKTAOOYM3H8T',
+                        'test': 'ZXXFTW7F1WFIS'
+                    },
+                    'records': [
+                        {
+                            'type': 'A',
+                            'name': '{hostname}.',
+                            'value': '{private_ip_address}'
+                        }
+                    ]
                 }
             ]
 
