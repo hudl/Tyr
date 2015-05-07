@@ -647,7 +647,8 @@ named {name}""".format(path = d['path'], name = d['name']))
                     'ip_address': self.instance.ip_address,
                     'dns_name': self.instance.dns_name,
                     'private_ip_address': self.instance.private_ip_address,
-                    'private_dns_name': self.instance.private_dns_name
+                    'private_dns_name': self.instance.private_dns_name,
+                    'dns_zone': self.hostname[len(self.name)+1:]
                 }
 
                 name = record['name'].format(**formatting_params)
