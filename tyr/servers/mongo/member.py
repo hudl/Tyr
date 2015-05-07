@@ -8,7 +8,7 @@ class MongoReplicaSetMember(MongoNode):
                     environment = None, ami = None, region = None, role = None,
                     keypair = None, availability_zone = None,
                     security_groups = None, block_devices = None,
-                    chef_path = None, replica_set = None,
+                    chef_path = None, dns_zones = None, replica_set = None,
                     mongodb_version = None):
 
         super(MongoReplicaSetMember, self).__init__(group, server_type, instance_type,
@@ -17,7 +17,7 @@ class MongoReplicaSetMember(MongoNode):
                                                     availability_zone,
                                                     security_groups,
                                                     block_devices, chef_path,
-                                                    mongodb_version)
+                                                    dns_zones, mongodb_version)
 
         self.replica_set = replica_set
 

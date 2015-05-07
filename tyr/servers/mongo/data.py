@@ -14,7 +14,7 @@ class MongoDataNode(MongoReplicaSetMember):
                     environment = None, ami = None, region = None, role = None,
                     keypair = None, availability_zone = None,
                     security_groups = None, block_devices = None,
-                    chef_path = None, replica_set = None,
+                    chef_path = None, dns_zones = None, replica_set = None,
                     data_volume_size = None, data_volume_iops = None,
                     mongodb_version = None):
 
@@ -22,7 +22,7 @@ class MongoDataNode(MongoReplicaSetMember):
                                             environment, ami, region, role,
                                             keypair, availability_zone,
                                             security_groups, block_devices,
-                                            chef_path, replica_set,
+                                            chef_path, dns_zones, replica_set,
                                             mongodb_version)
 
         self.data_volume_size = data_volume_size
