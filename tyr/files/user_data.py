@@ -21,12 +21,15 @@ MY_ENV=`/bin/echo "$MY_TAGS"|awk 'tolower($2) ~ /environment/ {{ print tolower($
 if [ $MY_ENV == "stage" ]; then
   MY_DOMAIN=app.staghudl.com
   ROUTE53_ZONE=Z3ETV7KVCRERYL
+  PRIVATE_ZONE=Z24UEMQ8K6Z50Z
 elif [ $MY_ENV == "prod" ]; then
   MY_DOMAIN=app.hudl.com
   ROUTE53_ZONE=ZDQ066NWSBGCZ
+  PRIVATE_ZONE=Z1LKTAOOYM3H8T
 elif [ $MY_ENV == "test" ]; then
   MY_DOMAIN=thorhudl.com
   ROUTE53_ZONE=ZAH3O4H1900GY
+  PRIVATE_ZONE=ZXXFTW7F1WFIS
 else
   exit 1
 fi
@@ -48,15 +51,29 @@ cat << 'EOF' > /root/route53/upsert.sh
 #!/bin/bash
 META_URL='http://169.254.169.254/latest/meta-data'
 PUBLIC_HOSTNAME=`curl -s $META_URL/public-hostname`
+LOCAL_HOSTNAME=`curl -s $META_URL/local-hostname`
 
 cat << EOT > /root/route53/upsert.json
 {{
-"Comment": "Creating CNAME for $HOSTNAME",
+"Comment": "Creating CNAMEs for $HOSTNAME in public $MY_DOMAIN",
 "Changes": [
   {{
     "Action": "UPSERT",
     "ResourceRecordSet": {{
       "Name": "$HOSTNAME.",
+      "Type": "CNAME",
+      "TTL": 60,
+      "ResourceRecords": [
+        {{
+          "Value": "$LOCAL_HOSTNAME"
+        }}
+      ]
+    }}
+  }},
+  {{
+    "Action": "UPSERT",
+    "ResourceRecordSet": {{
+      "Name": "$HOSTNAME.external.",
       "Type": "CNAME",
       "TTL": 60,
       "ResourceRecords": [
@@ -69,10 +86,33 @@ cat << EOT > /root/route53/upsert.json
 ]
 }}
 EOT
+
+cat << EOT > /root/route53/upsert_vpc.json
+{{
+"Comment": "Creating CNAME for $HOSTNAME in private $MY_DOMAIN",
+"Changes": [
+  {{
+    "Action": "UPSERT",
+    "ResourceRecordSet": {{
+      "Name": "$HOSTNAME.",
+      "Type": "CNAME",
+      "TTL": 60,
+      "ResourceRecords": [
+        {{
+          "Value": "$LOCAL_HOSTNAME"
+        }}
+      ]
+    }}
+  }}
+]
+}}
+EOT
+
 EOF
 
 cat << EOF >> /root/route53/upsert.sh
 /usr/bin/aws route53 change-resource-record-sets --region $MY_REGION --hosted-zone-id $ROUTE53_ZONE --change-batch file:///root/route53/upsert.json >> /root/route53/upsert.log 2>&1
+/usr/bin/aws route53 change-resource-record-sets --region $MY_REGION --hosted-zone-id $PRIVATE_ZONE --change-batch file:///root/route53/upsert_vpc.json >> /root/route53/upsert.log 2>&1
 EOF
 
 chmod +x /root/route53/upsert.sh

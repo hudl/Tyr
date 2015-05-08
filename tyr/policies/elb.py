@@ -26,7 +26,9 @@ allow_modify_nginx_elbs_stage = """{
              "Effect": "Allow",
              "Resource": [
                 "arn:aws:elasticloadbalancing:us-east-1:761584570493:loadbalancer/recruit-stage",
-                "arn:aws:elasticloadbalancing:us-east-1:761584570493:loadbalancer/hudl-stage"
+                "arn:aws:elasticloadbalancing:us-east-1:761584570493:loadbalancer/hudl-stage",
+                "arn:aws:elasticloadbalancing:us-east-1:761584570493:loadbalancer/recruit-stage-vpc",
+                "arn:aws:elasticloadbalancing:us-east-1:761584570493:loadbalancer/hudl-stage-vpc"
              ]
         }
      ]
@@ -43,7 +45,9 @@ allow_modify_nginx_elbs_prod = """{
              "Effect": "Allow",
              "Resource": [
                 "arn:aws:elasticloadbalancing:us-east-1:761584570493:loadbalancer/recruit-prod",
-                "arn:aws:elasticloadbalancing:us-east-1:761584570493:loadbalancer/hudl-primary"
+                "arn:aws:elasticloadbalancing:us-east-1:761584570493:loadbalancer/hudl-primary",
+                "arn:aws:elasticloadbalancing:us-east-1:761584570493:loadbalancer/recruit-prod-vpc",
+                "arn:aws:elasticloadbalancing:us-east-1:761584570493:loadbalancer/hudl-primary-vpc"
              ]
         }
      ]

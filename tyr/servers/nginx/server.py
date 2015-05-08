@@ -36,62 +36,7 @@ class NginxServer(Server):
         super(NginxServer, self).configure()
 
         if self.environment == 'stage':
-            self.IAM_ROLE_POLICIES.append('allow-update-route53-stage')
             self.IAM_ROLE_POLICIES.append('allow-modify-nginx-elbs-stage')
         elif self.environment == 'prod':
-            self.IAM_ROLE_POLICIES.append('allow-update-route53-prod')
             self.IAM_ROLE_POLICIES.append('allow-modify-nginx-elbs-prod')
         self.resolve_iam_role()
-
-    def bake(self):
-
-        chef_path = os.path.expanduser(self.chef_path)
-        self.chef_api = chef.autoconfigure(chef_path)
-
-        with self.chef_api:
-            try:
-                node = chef.Node(self.name)
-                node.delete()
-
-                self.log.info('Removed previous chef node "{node}"'.format(
-                                node = self.name))
-            except chef.exceptions.ChefServerNotFoundError:
-                pass
-            except Exception as e:
-                self.log.error(str(e))
-                raise e
-
-            try:
-                client = chef.Client(self.name)
-                client = client.delete()
-
-                self.log.info('Removed previous chef client "{client}"'.format(
-                                client = self.name))
-            except chef.exceptions.ChefServerNotFoundError:
-                pass
-            except Exception as e:
-                self.log.error(str(e))
-                raise e
-
-    @property
-    def user_data(self):
-
-        template = generic_user_data
-
-        validation_key_path = os.path.expanduser('~/.chef/chef-validator.pem')
-        validation_key_file = open(validation_key_path, 'r')
-        validation_key = validation_key_file.read()
-
-        return template.format(hostname = self.hostname,
-                                fqdn = self.hostname,
-                                validation_key = validation_key,
-                                chef_server = 'http://chef.app.hudl.com/',
-                                logfile = '/var/log/chef-client.log')
-
-    def autorun(self):
-
-        self.establish_logger()
-        self.configure()
-        self.launch()
-        self.tag()
-        self.bake()
