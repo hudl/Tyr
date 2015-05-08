@@ -1,5 +1,4 @@
 from tyr.servers.server import Server
-from tyr.files.user_data import generic_user_data
 import chef
 import requests
 import time

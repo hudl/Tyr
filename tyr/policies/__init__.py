@@ -13,9 +13,5 @@ policies = {
     'allow-get-nginx-config': s3.allow_get_nginx_config,
     'allow-describe-elbs': elb.allow_describe_elbs,
     'allow-modify-nginx-elbs-stage': elb.allow_modify_nginx_elbs_stage,
-    'allow-modify-nginx-elbs-prod': elb.allow_modify_nginx_elbs_prod,
-    'allow-update-route53-stage': route53.allow_update_route53_stage,
-    'allow-update-route53-stage-private': route53.allow_update_route53_stage_private,
-    'allow-update-route53-prod': route53.allow_update_route53_prod,
-    'allow-update-route53-prod-private': route53.allow_update_route53_prod_private
+    'allow-modify-nginx-elbs-prod': elb.allow_modify_nginx_elbs_prod
 }
