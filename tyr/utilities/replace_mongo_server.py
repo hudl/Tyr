@@ -522,12 +522,12 @@ def stop_decommissioned_node(address, terminate=False,
             log.debug('Failed to stop {instance}'.format(
                                                         instance = instance_id))
 @timeit
-def replace_server(environment = 'stage', group = 'monolith',
-                    instance_type = 'm3.medium', availability_zone = 'c',
-                    replica_set_index = 1, data_volume_size = 400,
-                    data_volume_iops = 2000, mongodb_package_version = '2.4.13',
-                    member = None, replace = False, node_type = 'data',
-                    replica_set_template=None, reroute=False, terminate=False,
+def replace_server(environment=None, group='monolith', instance_type=None,
+                    availability_zone=None, replica_set_index=None,
+                    data_volume_size=None, data_volume_iops=None,
+                    mongodb_package_version=None, member=None,
+                    replace=False, node_type='data', reroute=False,
+                    replica_set_template=None, terminate=False,
                     prompt_before_replace=True):
 
     if member is None:
