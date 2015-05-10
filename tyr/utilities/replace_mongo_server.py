@@ -262,21 +262,7 @@ def launch_server(environment, group, instance_type, availability_zone,
                     replica_set, data_volume_size, data_volume_iops,
                     mongodb_package_version, node_type, replica_set_template):
 
-    log.debug('Preparing to launch a new node with the following properties:')
-
-    log.debug('Node Type: {node_type}'.format(node_type = node_type))
-    log.debug('Environment: {environment}'.format(environment = environment))
-    log.debug('Group: {group}'.format(group = group))
-    log.debug('Instance Type: {instance_type}'.format(
-                                                instance_type = instance_type))
-    log.debug('Availability Zone: {zone}'.format(zone = availability_zone))
-    log.debug('Replica Set: {replica_set}'.format(replica_set = replica_set))
-    log.debug('Replica Set Name: {replica_set_template}'.format(
-                                replica_set_template = replica_set_template))
-    log.debug('Data Volume Size: {size}'.format(size = data_volume_size))
-    log.debug('Data Volume IOPS: {iops}'.format(iops = data_volume_iops))
-    log.debug('MongoDB Package Version: {version}'.format(
-                                            version = mongodb_package_version))
+    log.debug('Preparing to launch a new node')
 
     node = None
 
