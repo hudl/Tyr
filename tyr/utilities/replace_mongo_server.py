@@ -522,7 +522,7 @@ def stop_decommissioned_node(address, terminate=False,
             log.debug('Failed to stop {instance}'.format(
                                                         instance = instance_id))
 @timeit
-def replace_server(environment = 'stage', group = 'monolith',
+def replace_server(environment = 'stage', group = 'monolith', subnet_id = None,
                     instance_type = 'm3.medium', availability_zone = 'c',
                     replica_set_index = 1, data_volume_size = 400,
                     data_volume_iops = 2000, mongodb_package_version = '2.4.13',
@@ -630,8 +630,9 @@ def replace_server(environment = 'stage', group = 'monolith',
         log.info('The node being added is an arbiter')
 
         log.info('Launching the new node')
-        node = launch_server(environment, group, instance_type, availability_zone,
-                                replica_set_index, data_volume_size, data_volume_iops,
+        node = launch_server(environment, group, subnet_id, instance_type,
+                                availability_zone, replica_set_index,
+                                data_volume_size, data_volume_iops,
                                 mongodb_package_version, node_type,
                                 replica_set_template=replica_set_name)
 
@@ -659,8 +660,9 @@ def replace_server(environment = 'stage', group = 'monolith',
     log.info('The node being added is a {type_} node'.format(type_ = node_type))
 
     log.info('Launching the new node')
-    node = launch_server(environment, group, instance_type, availability_zone,
-                            replica_set_index, data_volume_size, data_volume_iops,
+    node = launch_server(environment, group, subnet_id, instance_type,
+                            availability_zone, replica_set_index,
+                            data_volume_size, data_volume_iops,
                             mongodb_package_version, node_type,
                             replica_set_template=replica_set_name)
 
