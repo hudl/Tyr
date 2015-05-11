@@ -2,8 +2,8 @@ from member import MongoReplicaSetMember
 
 class MongoArbiterNode(MongoReplicaSetMember):
 
-    NAME_TEMPLATE = '{envcl}-rs{replica_set}-{zone}-arb'
-    NAME_SEARCH_PREFIX = '{envcl}-rs{replica_set}-{zone}-'
+    NAME_TEMPLATE = '{envcl}-rs{replica_set}-{location}-arb'
+    NAME_SEARCH_PREFIX = '{envcl}-rs{replica_set}-{location}-'
     NAME_AUTO_INDEX=False
 
     CHEF_RUNLIST = ['role[RoleMongo]']
@@ -13,15 +13,15 @@ class MongoArbiterNode(MongoReplicaSetMember):
                     environment = None, ami = None, region = None, role = None,
                     keypair = None, availability_zone = None,
                     security_groups = None, block_devices = None,
-                    chef_path = None, replica_set = None,
-                    mongodb_version = None):
+                    chef_path = None, subnet_id = None, dns_zones = None,
+                    replica_set = None, mongodb_version = None):
 
         super(MongoArbiterNode, self).__init__(group, server_type, instance_type,
                                                 environment, ami, region, role,
                                                 keypair, availability_zone,
                                                 security_groups, block_devices,
-                                                chef_path, replica_set,
-                                                mongodb_version)
+                                                chef_path, subnet_id, dns_zones,
+                                                replica_set, mongodb_version)
 
     def bake(self):
 

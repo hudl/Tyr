@@ -1,19 +1,23 @@
 from exceptions import *
 import boto.ec2
 import boto.route53
+import boto.ec2.networkinterface
 import logging
 import os.path
 import chef
 import time
+from boto.ec2.networkinterface import NetworkInterfaceSpecification
 import json
+from boto.ec2.networkinterface import NetworkInterfaceCollection
 import urllib
+from boto.vpc import VPCConnection
 from paramiko.client import AutoAddPolicy, SSHClient
 from tyr.policies import policies
 
 class Server(object):
 
-    NAME_TEMPLATE='{envcl}-{zone}-{index}'
-    NAME_SEARCH_PREFIX='{envcl}-{zone}-'
+    NAME_TEMPLATE='{envcl}-{location}-{index}'
+    NAME_SEARCH_PREFIX='{envcl}-{location}-'
     NAME_AUTO_INDEX=True
 
     IAM_ROLE_POLICIES = []
@@ -21,13 +25,14 @@ class Server(object):
     CHEF_RUNLIST=['role[RoleBase]']
 
     def __init__(self, group=None, server_type=None, instance_type=None,
-                    environment=None, ami=None, region=None, role=None,
-                    keypair=None, availability_zone=None, security_groups=None,
-                    block_devices=None, chef_path=None):
+                 environment=None, ami=None, region=None, role=None,
+                 keypair=None, availability_zone=None, security_groups=None,
+                 block_devices=None, chef_path=None, subnet_id=None,
+                 dns_zones=None):
 
         self.instance_type = instance_type
         self.group = group
-        self.server_type= server_type
+        self.server_type = server_type
         self.environment = environment
         self.ami = ami
         self.region = region
@@ -37,6 +42,9 @@ class Server(object):
         self.security_groups = security_groups
         self.block_devices = block_devices
         self.chef_path = chef_path
+        self.dns_zones = dns_zones
+        self.subnet_id = subnet_id
+        self.vpc_id = None
 
     def establish_logger(self):
 
@@ -113,7 +121,7 @@ class Server(object):
 
         if self.ami is None:
             self.log.warn('No AMI provided')
-            self.ami = 'ami-146e2a7c'
+            self.ami = 'ami-1ecae776'
 
         try:
             self.ec2.get_all_images(image_ids=[self.ami])
@@ -144,15 +152,28 @@ class Server(object):
 
         if not valid(self.keypair):
             error = '"{keypair}" is not a valid EC2 keypair'.format(
-                        keypair = self.keypair)
+                        keypair=self.keypair)
             raise InvalidKeyPair(error)
 
         self.log.info('Using EC2 Key Pair "{keypair}"'.format(
-                        keypair = self.keypair))
+                        keypair=self.keypair))
 
-        if self.availability_zone is None:
-            self.log.warn('No EC2 availability zone provided')
-            self.availability_zone = 'c'
+        if self.subnet_id is None: 
+            if self.availability_zone is None:
+                self.log.warn('No EC2 availability zone provided, using zone c')
+                self.availability_zone = 'c'
+        else:
+            if self.availability_zone is not None:
+                self.log.warn('Both availability zone and subnet set, '
+                              'using availability zone from subnet')
+
+            self.vpc_id = self.get_subnet_vpc_id(self.subnet_id)
+            self.log.info("Using VPC {vpc_id}".format(vpc_id=self.vpc_id))
+            self.availability_zone = self.get_subnet_availability_zone(
+                                        self.subnet_id)
+            self.log.info("Using VPC, using availability zone " +
+                          "{availability_zone}".format(
+                           availability_zone=self.availability_zone))
 
         if len(self.availability_zone) == 1:
             self.availability_zone = self.region+self.availability_zone
@@ -161,11 +182,11 @@ class Server(object):
 
         if not valid(self.availability_zone):
             error = '"{zone}" is not a valid EC2 availability zone'.format(
-                    zone = self.availability_zone)
+                    zone=self.availability_zone)
             raise InvalidAvailabilityZone(error)
 
         self.log.info('Using EC2 Availability Zone "{zone}"'.format(
-                        zone = self.availability_zone))
+                        zone=self.availability_zone))
 
         if self.security_groups is None:
             self.log.warn('No EC2 security groups provided')
@@ -199,7 +220,64 @@ class Server(object):
         self.log.info('Using Chef path "{path}"'.format(
                                 path = self.chef_path))
 
+        if self.dns_zones is None:
+            self.log.warn('No DNS zones specified')
+            self.dns_zones = [
+                {
+                    'id': {
+                        'prod': 'ZDQ066NWSBGCZ',
+                        'stage': 'Z3ETV7KVCRERYL',
+                        'test': 'ZAH3O4H1900GY'
+                    },
+                    'records': [
+                        {
+                            'type': 'CNAME',
+                            'name': '{name}.external.{dns_zone}.',
+                            'value': '{dns_name}',
+                            'ttl': 60
+                        },
+                        {
+                            'type': 'CNAME',
+                            'name': '{hostname}.',
+                            'value': '{private_dns_name}',
+                            'ttl': 60
+                        }
+                    ]
+                },
+                {
+                    'id': {
+                        'prod': 'Z1LKTAOOYM3H8T',
+                        'stage': 'Z24UEMQ8K6Z50Z',
+                        'test': 'ZXXFTW7F1WFIS'
+                    },
+                    'records': [
+                        {
+                            'type': 'CNAME',
+                            'name': '{hostname}.',
+                            'value': '{private_dns_name}',
+                            'ttl': 60
+                        }
+                    ]
+                }
+            ]
 
+    @property
+    def location(self):
+
+        region_map = {
+                'ap-northeast-1': 'apne1',
+                'ap-southeast-1': 'apse1',
+                'ap-southeast-2': 'apse2',
+                'eu-central-1': 'euc1',
+                'eu-west-1': 'euw1',
+                'sa-east-1': 'sae1',
+                'us-east-1': 'use1',
+                'us-west-1': 'usw1',
+                'us-west-2': 'usw2',
+        }
+
+        return '{region}{zone}'.format(region=region_map[self.region],
+                                        zone=self.availability_zone[-1:])
 
     def next_index(self, supplemental={}):
 
@@ -267,8 +345,8 @@ class Server(object):
 
         supplemental = self.__dict__.copy()
 
-        supplemental['zone'] = self.availability_zone[-1:]
         supplemental['envcl'] = self.envcl
+        supplemental['location'] = self.location
 
         if self.NAME_AUTO_INDEX:
 
@@ -371,21 +449,43 @@ named {name}""".format(path = d['path'], name = d['name']))
 
         return bdm
 
+    def get_subnet_vpc_id(self, subnet_id):
+        vpc_conn = VPCConnection()
+        subnets = vpc_conn.get_all_subnets(
+            filters={'subnet_id': subnet_id})
+        if len(subnets) == 1:
+            vpc_id = subnets[0].vpc_id
+            return vpc_id
+        elif len(subnets) == 0:
+            raise NoSubnetReturned("No subnets returned")
+        else:
+            raise Exception("More than 1 subnet returned")
+
     def resolve_security_groups(self):
-
+        filters = {}
+        self.log.info("Resolving security groups")
+        
+        # If the server is being spun up in a vpc, search only that vpc
         exists = lambda s: s in [group.name for group in
-                self.ec2.get_all_security_groups()]
+                                 self.ec2.get_all_security_groups()
+                                 if self.vpc_id == group.vpc_id]
 
-        for group in self.security_groups:
+        for index, group in enumerate(self.security_groups):
+            
             if not exists(group):
                 self.log.info('Security Group {group} does not exist'.format(
-                                group = group))
-                self.ec2.create_security_group(group, group)
+                                group=group))
+                if self.subnet_id is None:
+                    self.ec2.create_security_group(group, group)
+                else:
+                    vpc_conn = VPCConnection()
+                    vpc_conn.create_security_group(
+                        group, group, vpc_id=self.vpc_id)
                 self.log.info('Created security group {group}'.format(
-                                group = group))
+                                group=group))
             else:
                 self.log.info('Security Group {group} already exists'.format(
-                                group = group))
+                                group=group))
 
     def resolve_iam_role(self):
 
@@ -514,6 +614,23 @@ named {name}""".format(path = d['path'], name = d['name']))
             self.log.error(str(e))
             raise e
 
+    def get_subnet_availability_zone(self, subnet_id):
+        self.log.info(
+            "getting zone for subnet {subnet_id}".format(subnet_id=subnet_id))
+        vpc_conn = VPCConnection()
+        filters = {'subnet-id': subnet_id}
+        subnets = vpc_conn.get_all_subnets(filters=filters)
+
+        if len(subnets) == 1:
+            availability_zone = subnets[0].availability_zone
+
+            log_message = 'Subnet {subnet_id} is in ' \
+                          'availability zone {availability_zone}'
+            self.log.info(log_message.format(
+                            subnet_id=subnet_id,
+                            availability_zone=availability_zone))
+            return availability_zone
+
     def establish_iam_connection(self):
 
         try:
@@ -532,17 +649,58 @@ named {name}""".format(path = d['path'], name = d['name']))
             self.log.error(str(e))
             raise e
 
+    def get_security_group_ids(self, security_groups, vpc_id=None):
+            security_group_ids = []
+            for group in security_groups:
+                filters = {'group-name': group}
+
+                security_groups = [group for group in
+                                   self.ec2.get_all_security_groups(
+                                    filters=filters)
+                                   if self.vpc_id == group.vpc_id]
+
+                if len(security_groups) == 1:
+                    security_group_ids.append(security_groups[0].id)
+                elif len(security_groups) == 0:
+                    raise NoSecurityGroupsReturned(
+                        "No security group returned.")
+                else:
+                    raise MultipleSecurityGroupsReturned(
+                        "More than 1 security group returned")
+
+            return security_group_ids
+
     def launch(self, wait=False):
+        self.security_group_ids = self.get_security_group_ids(
+            self.security_groups, self.vpc_id)
+
+        self.log.info(
+            "Using Security group ids: {ids}".format(
+                ids=self.security_group_ids))
 
         parameters = {
                 'image_id': self.ami,
                 'instance_profile_name': self.role,
                 'key_name': self.keypair,
                 'instance_type': self.instance_type,
-                'security_groups': self.security_groups,
                 'block_device_map': self.blockdevicemapping,
-                'user_data': self.user_data,
-                'placement': self.availability_zone}
+                'user_data': self.user_data}
+
+        if self.subnet_id is None:
+            parameters.update({
+                'placement': self.availability_zone,
+                'security_group_ids': self.security_group_ids,
+            })
+        else:
+            interface = NetworkInterfaceSpecification(
+                subnet_id=self.subnet_id,
+                groups=self.security_group_ids,
+                associate_public_ip_address=True)
+            interfaces = NetworkInterfaceCollection(
+                interface)
+            parameters.update({
+                'network_interfaces': interfaces
+            })
 
         reservation = self.ec2.run_instances(**parameters)
 
@@ -567,38 +725,59 @@ named {name}""".format(path = d['path'], name = d['name']))
 
     def tag(self):
         self.ec2.create_tags([self.instance.id], self.tags)
-        self.log.info('Tagged instance with {tags}'.format(tags = self.tags))
+        self.log.info('Tagged instance with {tags}'.format(tags=self.tags))
 
     def route(self):
-        zone_address = self.hostname[len(self.name)+1:]
 
-        self.log.info('Using Zone Address {address}'.format(
-                            address = zone_address))
+        for dns_zone in self.dns_zones:
 
-        try:
-            zone = self.route53.get_zone(zone_address)
-            self.log.info('Retrieved zone from Route53')
-        except Exception, e:
-            self.log.error(str(e))
-            raise e
+            self.log.info('Routing Hosted Zone {zone}'.format(zone=dns_zone))
 
-        name = self.hostname + '.'
-        self.log.info('Using record name {name}'.format(name = name))
-        self.log.info('Using record value {value}'.format(
-                        value = self.instance.public_dns_name))
+            for z in self.route53.get_zones():
+                if z.id == dns_zone['id'][self.environment]:
+                    zone = z
+                    break
 
-        if zone.get_cname(name) is None:
-            self.log.info('The CNAME record does not exist')
-            try:
-                zone.add_cname(name, self.instance.public_dns_name)
-                self.log.info('Created new CNAME record')
-            except Exception, e:
-                self.log.error(str(e))
-                raise e
-        else:
-            self.log.info('The CNAME record already exists')
-            zone.update_cname(name, self.instance.public_dns_name)
-            self.log.info('Updated the CNAME record')
+            self.log.info('Using Zone Address {zone}'.format(zone=zone.name))
+
+            for record in dns_zone['records']:
+
+                self.log.info('Adding DNS record {record}'.format(
+                                                                record=record))
+
+                formatting_params = {
+                    'hostname': self.hostname,
+                    'name': self.name,
+                    'instance_id': self.instance.id,
+                    'vpc_id': self.instance.vpc_id,
+                    'ip_address': self.instance.ip_address,
+                    'dns_name': self.instance.dns_name,
+                    'private_ip_address': self.instance.private_ip_address,
+                    'private_dns_name': self.instance.private_dns_name,
+                    'dns_zone': self.hostname[len(self.name)+1:]
+                }
+
+                name = record['name'].format(**formatting_params)
+                value = record['value'].format(**formatting_params)
+
+                self.log.info('Using record name {name}'.format(name=name))
+                self.log.info('Using record value {value}'.format(value=value))
+
+                existing_records = zone.find_records(name=name,
+                                                        type=record['type'])
+
+                if existing_records:
+                    self.log.info('The DNS record already exists')
+                    zone.delete_record(existing_records)
+                    self.log.info('The existing DNS record was deleted')
+
+                try:
+                    zone.add_record(record['type'], name, value,
+                                    ttl=record['ttl'])
+                    self.log.info('Added new DNS record')
+                except Exception, e:
+                    self.log.error(str(e))
+                    raise e
 
     @property
     def connection(self):

@@ -2,8 +2,8 @@ from member import MongoReplicaSetMember
 
 class MongoDataWarehousingNode(MongoReplicaSetMember):
 
-    NAME_TEMPLATE = '{envcl}-rs{replica_set}-{zone}-fulla'
-    NAME_SEARCH_PREFIX = '{envcl}-rs{replica_set}-{zone}-'
+    NAME_TEMPLATE = '{envcl}-rs{replica_set}-{location}-fulla'
+    NAME_SEARCH_PREFIX = '{envcl}-rs{replica_set}-{location}-'
     NAME_AUTO_INDEX=False
 
     IAM_ROLE_POLICIES = [
@@ -19,8 +19,9 @@ class MongoDataWarehousingNode(MongoReplicaSetMember):
                     environment = None, ami = None, region = None, role = None,
                     keypair = None, availability_zone = None,
                     security_groups = None, block_devices = None,
-                    chef_path = None, replica_set = None,
-                    data_volume_size = None, mongodb_version = None):
+                    chef_path = None, subnet_id = None, dns_zones = None,
+                    replica_set = None, data_volume_size = None,
+                    mongodb_version = None):
 
         super(MongoDataWarehousingNode, self).__init__(group, server_type,
                                                         instance_type,
@@ -29,7 +30,8 @@ class MongoDataWarehousingNode(MongoReplicaSetMember):
                                                         availability_zone,
                                                         security_groups,
                                                         block_devices,
-                                                        chef_path,
+                                                        chef_path, subnet_id,
+                                                        dns_zones,
                                                         replica_set,
                                                         mongodb_version)
 
