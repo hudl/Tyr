@@ -68,3 +68,18 @@ allow_download_script_s3_stage_updater = """{
         }
     ]
 }"""
+
+allow_get_nginx_config = """{
+    "Statement": [
+        {
+            "Sid": "Stmt1367531520229",
+            "Action": [
+                "s3:GetObject"
+             ],
+             "Effect": "Allow",
+             "Resource": [
+                "arn:aws:s3:::hudl-sparkplug/*"
+             ]
+        }
+     ]
+}"""

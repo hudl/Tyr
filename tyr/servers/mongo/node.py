@@ -14,7 +14,8 @@ class MongoNode(Server):
                     environment = None, ami = None, region = None, role = None,
                     keypair = None, availability_zone = None,
                     security_groups = None, block_devices = None,
-                    chef_path = None, dns_zones = None, mongodb_version=None):
+                    chef_path = None, subnet_id = None, dns_zones = None,
+                    mongodb_version=None):
 
         self.mongodb_version = mongodb_version
 
@@ -24,7 +25,7 @@ class MongoNode(Server):
                                         environment, ami, region, role,
                                         keypair, availability_zone,
                                         security_groups, block_devices,
-                                        chef_path, dns_zones)
+                                        chef_path, subnet_id, dns_zones)
 
     def configure(self):
 
@@ -45,7 +46,7 @@ class MongoNode(Server):
             'management',
             'chef-nodes',
             self.envcl,
-            '{env}-mongo-management'.format(env = self.environment[0])
+            '{env}-mongo-management'.format(env=self.environment[0])
         ]
 
         self.resolve_security_groups()
