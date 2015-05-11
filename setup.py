@@ -7,7 +7,7 @@ setup(
     author_email = 'mihir.singh@hudl.com',
     packages = ['tyr'],
     zip_safe = False,
-    include_package_date = True,
+    include_package_data = True,
     platforms = 'any',
     install_requires = [
         'boto',
