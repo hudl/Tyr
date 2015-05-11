@@ -648,7 +648,7 @@ named {name}""".format(path = d['path'], name = d['name']))
                 formatting_params = {
                     'hostname': self.hostname,
                     'name': self.name,
-                    'id': self.instance.id,
+                    'instance_id': self.instance.id,
                     'vpc_id': self.instance.vpc_id,
                     'ip_address': self.instance.ip_address,
                     'dns_name': self.instance.dns_name,
