@@ -2,7 +2,7 @@ from node import MongoNode
 
 class MongoConfigNode(MongoNode):
 
-    NAME_TEMPLATE = '{envcl}-cfg-{zone}'
+    NAME_TEMPLATE = '{envcl}-cfg-{location}'
     NAME_SEARCH_PREFIX = '{envcl}-cfg-'
     NAME_AUTO_INDEX = False
 

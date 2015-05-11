@@ -2,8 +2,8 @@ from member import MongoReplicaSetMember
 
 class MongoDataWarehousingNode(MongoReplicaSetMember):
 
-    NAME_TEMPLATE = '{envcl}-rs{replica_set}-{zone}-fulla'
-    NAME_SEARCH_PREFIX = '{envcl}-rs{replica_set}-{zone}-'
+    NAME_TEMPLATE = '{envcl}-rs{replica_set}-{location}-fulla'
+    NAME_SEARCH_PREFIX = '{envcl}-rs{replica_set}-{location}-'
     NAME_AUTO_INDEX=False
 
     IAM_ROLE_POLICIES = [

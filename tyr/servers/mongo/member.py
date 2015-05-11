@@ -33,6 +33,16 @@ class MongoReplicaSetMember(MongoNode):
 
         self.log.info('Using replica set {set}'.format(set = self.replica_set))
 
+    @property
+    def tags(self):
+
+        tags = super(MongoReplicaSetMember, self).tags
+
+        tags['ReplicaSet'] = self.REPLICA_SET_TEMPLATE.format(group=self.group,
+                                                        set_ = self.replica_set)
+
+        return tags
+
     def bake(self):
 
         super(MongoReplicaSetMember, self).bake()
