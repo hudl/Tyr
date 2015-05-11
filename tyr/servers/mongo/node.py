@@ -31,6 +31,13 @@ class MongoNode(Server):
 
         super(MongoNode, self).configure()
 
+        if self.environment == "prod":
+            self.IAM_ROLE_POLICIES.append('allow-mongo-backup-snapshot')
+        elif self.environment == "stage":
+            self.IAM_ROLE_POLICIES.append('allow-mongo-snapshot-cleanup')
+
+        self.resolve_iam_role()
+
         if self.mongodb_version is None:
             self.log.warn('MongoDB version not set')
             self.mongodb_version = '2.4.13'
