@@ -12,9 +12,9 @@ class CacheServer(Server):
     def __init__(self, group=None, server_type=None, instance_type=None,
                     environment=None, ami=None, region=None, role=None,
                     keypair=None, availability_zone=None, security_groups=None,
-                    block_devices=None, chef_path=None, couchbase_version=None,
-                    couchbase_username=None, couchbase_password=None,
-                    bucket_name=None, subnet_id=None):
+                    block_devices=None, chef_path=None, subnet_id=None,
+                    couchbase_version=None, couchbase_username=None,
+                    couchbase_password=None, bucket_name=None):
 
         if server_type is None: server_type = self.SERVER_TYPE
 

@@ -14,8 +14,7 @@ class MongoNode(Server):
                     environment = None, ami = None, region = None, role = None,
                     keypair = None, availability_zone = None,
                     security_groups = None, block_devices = None,
-                    chef_path = None, mongodb_version=None,
-                    subnet_id = None):
+                    chef_path = None, subnet_id = None, mongodb_version=None):
 
         self.mongodb_version = mongodb_version
 

@@ -19,7 +19,7 @@ class MongoConfigNode(MongoNode):
                                                 environment, ami, region, role,
                                                 keypair, availability_zone,
                                                 security_groups,
-                                                block_devices, chef_path, 
+                                                block_devices, chef_path,
                                                 subnet_id)
 
     def bake(self):
