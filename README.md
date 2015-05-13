@@ -32,25 +32,6 @@ These are specified in the `setup.py` file and will automatically be installed.
 
 ## Usage
 
-Boto needs AWS credentials that can optionally be passed via environment variable:
-
-- [BotoConfig](https://code.google.com/p/boto/wiki/BotoConfig)
-
-```
-export AWS_ACCESS_KEY_ID=
-export AWS_SECRET_ACCESS_KEY=
-```
-
-Stackdriver credentials need to be supplied:
-
-```
-export STACKDRIVER_API_KEY=
-export STACKDRIVER_USERNAME=
-```
-
-Ideally, the usage of each server and cluster type should be documented.
-However, here's a quick sample. We're going to spin up a MongoDB data node.
-
 ``` python
 from tyr.servers.mongo import MongoDataNode
 node = MongoDataNode(group='monolith')
