@@ -32,8 +32,8 @@ These are specified in the `setup.py` file and will automatically be installed.
 
 ## Usage
 
-Ideally, the usage of each server and cluster type should be documented.   
-However, here's a quick sample. We're going to spin up a MongoDB data node.    
+Ideally, the usage of each server and cluster type should be documented.
+However, here's a quick sample. We're going to spin up a MongoDB data node.
 
 ``` python
 from tyr.servers.mongo import MongoDataNode
