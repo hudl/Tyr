@@ -381,7 +381,7 @@ class Server(object):
         template = """#!/bin/bash
 sed -i '/requiretty/d' /etc/sudoers
 hostname {hostname}
-echo '127.0.0.1 {fqdn} {hostname}' > /etc/hosts
+echo '127.0.0.1 {fqdn} localhost localhost.localdomain' > /etc/hosts
 mkdir /etc/chef
 touch /etc/chef/client.rb
 echo '{validation_key}' > /etc/chef/validation.pem
