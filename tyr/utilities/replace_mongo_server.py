@@ -454,7 +454,7 @@ def wait_for_sync(node):
 
     while True:
 
-        status = run_mongo_command(node.instance.public_dns_name, 'rs.status()')
+        status = run_mongo_command(node.instance.private_dns_name, 'rs.status()')
 
         if status['ok'] != 1:
 
@@ -605,7 +605,7 @@ def replace_server(environment = 'stage', group = 'monolith', subnet_id = None,
 
             log.debug('The tag Name could not be found on the instance')
 
-            public_address = instance.public_dns_name
+            public_address = instance.private_dns_name
 
         log.debug('Proceeding using {address} to contact the primary'.format(
                                                     address = public_address))
