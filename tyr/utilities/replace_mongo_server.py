@@ -105,7 +105,7 @@ class ReplicaSet(object):
         self.determine_primary(member)
 
     @timeit
-    def add_member(self, address, arbiter=False, hidden=False):
+    def add_member(self, address, arbiter=False, hidden=False, accessible=None):
 
         log.debug('Re-determining the replica set primary')
         self.determine_primary(self.primary)
@@ -113,7 +113,10 @@ class ReplicaSet(object):
         log.debug('Checking if mongod is running on {address}'.format(
                                                         address = address))
 
-        output = run_command(address, 'pgrep mongod')
+        if accessible is None:
+            output = run_command(address, 'pgrep mongod')
+        else:
+            output = run_command(accessible, 'pgrep mongod')
 
         if len(output) == 0:
             log.debug('mongod is not running on {address}'.format(
@@ -637,7 +640,8 @@ def replace_server(environment=None, group=None, instance_type=None,
             log.info('The replica set does not have an arbiter')
 
         log.info('Adding the new arbiter to the replica set')
-        replica_set.add_member(node.hostname, arbiter=True)
+        replica_set.add_member(node.hostname, arbiter=True,
+                                accessible=node.instance.private_dns_name)
 
         if replace:
             log.info('Terminating the previous arbiter')
@@ -663,9 +667,11 @@ def replace_server(environment=None, group=None, instance_type=None,
     log.info('Adding the new node to the replica set')
 
     if node_type == 'datawarehousing':
-        replica_set.add_member(node.hostname, hidden=True)
+        replica_set.add_member(node.hostname, hidden=True,
+                                accessible=node.instance.private_dns_name)
     else:
-        replica_set.add_member(node.hostname)
+        replica_set.add_member(node.hostname,
+                                accessible=node.instance.private_dns_name)
 
     log.info('Retreiving the replica set\'s arbiter')
     arbiter = replica_set.arbiter
