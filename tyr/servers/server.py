@@ -806,7 +806,7 @@ named {name}""".format(path = d['path'], name = d['name']))
 
         while True:
             try:
-                connection.connect(self.instance.public_dns_name,
+                connection.connect(self.instance.private_dns_name,
                                     username = 'ec2-user')
                 break
             except Exception:
