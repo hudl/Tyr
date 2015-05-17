@@ -258,9 +258,10 @@ def run_mongo_command(address, command):
         return response
 
 @timeit
-def launch_server(environment, group, instance_type, availability_zone,
-                    replica_set, data_volume_size, data_volume_iops,
-                    mongodb_package_version, node_type, replica_set_template):
+def launch_server(environment, group, subnet_id, instance_type,
+                    availability_zone, replica_set, data_volume_size,
+                    data_volume_iops, mongodb_package_version, node_type,
+                    replica_set_template):
 
     log.debug('Preparing to launch a new node')
 
@@ -269,6 +270,7 @@ def launch_server(environment, group, instance_type, availability_zone,
     if node_type == 'data':
         node = MongoDataNode(group = group, instance_type = instance_type,
                                 environment = environment,
+                                subnet_id = subnet_id,
                                 availability_zone = availability_zone,
                                 replica_set = replica_set,
                                 data_volume_size = data_volume_size,
@@ -278,6 +280,7 @@ def launch_server(environment, group, instance_type, availability_zone,
     elif node_type == 'datawarehousing':
         node = MongoDataWarehousingNode(group = group, instance_type = instance_type,
                                 environment = environment,
+                                subnet_id = subnet_id,
                                 availability_zone = availability_zone,
                                 replica_set = replica_set,
                                 data_volume_size = data_volume_size,
@@ -285,6 +288,7 @@ def launch_server(environment, group, instance_type, availability_zone,
     elif node_type == 'arbiter':
         node = MongoArbiterNode(group = group, instance_type = instance_type,
                                 environment = environment,
+                                subnet_id = subnet_id,
                                 availability_zone = availability_zone,
                                 replica_set = replica_set,
                                 mongodb_version = mongodb_package_version)
