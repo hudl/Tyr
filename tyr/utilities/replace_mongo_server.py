@@ -753,4 +753,5 @@ def replace_server(environment = 'stage', group = 'monolith', subnet_id = None,
                 log.debug('An existing DNS record does not exist')
             else:
                 log.debug('Updating the DNS CNAME record')
-                zone.update_cname(member+'.', node.instance.public_dns_name)
+                zone.update_cname(member+'.', node.instance.private_dns_name)
+
