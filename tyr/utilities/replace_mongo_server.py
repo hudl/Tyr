@@ -262,21 +262,7 @@ def launch_server(environment, group, instance_type, availability_zone,
                     replica_set, data_volume_size, data_volume_iops,
                     mongodb_package_version, node_type, replica_set_template):
 
-    log.debug('Preparing to launch a new node with the following properties:')
-
-    log.debug('Node Type: {node_type}'.format(node_type = node_type))
-    log.debug('Environment: {environment}'.format(environment = environment))
-    log.debug('Group: {group}'.format(group = group))
-    log.debug('Instance Type: {instance_type}'.format(
-                                                instance_type = instance_type))
-    log.debug('Availability Zone: {zone}'.format(zone = availability_zone))
-    log.debug('Replica Set: {replica_set}'.format(replica_set = replica_set))
-    log.debug('Replica Set Name: {replica_set_template}'.format(
-                                replica_set_template = replica_set_template))
-    log.debug('Data Volume Size: {size}'.format(size = data_volume_size))
-    log.debug('Data Volume IOPS: {iops}'.format(iops = data_volume_iops))
-    log.debug('MongoDB Package Version: {version}'.format(
-                                            version = mongodb_package_version))
+    log.debug('Preparing to launch a new node')
 
     node = None
 
@@ -522,12 +508,12 @@ def stop_decommissioned_node(address, terminate=False,
             log.debug('Failed to stop {instance}'.format(
                                                         instance = instance_id))
 @timeit
-def replace_server(environment = 'stage', group = 'monolith', subnet_id = None,
-                    instance_type = 'm3.medium', availability_zone = 'c',
-                    replica_set_index = 1, data_volume_size = 400,
-                    data_volume_iops = 2000, mongodb_package_version = '2.4.13',
-                    member = None, replace = False, node_type = 'data',
-                    replica_set_template=None, reroute=False, terminate=False,
+def replace_server(environment=None, group=None, instance_type=None,
+                    availability_zone=None, replica_set_index=None,
+                    data_volume_size=None, data_volume_iops=None,
+                    mongodb_package_version=None, member=None,
+                    replace=False, node_type='data', reroute=False,
+                    replica_set_template=None, terminate=False,
                     prompt_before_replace=True):
 
     if member is None:
