@@ -812,8 +812,12 @@ named {name}""".format(path = d['path'], name = d['name']))
 
         while True:
             try:
+                keys = ['~/.ssh/stage', '~/.ssh/prod']
+                keys = [os.path.expanduser(key) for key in keys]
+
                 connection.connect(self.instance.private_dns_name,
-                                    username = 'ec2-user')
+                                    username='ec2-user',
+                                    key_filename=keys)
                 break
             except Exception:
                 self.log.warn('Unable to establish SSH connection')

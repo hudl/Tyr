@@ -206,8 +206,11 @@ def run_command(address, command):
 
     while True:
         try:
-            connection.connect(address,
-                                username = 'ec2-user')
+            keys = ['~/.ssh/stage', '~/.ssh/prod']
+            keys = [os.path.expanduser(key) for key in keys]
+
+            connection.connect(address, username='ec2-user',
+                                key_filename=keys)
             break
         except Exception:
             log.warn('Unable to establish an SSH connection')
