@@ -727,7 +727,7 @@ named {name}""".format(path = d['path'], name = d['name']))
         self.ec2.create_tags([self.instance.id], self.tags)
         self.log.info('Tagged instance with {tags}'.format(tags=self.tags))
 
-    def route(self):
+    def route(self, wait=False):
 
         for dns_zone in self.dns_zones:
 
@@ -772,8 +772,14 @@ named {name}""".format(path = d['path'], name = d['name']))
                     self.log.info('The existing DNS record was deleted')
 
                 try:
-                    zone.add_record(record['type'], name, value,
-                                    ttl=record['ttl'])
+                    status = zone.add_record(record['type'], name, value,
+                                                ttl=record['ttl'])
+
+                    if wait:
+                        while status.update() != 'INSYNC':
+                            self.log.debug('Waiting for DNS change to propagate')
+                            time.sleep(10)
+
                     self.log.info('Added new DNS record')
                 except Exception, e:
                     self.log.error(str(e))
@@ -806,8 +812,12 @@ named {name}""".format(path = d['path'], name = d['name']))
 
         while True:
             try:
-                connection.connect(self.instance.public_dns_name,
-                                    username = 'ec2-user')
+                keys = ['~/.ssh/stage', '~/.ssh/prod']
+                keys = [os.path.expanduser(key) for key in keys]
+
+                connection.connect(self.instance.private_dns_name,
+                                    username='ec2-user',
+                                    key_filename=keys)
                 break
             except Exception:
                 self.log.warn('Unable to establish SSH connection')

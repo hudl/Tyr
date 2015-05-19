@@ -105,7 +105,7 @@ class ReplicaSet(object):
         self.determine_primary(member)
 
     @timeit
-    def add_member(self, address, arbiter=False, hidden=False):
+    def add_member(self, address, arbiter=False, hidden=False, accessible=None):
 
         log.debug('Re-determining the replica set primary')
         self.determine_primary(self.primary)
@@ -113,7 +113,10 @@ class ReplicaSet(object):
         log.debug('Checking if mongod is running on {address}'.format(
                                                         address = address))
 
-        output = run_command(address, 'pgrep mongod')
+        if accessible is None:
+            output = run_command(address, 'pgrep mongod')
+        else:
+            output = run_command(accessible, 'pgrep mongod')
 
         if len(output) == 0:
             log.debug('mongod is not running on {address}'.format(
@@ -203,8 +206,11 @@ def run_command(address, command):
 
     while True:
         try:
-            connection.connect(address,
-                                username = 'ec2-user')
+            keys = ['~/.ssh/stage', '~/.ssh/prod']
+            keys = [os.path.expanduser(key) for key in keys]
+
+            connection.connect(address, username='ec2-user',
+                                key_filename=keys)
             break
         except Exception:
             log.warn('Unable to establish an SSH connection')
@@ -437,7 +443,7 @@ def wait_for_sync(node):
 
     while True:
 
-        status = run_mongo_command(node.instance.public_dns_name, 'rs.status()')
+        status = run_mongo_command(node.instance.private_dns_name, 'rs.status()')
 
         if status['ok'] != 1:
 
@@ -588,7 +594,7 @@ def replace_server(environment=None, group=None, instance_type=None,
 
             log.debug('The tag Name could not be found on the instance')
 
-            public_address = instance.public_dns_name
+            public_address = instance.private_dns_name
 
         log.debug('Proceeding using {address} to contact the primary'.format(
                                                     address = public_address))
@@ -637,7 +643,8 @@ def replace_server(environment=None, group=None, instance_type=None,
             log.info('The replica set does not have an arbiter')
 
         log.info('Adding the new arbiter to the replica set')
-        replica_set.add_member(node.hostname, arbiter=True)
+        replica_set.add_member(node.hostname, arbiter=True,
+                                accessible=node.instance.private_dns_name)
 
         if replace:
             log.info('Terminating the previous arbiter')
@@ -663,9 +670,11 @@ def replace_server(environment=None, group=None, instance_type=None,
     log.info('Adding the new node to the replica set')
 
     if node_type == 'datawarehousing':
-        replica_set.add_member(node.hostname, hidden=True)
+        replica_set.add_member(node.hostname, hidden=True,
+                                accessible=node.instance.private_dns_name)
     else:
-        replica_set.add_member(node.hostname)
+        replica_set.add_member(node.hostname,
+                                accessible=node.instance.private_dns_name)
 
     log.info('Retreiving the replica set\'s arbiter')
     arbiter = replica_set.arbiter
@@ -733,4 +742,5 @@ def replace_server(environment=None, group=None, instance_type=None,
                 log.debug('An existing DNS record does not exist')
             else:
                 log.debug('Updating the DNS CNAME record')
-                zone.update_cname(member+'.', node.instance.public_dns_name)
+                zone.update_cname(member+'.', node.instance.private_dns_name)
+
