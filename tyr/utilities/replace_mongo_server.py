@@ -508,7 +508,7 @@ def stop_decommissioned_node(address, terminate=False,
             log.debug('Failed to stop {instance}'.format(
                                                         instance = instance_id))
 @timeit
-def replace_server(environment=None, group='monolith', instance_type=None,
+def replace_server(environment=None, group=None, instance_type=None,
                     availability_zone=None, replica_set_index=None,
                     data_volume_size=None, data_volume_iops=None,
                     mongodb_package_version=None, member=None,
