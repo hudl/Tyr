@@ -8,8 +8,8 @@ class MongoReplicaSetMember(MongoNode):
                     environment = None, ami = None, region = None, role = None,
                     keypair = None, availability_zone = None,
                     security_groups = None, block_devices = None,
-                    chef_path = None, replica_set = None,
-                    mongodb_version = None):
+                    chef_path = None, subnet_id = None, dns_zones = None,
+                    replica_set = None, mongodb_version = None):
 
         super(MongoReplicaSetMember, self).__init__(group, server_type, instance_type,
                                                     environment, ami, region,
@@ -17,6 +17,7 @@ class MongoReplicaSetMember(MongoNode):
                                                     availability_zone,
                                                     security_groups,
                                                     block_devices, chef_path,
+                                                    subnet_id, dns_zones,
                                                     mongodb_version)
 
         self.replica_set = replica_set
@@ -30,6 +31,16 @@ class MongoReplicaSetMember(MongoNode):
             self.replica_set = 1
 
         self.log.info('Using replica set {set}'.format(set = self.replica_set))
+
+    @property
+    def tags(self):
+
+        tags = super(MongoReplicaSetMember, self).tags
+
+        tags['ReplicaSet'] = self.REPLICA_SET_TEMPLATE.format(group=self.group,
+                                                        set_ = self.replica_set)
+
+        return tags
 
     def bake(self):
 

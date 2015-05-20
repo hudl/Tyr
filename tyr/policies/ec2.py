@@ -18,3 +18,69 @@ allow_volume_control = """{
         }
      ]
 }"""
+
+allow_mongo_backup_snapshot = """{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": [
+                "ec2:CreateTags",
+                "ec2:DescribeTags",
+                "ec2:CreateSnapshot",
+                "ec2:DescribeInstances"
+            ],
+            "Sid": "Stmt1372359394000",
+            "Resource": [
+                "*"
+            ],
+            "Effect": "Allow"
+        }
+    ]
+}"""
+
+allow_mongo_snapshot_cleanup = """{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": [
+                "ec2:DescribeSnapshots",
+                "ec2:DeleteSnapshot"
+            ],
+            "Sid": "Stmt1372440398000",
+            "Resource": [
+                "*"
+            ],
+            "Effect": "Allow"
+        }
+    ]
+}"""
+
+allow_describe_instances = """{
+    "Statement": [
+        {
+            "Sid": "Stmt1367531529529",
+            "Action": [
+                "ec2:DescribeInstances"
+             ],
+             "Effect": "Allow",
+             "Resource": [
+                "*"
+             ]
+        }
+     ]
+}"""
+
+allow_describe_tags = """{
+    "Statement": [
+        {
+            "Sid": "Stmt1367531520228",
+            "Action": [
+                "ec2:DescribeTags"
+             ],
+             "Effect": "Allow",
+             "Resource": [
+                "*"
+             ]
+        }
+     ]
+}"""

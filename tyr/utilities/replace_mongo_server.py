@@ -105,7 +105,7 @@ class ReplicaSet(object):
         self.determine_primary(member)
 
     @timeit
-    def add_member(self, address, arbiter=False, hidden=False):
+    def add_member(self, address, arbiter=False, hidden=False, accessible=None):
 
         log.debug('Re-determining the replica set primary')
         self.determine_primary(self.primary)
@@ -113,7 +113,10 @@ class ReplicaSet(object):
         log.debug('Checking if mongod is running on {address}'.format(
                                                         address = address))
 
-        output = run_command(address, 'pgrep mongod')
+        if accessible is None:
+            output = run_command(address, 'pgrep mongod')
+        else:
+            output = run_command(accessible, 'pgrep mongod')
 
         if len(output) == 0:
             log.debug('mongod is not running on {address}'.format(
@@ -203,8 +206,11 @@ def run_command(address, command):
 
     while True:
         try:
-            connection.connect(address,
-                                username = 'ec2-user')
+            keys = ['~/.ssh/stage', '~/.ssh/prod']
+            keys = [os.path.expanduser(key) for key in keys]
+
+            connection.connect(address, username='ec2-user',
+                                key_filename=keys)
             break
         except Exception:
             log.warn('Unable to establish an SSH connection')
@@ -258,31 +264,19 @@ def run_mongo_command(address, command):
         return response
 
 @timeit
-def launch_server(environment, group, instance_type, availability_zone,
-                    replica_set, data_volume_size, data_volume_iops,
-                    mongodb_package_version, node_type, replica_set_template):
+def launch_server(environment, group, subnet_id, instance_type,
+                    availability_zone, replica_set, data_volume_size,
+                    data_volume_iops, mongodb_package_version, node_type,
+                    replica_set_template):
 
-    log.debug('Preparing to launch a new node with the following properties:')
-
-    log.debug('Node Type: {node_type}'.format(node_type = node_type))
-    log.debug('Environment: {environment}'.format(environment = environment))
-    log.debug('Group: {group}'.format(group = group))
-    log.debug('Instance Type: {instance_type}'.format(
-                                                instance_type = instance_type))
-    log.debug('Availability Zone: {zone}'.format(zone = availability_zone))
-    log.debug('Replica Set: {replica_set}'.format(replica_set = replica_set))
-    log.debug('Replica Set Name: {replica_set_template}'.format(
-                                replica_set_template = replica_set_template))
-    log.debug('Data Volume Size: {size}'.format(size = data_volume_size))
-    log.debug('Data Volume IOPS: {iops}'.format(iops = data_volume_iops))
-    log.debug('MongoDB Package Version: {version}'.format(
-                                            version = mongodb_package_version))
+    log.debug('Preparing to launch a new node')
 
     node = None
 
     if node_type == 'data':
         node = MongoDataNode(group = group, instance_type = instance_type,
                                 environment = environment,
+                                subnet_id = subnet_id,
                                 availability_zone = availability_zone,
                                 replica_set = replica_set,
                                 data_volume_size = data_volume_size,
@@ -292,6 +286,7 @@ def launch_server(environment, group, instance_type, availability_zone,
     elif node_type == 'datawarehousing':
         node = MongoDataWarehousingNode(group = group, instance_type = instance_type,
                                 environment = environment,
+                                subnet_id = subnet_id,
                                 availability_zone = availability_zone,
                                 replica_set = replica_set,
                                 data_volume_size = data_volume_size,
@@ -299,6 +294,7 @@ def launch_server(environment, group, instance_type, availability_zone,
     elif node_type == 'arbiter':
         node = MongoArbiterNode(group = group, instance_type = instance_type,
                                 environment = environment,
+                                subnet_id = subnet_id,
                                 availability_zone = availability_zone,
                                 replica_set = replica_set,
                                 mongodb_version = mongodb_package_version)
@@ -447,7 +443,7 @@ def wait_for_sync(node):
 
     while True:
 
-        status = run_mongo_command(node.instance.public_dns_name, 'rs.status()')
+        status = run_mongo_command(node.instance.private_dns_name, 'rs.status()')
 
         if status['ok'] != 1:
 
@@ -522,12 +518,12 @@ def stop_decommissioned_node(address, terminate=False,
             log.debug('Failed to stop {instance}'.format(
                                                         instance = instance_id))
 @timeit
-def replace_server(environment = 'stage', group = 'monolith',
-                    instance_type = 'm3.medium', availability_zone = 'c',
-                    replica_set_index = 1, data_volume_size = 400,
-                    data_volume_iops = 2000, mongodb_package_version = '2.4.13',
-                    member = None, replace = False, node_type = 'data',
-                    replica_set_template=None, reroute=False, terminate=False,
+def replace_server(environment=None, group=None, subnet_id=None,
+                    instance_type=None, availability_zone=None,
+                    replica_set_index=None, data_volume_size=None,
+                    data_volume_iops=None, mongodb_package_version=None,
+                    member=None, replace=False, node_type='data',
+                    reroute=False, replica_set_template=None, terminate=False,
                     prompt_before_replace=True):
 
     if member is None:
@@ -598,7 +594,7 @@ def replace_server(environment = 'stage', group = 'monolith',
 
             log.debug('The tag Name could not be found on the instance')
 
-            public_address = instance.public_dns_name
+            public_address = instance.private_dns_name
 
         log.debug('Proceeding using {address} to contact the primary'.format(
                                                     address = public_address))
@@ -630,8 +626,9 @@ def replace_server(environment = 'stage', group = 'monolith',
         log.info('The node being added is an arbiter')
 
         log.info('Launching the new node')
-        node = launch_server(environment, group, instance_type, availability_zone,
-                                replica_set_index, data_volume_size, data_volume_iops,
+        node = launch_server(environment, group, subnet_id, instance_type,
+                                availability_zone, replica_set_index,
+                                data_volume_size, data_volume_iops,
                                 mongodb_package_version, node_type,
                                 replica_set_template=replica_set_name)
 
@@ -646,7 +643,8 @@ def replace_server(environment = 'stage', group = 'monolith',
             log.info('The replica set does not have an arbiter')
 
         log.info('Adding the new arbiter to the replica set')
-        replica_set.add_member(node.hostname, arbiter=True)
+        replica_set.add_member(node.hostname, arbiter=True,
+                                accessible=node.instance.private_dns_name)
 
         if replace:
             log.info('Terminating the previous arbiter')
@@ -659,8 +657,9 @@ def replace_server(environment = 'stage', group = 'monolith',
     log.info('The node being added is a {type_} node'.format(type_ = node_type))
 
     log.info('Launching the new node')
-    node = launch_server(environment, group, instance_type, availability_zone,
-                            replica_set_index, data_volume_size, data_volume_iops,
+    node = launch_server(environment, group, subnet_id, instance_type,
+                            availability_zone, replica_set_index,
+                            data_volume_size, data_volume_iops,
                             mongodb_package_version, node_type,
                             replica_set_template=replica_set_name)
 
@@ -671,9 +670,11 @@ def replace_server(environment = 'stage', group = 'monolith',
     log.info('Adding the new node to the replica set')
 
     if node_type == 'datawarehousing':
-        replica_set.add_member(node.hostname, hidden=True)
+        replica_set.add_member(node.hostname, hidden=True,
+                                accessible=node.instance.private_dns_name)
     else:
-        replica_set.add_member(node.hostname)
+        replica_set.add_member(node.hostname,
+                                accessible=node.instance.private_dns_name)
 
     log.info('Retreiving the replica set\'s arbiter')
     arbiter = replica_set.arbiter
@@ -741,4 +742,5 @@ def replace_server(environment = 'stage', group = 'monolith',
                 log.debug('An existing DNS record does not exist')
             else:
                 log.debug('Updating the DNS CNAME record')
-                zone.update_cname(member+'.', node.instance.public_dns_name)
+                zone.update_cname(member+'.', node.instance.private_dns_name)
+

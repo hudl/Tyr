@@ -15,3 +15,15 @@ class InvalidAMI(Exception):
 
 class InvalidAvailabilityZone(Exception):
     pass
+
+class NoSubnetReturned(Exception):
+	pass
+
+class NoVPCReturned(Exception):
+	pass
+
+class NoSecurityGroupsReturned(Exception):
+	pass
+
+class MultipleSecurityGroupsReturned(Exception):
+	pass
