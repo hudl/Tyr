@@ -376,13 +376,15 @@ named {name}""".format(path = d['path'], name = d['name']))
     def resolve_security_groups(self):
 
         exists = lambda s: s in [group.name for group in
-                self.ec2.get_all_security_groups()]
+                                 self.ec2.get_all_security_groups()
+                                 if self.vpc_id == group.vpc_id]
 
         for group in self.security_groups:
             if not exists(group):
                 self.log.info('Security Group {group} does not exist'.format(
                                 group = group))
-                self.ec2.create_security_group(group, group)
+                self.ec2.create_security_group(group, group,
+                                               vpc_id=self.vpc_id)
                 self.log.info('Created security group {group}'.format(
                                 group = group))
             else:
@@ -396,7 +398,8 @@ named {name}""".format(path = d['path'], name = d['name']))
                 self.log.info('Setting inbound rules for {group}'.format(
                                                             group = group))
 
-                g = self.ec2.get_all_security_groups(groupnames=[group])[0]
+                gs = self.ec2.get_all_security_groups(groupnames=[group])
+                g = [group for group in gs if group.vpc_id is None][0]
 
                 for rule in security_groups[key]['rules']:
 
@@ -460,6 +463,8 @@ named {name}""".format(path = d['path'], name = d['name']))
 
                             groups = self.ec2.get_all_security_groups(
                                                             groupnames=[name])
+                            groups = [group for group in groups if
+                                      group.vpc_id == self.vpc_id]
 
                             complete_params['src_group'] = groups[0]
 
