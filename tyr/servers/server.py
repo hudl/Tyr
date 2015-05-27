@@ -15,6 +15,7 @@ from boto.vpc import VPCConnection
 from paramiko.client import AutoAddPolicy, SSHClient
 from tyr.policies import policies
 from tyr.security_groups import security_groups
+from tyr.security_groups.constants import constants as sg_constants
 
 class Server(object):
 
@@ -547,6 +548,9 @@ named {name}""".format(path = d['path'], name = d['name']))
                                      }
 
                         if not re.match(source['rule'], group): continue
+
+                        if source['value'][0] == '@':
+                            source['value'] = sg_constants[source['value'][1:]]
 
                         if re.match(cidr_ip_pattern, source['value']):
                             complete_params['cidr_ip'] = source['value']
