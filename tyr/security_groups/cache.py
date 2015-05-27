@@ -73,19 +73,15 @@ definition = {
             'source': [
                 {
                     'rule': '[ts]-.+-cache',
-                    'value': '216.229.9.101/32'
+                    'value': '@hudl-lincoln-east'
                 },
                 {
                     'rule': '[ts]-.+-cache',
-                    'value': '24.106.8.210/32'
+                    'value': '@hudl-omaha'
                 },
                 {
                     'rule': '[ts]-.+-cache',
-                    'value': '74.51.218.230/32'
-                },
-                {
-                    'rule': '[ts]-.+-cache',
-                    'value': '75.69.151.220/32'
+                    'value': '@hudl-boston'
                 }
             ]
         }
