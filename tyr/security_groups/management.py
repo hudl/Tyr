@@ -7,6 +7,9 @@ definition = {
             'source': [
                 'p-ops-vpn',
                 '@hudl-lincoln-east',
+                '@hudl-lincoln-west',
+                '@hudl-boston'
+                '@hudl-omaha'
             ]
         },
         {
