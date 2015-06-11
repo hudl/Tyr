@@ -742,7 +742,7 @@ named {name}""".format(path = d['path'], name = d['name']))
 
             for record in dns_zone['records']:
 
-                self.log.info('Adding DNS record {record}'.format(
+                self.log.info('Processing DNS record {record}'.format(
                                                                 record=record))
 
                 formatting_params = {
@@ -757,13 +757,13 @@ named {name}""".format(path = d['path'], name = d['name']))
                     'dns_zone': self.hostname[len(self.name)+1:]
                 }
 
-                name = record['name'].format(**formatting_params)
-                value = record['value'].format(**formatting_params)
+                record['name'] = record['name'].format(**formatting_params)
+                record['value'] = record['value'].format(**formatting_params)
 
-                self.log.info('Using record name {name}'.format(name=name))
-                self.log.info('Using record value {value}'.format(value=value))
+                self.log.info('Adding DNS record {record}'.format(
+                                                            record=record))
 
-                existing_records = zone.find_records(name=name,
+                existing_records = zone.find_records(name=record['name'],
                                                         type=record['type'])
 
                 if existing_records:
@@ -772,8 +772,9 @@ named {name}""".format(path = d['path'], name = d['name']))
                     self.log.info('The existing DNS record was deleted')
 
                 try:
-                    status = zone.add_record(record['type'], name, value,
-                                                ttl=record['ttl'])
+                    status = zone.add_record(record['type'], record['name'],
+                                             record['value'],
+                                             ttl=record['ttl'])
 
                     if wait:
                         while status.update() != 'INSYNC':
