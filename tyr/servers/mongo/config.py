@@ -49,5 +49,8 @@ class MongoConfigNode(MongoNode):
 
             self.log.info('Configured the hudl_ebs.volumes attribute')
 
+            self.chef_node.attributes.set_dotted('mongodb.config.port', 27019)
+            self.log.info('Set the MongoDB port to 27019')
+
             self.chef_node.save()
             self.log.info('Saved the Chef Node configuration')
