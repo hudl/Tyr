@@ -71,7 +71,7 @@ class Server(object):
 
         if self.instance_type is None:
             self.log.warn('No Instance Type provided')
-            self.instance_type = 'm3.medium'
+            self.instance_type = 't2.medium'
 
         self.log.info('Using Instance Type "{instance_type}"'.format(
                                             instance_type = self.instance_type))
