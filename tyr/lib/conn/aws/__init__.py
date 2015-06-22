@@ -33,7 +33,7 @@ def client(service_name, region_name, aws_access_key_id=None,
         'aws_secret_access_key': aws_secret_access_key
     }
 
-    key_template = '{service_name}_{region_name}_{aws_access_key_id}_' \
+    key_template = 'client_{service_name}_{region_name}_{aws_access_key_id}_' \
                    '{aws_secret_access_key}'
 
     key_raw = key_template.format(**params).encode('utf-8')
