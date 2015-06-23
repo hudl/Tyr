@@ -1,6 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
 
+from termcolor import cprint
+
+color_level_map = {
+    'debug': 'blue',
+    'info': 'green',
+    'warning': 'yellow',
+    'error': 'red',
+    'critical': 'magenta'
+}
+
 
 def stdout_handler(values):
     """
@@ -13,6 +23,8 @@ def stdout_handler(values):
         template = '{timestamp} [{level}] {path}: {event} [{tags}]'
     else:
         template = '{timestamp} [{level}] {path}: [{tags}]'
+
+    level = values['level']
 
     params = {}
 
@@ -33,4 +45,4 @@ def stdout_handler(values):
 
     params['tags'] = params['tags'].lstrip()
 
-    print(template.format(**params))
+    cprint(template.format(**params), color_level_map[level])
