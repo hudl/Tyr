@@ -1,4 +1,5 @@
 ## Tyr
+[![](https://img.shields.io/badge/hudl-OSS-orange.svg)](http://hudl.github.io/)
 
 Tyr is a Python library used internally at Hudl to automate the task of spinning
 up individual servers as well as different types of clusters.
