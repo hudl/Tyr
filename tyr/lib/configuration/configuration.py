@@ -10,9 +10,10 @@ class Configuration(object):
     _kwargs = {}
     _config = {}
 
-    def __init__(self, path, **kwargs):
+    def __init__(self, path, environment, **kwargs):
         self.path = path
         self._kwargs = kwargs
+        self.environment = environment
 
         self._load()
 
@@ -26,8 +27,9 @@ class Configuration(object):
 
     def _load(self):
         """
-        Loads and builds the configuration given a path and any overrides,
-        provided as path and additional keyword arguments in __init__.
+        Loads and builds the configuration given a path, environment and any
+        overrides, provided as path and additional keyword arguments in
+        __init__.
         """
 
         components = self.path.split('.')
@@ -37,9 +39,16 @@ class Configuration(object):
         for index, component in enumerate(components):
             tree = [self.root]
             tree.extend(components[0:index+1])
-            tree.append('conf.json')
 
-            conf_paths.append(os.path.join(*tree))
+            general = tree.copy()
+            environment_specific = tree.copy()
+
+            general.append('conf.json')
+            environment_specific.append('{environment}.json'.format(
+                environment=self.environment))
+
+            conf_paths.append(os.path.join(*general))
+            conf_paths.append(os.path.join(*environment_specific))
 
         for conf_path in conf_paths:
             if os.path.exists(conf_path) and os.path.isfile(conf_path):
