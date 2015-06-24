@@ -129,3 +129,48 @@ def key_pair_name_is_valid(key_pair_name, context):
                      values={'queried-key-pair-name': key_pair_name})
 
     return is_valid
+
+
+def availability_zone_is_valid(availability_zone, context):
+    """
+    Determines if a given availability zone is valid.
+
+    :type availability_zone: string
+    :param availability_zone: The availability zone to validate
+    :type context: tyr.lib.context.context.Context
+    :param context: The current context
+    """
+    _path = 'tyr.lib.util.aws.ec2.availability_zone_is_valid'
+
+    logger = context.logger
+    logger.bind('path', _path)
+    conf = tyr.lib.configuration.get_conf(_path, context.environment)
+
+    logger.debug(event='Determing if AWS EC2 availability zone is valid',
+                 values={'queried-availability-zone': availability_zone})
+
+    logger.debug(event='Retrieving AWS EC2 client',
+                 values={'aws-region': conf.aws['region']})
+
+    client = tyr.lib.conn.aws_client('ec2', conf.aws['region'])
+
+    is_valid = True
+
+    try:
+        zone = client.describe_availability_zones(
+            ZoneNames=[availability_zone])
+        logger.debug(event='Successfully retrieved availability zone',
+                     values={'retrieved-availability-zone': zone})
+    except botocore.exceptions.ClientError as e:
+        is_valid = False
+        logger.debug(event='Received botocore ClientError',
+                     values={'error': str(e)})
+
+    if is_valid:
+        logger.debug(event='Queried AWS EC2 Availability Zone is valid',
+                     values={'queried-availability-zone': availability_zone})
+    else:
+        logger.debug(event='Queried AWS EC2 Availability Zone is not valid',
+                     values={'queried-availability-zone': availability_zone})
+
+    return is_valid
