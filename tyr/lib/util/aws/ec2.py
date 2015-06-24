@@ -1,6 +1,7 @@
 #!/usr/bin/env/python
 # -*- coding: utf-8 -*-
 
+import botocore.exceptions
 import tyr.lib.conn
 import tyr.lib.configuration
 import tyr.lib.logging
@@ -42,3 +43,46 @@ def region_is_valid(region, context):
                      values={'queried-aws-region': region})
 
     return region in regions
+
+
+def ami_id_is_valid(ami_id, context):
+    """
+    Determines if a provided AMI ID is valid.
+
+    :type ami_id: string
+    :param ami_id: The AMI ID to validate
+    :type context: tyr.lib.context.context.Context
+    :param context: The current context
+    """
+    _path = 'tyr.lib.util.aws.ec2.ami_id_is_valid'
+
+    logger = context.logger
+    logger.bind('path', _path)
+    conf = tyr.lib.configuration.get_conf(_path, context.environment)
+
+    logger.debug(event='Determing if AWS EC2 AMI ID is valid',
+                 values={'queried-ami-id': ami_id})
+
+    logger.debug(event='Retrieving AWS EC2 client',
+                 values={'aws-region': conf.aws['region']})
+
+    client = tyr.lib.conn.aws_client('ec2', conf.aws['region'])
+
+    is_valid = True
+
+    try:
+        client.describe_images(ImageIds=[ami_id])
+        logger.debug(event='Successfully retrieved image with ID')
+    except botocore.exceptions.ClientError as e:
+        is_valid = False
+        logger.debug(event='Received botocore ClientError',
+                     values={'error': str(e)})
+
+    if is_valid:
+        logger.debug(event='Queried AWS EC2 AMI ID is valid',
+                     values={'queried-ami-id': ami_id})
+    else:
+        logger.debug(event='Queried AWS EC2 AMI ID is not valid',
+                     values={'queried-ami-id': ami_id})
+
+    return is_valid
