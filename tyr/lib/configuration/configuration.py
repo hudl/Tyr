@@ -6,7 +6,6 @@ import os.path
 
 
 class Configuration(object):
-    root = '/etc'
     _kwargs = {}
     _config = {}
 
@@ -36,7 +35,7 @@ class Configuration(object):
         conf_paths = []
 
         for index, component in enumerate(components):
-            tree = [self.root]
+            tree = [self._context.config_root]
             tree.extend(components[0:index+1])
 
             general = tree.copy()
