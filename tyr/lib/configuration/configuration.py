@@ -10,11 +10,10 @@ class Configuration(object):
     _kwargs = {}
     _config = {}
 
-    def __init__(self, path, environment, **kwargs):
+    def __init__(self, path, context, **kwargs):
         self.path = path
         self._kwargs = kwargs
-        self.environment = environment
-
+        self._context = context
         self._load()
 
     def reload(self):
@@ -45,7 +44,7 @@ class Configuration(object):
 
             general.append('conf.json')
             environment_specific.append('{environment}.json'.format(
-                environment=self.environment))
+                environment=self._context.environment))
 
             conf_paths.append(os.path.join(*general))
             conf_paths.append(os.path.join(*environment_specific))
