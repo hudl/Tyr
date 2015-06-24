@@ -86,3 +86,46 @@ def ami_id_is_valid(ami_id, context):
                      values={'queried-ami-id': ami_id})
 
     return is_valid
+
+
+def key_pair_name_is_valid(key_pair_name, context):
+    """
+    Determines if a provided Key Pair Name is valid.
+
+    :type key_pair_name: string
+    :param ami_id: The name of the Key Pair to validate
+    :type context: tyr.lib.context.context.Context
+    :param context: The current context
+    """
+    _path = 'tyr.lib.util.aws.ec2.key_pair_name_is_valid'
+
+    logger = context.logger
+    logger.bind('path', _path)
+    conf = tyr.lib.configuration.get_conf(_path, context.environment)
+
+    logger.debug(event='Determing if Key Pair Name is valid',
+                 values={'queried-key-pair-name': key_pair_name})
+
+    logger.debug(event='Retrieving AWS EC2 client',
+                 values={'aws-region': conf.aws['region']})
+
+    client = tyr.lib.conn.aws_client('ec2', conf.aws['region'])
+
+    is_valid = True
+
+    try:
+        client.describe_key_pairs(KeyNames=[key_pair_name])
+        logger.debug(event='Successfully retrieved Key Pair with name')
+    except botocore.exceptions.ClientError as e:
+        is_valid = False
+        logger.debug(event='Received botocore ClientError',
+                     values={'error': str(e)})
+
+    if is_valid:
+        logger.debug(event='Queried AWS EC2 Key Pair Name is valid',
+                     values={'queried-key-pair-name': key_pair_name})
+    else:
+        logger.debug(event='Queried AWS EC2 Key Pair Name is not valid',
+                     values={'queried-key-pair-name': key_pair_name})
+
+    return is_valid
