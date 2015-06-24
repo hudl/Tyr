@@ -6,7 +6,7 @@ import tyr.lib.configuration
 import tyr.lib.logging
 
 
-def region_is_valid(region, environment):
+def region_is_valid(region, context):
     """
     Determines if the provided region is a valid AWS EC2 region.
 
@@ -17,8 +17,9 @@ def region_is_valid(region, environment):
     """
     _path = 'tyr.lib.util.aws.ec2.region_is_valid'
 
-    logger = tyr.lib.logging.get_logger(_path)
-    conf = tyr.lib.configuration.get_conf(_path, environment)
+    logger = context.logger
+    logger.bind('path', _path)
+    conf = tyr.lib.configuration.get_conf(_path, context.environment)
 
     logger.debug(event='Determing if AWS EC2 region is valid',
                  values={'queried-aws-region': region})
