@@ -20,7 +20,7 @@ def region_is_valid(region, context):
 
     logger = context.logger
     logger.bind('path', _path)
-    conf = tyr.lib.configuration.get_conf(_path, context.environment)
+    conf = tyr.lib.configuration.get_conf(_path, context)
 
     logger.debug(event='Determing if AWS EC2 region is valid',
                  values={'queried-aws-region': region})
@@ -58,7 +58,7 @@ def ami_id_is_valid(ami_id, context):
 
     logger = context.logger
     logger.bind('path', _path)
-    conf = tyr.lib.configuration.get_conf(_path, context.environment)
+    conf = tyr.lib.configuration.get_conf(_path, context)
 
     logger.debug(event='Determing if AWS EC2 AMI ID is valid',
                  values={'queried-ami-id': ami_id})
@@ -101,7 +101,7 @@ def key_pair_name_is_valid(key_pair_name, context):
 
     logger = context.logger
     logger.bind('path', _path)
-    conf = tyr.lib.configuration.get_conf(_path, context.environment)
+    conf = tyr.lib.configuration.get_conf(_path, context)
 
     logger.debug(event='Determing if Key Pair Name is valid',
                  values={'queried-key-pair-name': key_pair_name})
@@ -144,7 +144,7 @@ def availability_zone_is_valid(availability_zone, context):
 
     logger = context.logger
     logger.bind('path', _path)
-    conf = tyr.lib.configuration.get_conf(_path, context.environment)
+    conf = tyr.lib.configuration.get_conf(_path, context)
 
     logger.debug(event='Determing if AWS EC2 availability zone is valid',
                  values={'queried-availability-zone': availability_zone})
