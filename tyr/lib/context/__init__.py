@@ -4,7 +4,7 @@
 from tyr.lib.context.context import Context
 
 
-def get_context(environment, logger=None):
+def get_context(environment, config_root='/etc', logger=None):
     """
     Convenience method for creating a context.
 
@@ -13,4 +13,4 @@ def get_context(environment, logger=None):
     :type logger: tyr.lib.logging.logger.Logger
     :param logger: A logger for the current context
     """
-    return Context(environment, logger)
+    return Context(environment, config_root, logger)
