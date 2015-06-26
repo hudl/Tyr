@@ -16,7 +16,7 @@ def subnet_id_is_valid(subnet_id, context):
     :type context: tyr.lib.context.context
     :param context: The current context
     """
-    _path = 'tyr.lib.util.aws.vpc'
+    _path = 'tyr.lib.util.aws.vpc.subnet_id_is_valid'
 
     logger = context.logger
     logger.bind('path', _path)
@@ -49,3 +49,43 @@ def subnet_id_is_valid(subnet_id, context):
                      values={'queried-vpc-subnet-id': subnet_id})
 
     return is_valid
+
+
+def get_subnet_with_id(subnet_id, context):
+    """
+    Retrieves the VPC Subnet with the provided ID.
+
+    :type subnet_id: string
+    :param subnet_id: The VPC Subnet ID to retrieve
+    :type context: tyr.lib.context.context
+    :param context: The current context
+    """
+    _path = 'tyr.lib.util.aws.vpc.get_subnet_with_id'
+
+    logger = context.logger
+    logger.bind('path', _path)
+    conf = tyr.lib.configuration.get_conf(_path, context)
+
+    logger.debug(event='Retrieving VPC Subnet with ID',
+                 values={'queried-vpc-subnet-id': subnet_id})
+
+    logger.debug(event='Retrieving AWS EC2 client',
+                 values={'aws-region': conf.aws['region']})
+
+    client = tyr.lib.conn.aws_client('ec2', conf.aws['region'])
+
+    subnet = None
+
+    try:
+        response = client.describe_subnets(SubnetIds=[subnet_id])
+        subnet = response['Subnets'][0]
+        logger.debug(event='Retrieved VPC subnet with ID',
+                     values={'subnet': subnet})
+    except botocore.exceptions.ClientError as e:
+        logger.debug(event='Received botocore ClientError',
+                     values={'error': str(e)})
+
+    return subnet
+
+
+
