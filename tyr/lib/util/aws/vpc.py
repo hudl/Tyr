@@ -88,4 +88,38 @@ def get_subnet_with_id(subnet_id, context):
     return subnet
 
 
+def availability_zone_for_subnet_id(subnet_id, context):
+    """
+    Returns the availability zone associated with a given VPC Subnet ID.
 
+    :type subnet_id: string
+    :param subnet_id: The VPC subnet ID to retrieve an availability zone for
+    :type context: tyr.lib.context.context
+    :param context: The current context
+    """
+    _path = 'tyr.lib.util.aws.vpc.availability_zone_for_subnet_id'
+
+    logger = context.logger
+    logger.bind('path', _path)
+
+    logger.debug(event='Retrieving availability zone for VPC Subnet',
+                 values={'queried-vpc-subnet-id': subnet_id})
+
+    availability_zone = None
+
+    subnet = get_subnet_with_id(subnet_id, context)
+
+    logger.bind('path', _path)
+    logger.debug(event='Retrieved VPC subnet with ID',
+                 values={'subnet': subnet})
+
+    if subnet is None:
+        logger.debug(event='Failed to retrieve VPC Subnet',
+                     values={'queried-vpc-subnet-id': subnet_id})
+    else:
+        availability_zone = subnet['AvailabilityZone']
+        logger.debug(event='Retrieved availability zone for VPC Subnet',
+                     values={'queried-vpc-subnet-id': subnet_id,
+                             'availability_zone': subnet['AvailabilityZone']})
+
+    return availability_zone
