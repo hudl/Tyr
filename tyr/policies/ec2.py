@@ -84,3 +84,22 @@ allow_describe_tags = """{
         }
      ]
 }"""
+
+allow_describe_snapshots = """{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "Stmt1435655131000",
+            "Effect": "Allow",
+            "Action": [
+                "ec2:DescribeSnapshotAttribute",
+                "ec2:DescribeSnapshots"
+            ],
+            "Resource": [
+                "*"
+            ]
+        }
+    ]
+}"""
+
+
