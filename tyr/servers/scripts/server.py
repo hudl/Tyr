@@ -31,11 +31,10 @@ class ScriptsServer(Server):
                                             chef_path, subnet_id, dns_zones)
 
     def configure(self):
-
         super(ScriptsServer, self).configure()
+        if self.environment == 'prod':
+            self.instance_type = 't2.micro'
+        else:
+            self.instance_type = 't2.micro'
 
-        if self.environment == 'stage':
-            self.IAM_ROLE_POLICIES.append('allow-modify-scripts-elbs-stage')
-        elif self.environment == 'prod':
-            self.IAM_ROLE_POLICIES.append('allow-modify-scripts-elbs-prod')
         self.resolve_iam_role()
