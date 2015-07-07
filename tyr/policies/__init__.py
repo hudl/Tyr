@@ -1,6 +1,7 @@
 import ec2
 import s3
 import elb
+import route53
 
 policies = {
     'allow-volume-control': ec2.allow_volume_control,
@@ -14,5 +15,7 @@ policies = {
     'allow-get-nginx-config': s3.allow_get_nginx_config,
     'allow-describe-elbs': elb.allow_describe_elbs,
     'allow-modify-nginx-elbs-stage': elb.allow_modify_nginx_elbs_stage,
-    'allow-modify-nginx-elbs-prod': elb.allow_modify_nginx_elbs_prod
+    'allow-modify-nginx-elbs-prod': elb.allow_modify_nginx_elbs_prod,
+    'allow-update-route53-prod': route53.allow_update_route53_prod,
+    'allow-update-route53-stage': route53.allow_update_route53_stage
 }
