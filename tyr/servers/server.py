@@ -540,7 +540,8 @@ named {name}""".format(path = d['path'], name = d['name']))
 
         self.log.info('Existing policies: {policies}'.format(policies=existing_policies))
 
-        for policy in self.IAM_ROLE_POLICIES:
+        for policy_template in self.IAM_ROLE_POLICIES:
+            policy = policy_template.format(environment = self.environment)
 
             self.log.info('Processing policy "{policy}"'.format(policy=policy))
 
