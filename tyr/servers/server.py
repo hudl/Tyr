@@ -9,26 +9,30 @@ import time
 from boto.ec2.networkinterface import NetworkInterfaceSpecification
 import json
 from boto.ec2.networkinterface import NetworkInterfaceCollection
+from boto.ec2.autoscale import AutoScaleConnection
+from boto.ec2.autoscale import LaunchConfiguration
 import urllib
 from boto.vpc import VPCConnection
 from paramiko.client import AutoAddPolicy, SSHClient
 from tyr.policies import policies
 
+
 class Server(object):
 
-    NAME_TEMPLATE='{envcl}-{location}-{index}'
-    NAME_SEARCH_PREFIX='{envcl}-{location}-'
-    NAME_AUTO_INDEX=True
+    NAME_TEMPLATE = '{envcl}-{location}-{index}'
+    NAME_SEARCH_PREFIX = '{envcl}-{location}-'
+    NAME_AUTO_INDEX = True
 
     IAM_ROLE_POLICIES = []
 
-    CHEF_RUNLIST=['role[RoleBase]']
+    CHEF_RUNLIST = ['role[RoleBase]']
 
     def __init__(self, group=None, server_type=None, instance_type=None,
                  environment=None, ami=None, region=None, role=None,
                  keypair=None, availability_zone=None, security_groups=None,
                  block_devices=None, chef_path=None, subnet_id=None,
-                 dns_zones=None):
+                 dns_zones=None, desired_capacity=None, max_capacity=None,
+                 min_capacity=None):
 
         self.instance_type = instance_type
         self.group = group
@@ -45,6 +49,9 @@ class Server(object):
         self.dns_zones = dns_zones
         self.subnet_id = subnet_id
         self.vpc_id = None
+        self.desired_capacity = desired_capacity
+        self.max_capacity = max_capacity
+        self.min_capacity = min_capacity
 
     def establish_logger(self):
 
@@ -95,6 +102,12 @@ class Server(object):
             self.log.warn('No environment provided')
             self.environment = 'test'
 
+        if self.desired_capacity is None:
+            self.desired_capacity = 3
+
+        if self.maximum_capacity is None:
+            self.maximum_capacity = 3
+
         self.environment = self.environment.lower()
 
         self.log.info('Using Environment "{environment}"'.format(
@@ -118,6 +131,7 @@ class Server(object):
         self.establish_ec2_connection()
         self.establish_iam_connection()
         self.establish_route53_connection()
+        self.establish_autoscale_connection()
 
         if self.ami is None:
             self.log.warn('No AMI provided')
@@ -464,28 +478,28 @@ named {name}""".format(path = d['path'], name = d['name']))
     def resolve_security_groups(self):
         filters = {}
         self.log.info("Resolving security groups")
-        
+
         # If the server is being spun up in a vpc, search only that vpc
         exists = lambda s: s in [group.name for group in
                                  self.ec2.get_all_security_groups()
                                  if self.vpc_id == group.vpc_id]
 
         for index, group in enumerate(self.security_groups):
-            
+
             if not exists(group):
-                self.log.info('Security Group {group} does not exist'.format(
-                                group=group))
+                self.log.info('Security Group {group} does not exist'
+                              .format(group=group))
                 if self.subnet_id is None:
                     self.ec2.create_security_group(group, group)
                 else:
                     vpc_conn = VPCConnection()
                     vpc_conn.create_security_group(
                         group, group, vpc_id=self.vpc_id)
-                self.log.info('Created security group {group}'.format(
-                                group=group))
+                self.log.info('Created security group {group}'
+                              .format(group=group))
             else:
-                self.log.info('Security Group {group} already exists'.format(
-                                group=group))
+                self.log.info('Security Group {group} already exists'
+                              .format(group=group))
 
     def resolve_iam_role(self):
 
@@ -649,6 +663,14 @@ named {name}""".format(path = d['path'], name = d['name']))
             self.log.error(str(e))
             raise e
 
+    def establish_autoscale_connection(self):
+        try:
+            self.autoscale = boto.ec2.autoscale.connect_to_region(self.region)
+            self.log.info('Established connection to autoscale')
+        except Exception, e:
+            self.log.error(str(e))
+            raise e
+
     def get_security_group_ids(self, security_groups, vpc_id=None):
             security_group_ids = []
             for group in security_groups:
@@ -785,6 +807,44 @@ named {name}""".format(path = d['path'], name = d['name']))
                 except Exception, e:
                     self.log.error(str(e))
                     raise e
+
+    def launch_configuration(self):
+        try:
+            self.autoscale.get_all_launch_configurations(names=[self.envcl])
+        except:
+            log.info("Creating new launch_configuration: {0}".format(self.envcl))
+            lc = LaunchConfiguration(name=self.envcl, image_id=self.ami,
+                                     key_name=self.keypair, security_groups=self.security_groups)
+            conn.create_launch_configuration(lc)
+            self.launnch_configuration = lc
+
+
+    def autoscaling_group(self):
+        try:
+            exiting_asg = self.autoscale.get_all_groups(names=[self.envcl])
+        except:
+            if not existing_asg:
+                log.info("Creating new autoscaling group: {0}".format(self.group))
+    
+                ag = AutoScalingGroup(name=self.group,
+                                      load_balancers=self.load_balancers,
+                                      availability_zones=self.availability_zones,
+                                      desired_capacity=self.desired_capacity,
+                                      health_check_period=self.health_check_grace_period,
+                                      launch_config=self.launnch_configuration, 
+                                      min_size=self.min_size,
+                                      max_size=self.max_size,
+                                      default_cooldown=cooldown,
+                                      connection=self.autoscale)
+                conn.create_auto_scaling_group(ag)
+
+    def ingress_rules(self):
+        try:
+            grps = conn.get_all_security_groups(groupnames=[self.envcl])
+            grps[0].authorize(src_grp=self.ingress_groups_to_add)
+        except:
+            self.log.error("Unable to add ingress rules!")
+            raise e
 
     @property
     def connection(self):

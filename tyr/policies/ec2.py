@@ -84,3 +84,237 @@ allow_describe_tags = """{
         }
      ]
 }"""
+
+allow_create_tags = """{
+    "Statement": [
+        { "Sid": "Stmt1357615676069",
+          "Action": [
+            "ec2:CreateTags"
+          ],
+          "Effect": "Allow",
+          "Resource": [
+            "*"
+          ]
+        }
+    ]
+}"""
+
+
+allow_web_initialization_prod = """{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "s3:GetObject"
+      ],
+      "Sid": "Stmt1370289990000",
+      "Resource": [
+        "arn:aws:s3:::hudl-config/common/*",
+        "arn:aws:s3:::hudl-config/prod-mv-web/*"
+      ],
+      "Effect": "Allow"
+    },
+    {
+      "Action": [
+        "s3:ListBucket"
+      ],
+      "Sid": "Stmt1370290042000",
+      "Condition": {
+        "StringLike": {
+          "s3:prefix": "prod-mv-web/*"
+        }
+      },
+      "Resource": [
+        "arn:aws:s3:::hudl-config"
+      ],
+      "Effect": "Allow"
+    },
+    {
+      "Action": [
+        "cloudwatch:DescribeAlarms",
+        "cloudwatch:DescribeAlarmsForMetric",
+        "cloudwatch:ListMetrics",
+        "cloudwatch:PutMetricAlarm",
+        "cloudwatch:PutMetricData",
+        "cloudwatch:SetAlarmState"
+      ],
+      "Sid": "Stmt1370290134000",
+      "Resource": [
+        "*"
+      ],
+      "Effect": "Allow"
+    }
+  ]
+}"""
+
+
+allow_web_initialization_stage = """{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "s3:GetObject"
+      ],
+      "Sid": "Stmt1370289990000",
+      "Resource": [
+        "arn:aws:s3:::hudl-config/common/*",
+        "arn:aws:s3:::hudl-config/stage-mv-web/*"
+      ],
+      "Effect": "Allow"
+    },
+    {
+      "Action": [
+        "s3:ListBucket"
+      ],
+      "Sid": "Stmt1370290042000",
+      "Condition": {
+        "StringLike": {
+          "s3:prefix": "stage-mv-web/*"
+        }
+      },
+      "Resource": [
+        "arn:aws:s3:::hudl-config"
+      ],
+      "Effect": "Allow"
+    },
+    {
+      "Action": [
+        "cloudwatch:DescribeAlarms",
+        "cloudwatch:DescribeAlarmsForMetric",
+        "cloudwatch:ListMetrics",
+        "cloudwatch:PutMetricAlarm",
+        "cloudwatch:PutMetricData",
+        "cloudwatch:SetAlarmState"
+      ],
+      "Sid": "Stmt1370290134000",
+      "Resource": [
+        "*"
+      ],
+      "Effect": "Allow"
+    }
+  ]
+}"""
+
+
+allow_outpost_sns_prod = """{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "Stmt1390578067000",
+      "Effect": "Allow",
+      "Action": [
+        "sns:ListSubscriptions",
+        "sns:ListSubscriptionsByTopic",
+        "sns:Publish",
+        "sns:Subscribe"
+      ],
+      "Resource": [
+        "arn:aws:sns:us-east-1:761584570493:prod-outpost",
+        "arn:aws:sns:us-east-1:761584570493:alyx3"
+      ]
+    },
+    {
+      "Sid": "Stmt1390578067001",
+      "Effect": "Allow",
+      "Action": [
+        "sns:ConfirmSubscription",
+        "sns:Unsubscribe"
+      ],
+      "Resource": [
+        "arn:aws:sns:us-east-1:761584570493:*"
+      ]
+    }
+  ]
+}"""
+
+allow_outpost_sns_stage = """{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "Stmt1390578067000",
+      "Effect": "Allow",
+      "Action": [
+        "sns:ListSubscriptions",
+        "sns:ListSubscriptionsByTopic",
+        "sns:Publish",
+        "sns:Subscribe"
+      ],
+      "Resource": [
+        "arn:aws:sns:us-east-1:761584570493:stage-outpost",
+        "arn:aws:sns:us-east-1:761584570493:alyx3"
+      ]
+    },
+    {
+      "Sid": "Stmt1390578067001",
+      "Effect": "Allow",
+      "Action": [
+        "sns:ConfirmSubscription",
+        "sns:Unsubscribe"
+      ],
+      "Resource": [
+        "arn:aws:sns:us-east-1:761584570493:*"
+      ]
+    }
+  ]
+}"""
+
+
+allow_set_cloudwatch_alarms = """{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "Stmt1399496077000",
+      "Effect": "Allow",
+      "Action": [
+        "cloudwatch:DescribeAlarms",
+        "cloudwatch:PutMetricAlarm"
+      ],
+      "Resource": [
+        "*"
+      ]
+    }
+  ]
+}"""
+
+allow_remove_cloudwatch_alarms = """{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "Stmt1399498965000",
+      "Effect": "Allow",
+      "Action": [
+        "cloudwatch:DeleteAlarms"
+      ],
+      "Resource": [
+        "*"
+      ]
+    }
+  ]
+}"""
+
+allow_deploy_web_updates = """{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "Stmt1408567829000",
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket"
+      ],
+      "Resource": [
+        "arn:aws:s3:::hudl-web-updates"
+      ]
+    },
+    {
+      "Sid": "Stmt1408567479000",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject"
+      ],
+      "Resource": [
+        "arn:aws:s3:::hudl-web-updates*"
+      ]
+    }
+  ]
+}"""
+
