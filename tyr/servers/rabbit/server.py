@@ -1,14 +1,11 @@
 from tyr.servers.server import Server
-import chef
-import requests
-import time
-import os.path
+
 
 class RabbitMQServer(Server):
 
     SERVER_TYPE = 'rabbit'
 
-    CHEF_RUNLIST=['role[RoleRabbit]']
+    CHEF_RUNLIST = ['role[RoleRabbit]']
 
     IAM_ROLE_POLICIES = [
         'allow-describe-tags',
