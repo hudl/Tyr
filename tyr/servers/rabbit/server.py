@@ -29,7 +29,3 @@ class RabbitMQServer(Server):
                                              keypair, availability_zone,
                                              security_groups, block_devices,
                                              chef_path, subnet_id, dns_zones)
-
-    def configure(self):
-
-        super(RabbitMQServer, self).configure()
