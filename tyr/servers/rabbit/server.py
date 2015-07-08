@@ -10,7 +10,6 @@ class RabbitMQServer(Server):
 
     CHEF_RUNLIST=['role[RoleRabbit]']
 
-
     IAM_ROLE_POLICIES = [
         'allow-describe-tags',
         'allow-volume-control',
