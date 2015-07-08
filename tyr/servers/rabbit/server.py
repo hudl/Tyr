@@ -25,10 +25,10 @@ class RabbitMQServer(Server):
         if server_type is None: server_type = self.SERVER_TYPE
 
         super(RabbitMQServer, self).__init__(group, server_type, instance_type,
-                                environment, ami, region, role,
-                                    keypair, availability_zone,
-                                    security_groups, block_devices,
-                                    chef_path, subnet_id, dns_zones)
+                                             environment, ami, region, role,
+                                             keypair, availability_zone,
+                                             security_groups, block_devices,
+                                             chef_path, subnet_id, dns_zones)
 
     def configure(self):
 
