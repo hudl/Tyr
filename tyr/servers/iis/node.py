@@ -13,7 +13,7 @@ class IISNode(Server):
         'allow-describe-elbs',
         'allow-set-cloudwatch-alarms',
         'allow-remove-cloudwatch-alarms',
-        'allow_deploy_web_updates',
+        'allow-deploy-web-updates',
 
     ]
 
@@ -45,8 +45,6 @@ class IISNode(Server):
                                       min_capacity=min_capacity)
 
     def configure(self):
-        super(IISNode, self).configure()
-
         env_prefix = self.environment[0]
 
         self.security_groups = [
@@ -63,14 +61,18 @@ class IISNode(Server):
             "{0}-nginx".format(env_prefix)
         ]
 
-        self.IAM_ROLE_POLICIES.append('allow_web_initialization_{0}'
+        self.ports_to_authorize = [9000, 9001, 8095, 8096]
+
+        self.IAM_ROLE_POLICIES.append('allow-web-initialization-{0}'
             .format(self.environment))
-        self.IAM_ROLE_POLICIES.append('allow_outpost_sns_prod_{0}'
+        self.IAM_ROLE_POLICIES.append('allow-outpost-sns-{0}'
             .format(self.environment))
-        self.IAM_ROLE_POLICIES.append('{0}-{1}-web'
-            .format(self.environment))
+        #self.IAM_ROLE_POLICIES.append('{0}-{1}-web'
+        #    .format(self.environment, self.group))
+
+        super(IISNode, self).configure()
 
         self.resolve_iam_role()
         self.launch_configuration()
-        self.autoscale_group()
+        self.autoscaling_group()
         self.ingress_rules()

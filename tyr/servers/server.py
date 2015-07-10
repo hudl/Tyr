@@ -32,7 +32,8 @@ class Server(object):
                  keypair=None, availability_zone=None, security_groups=None,
                  block_devices=None, chef_path=None, subnet_id=None,
                  dns_zones=None, desired_capacity=None, max_capacity=None,
-                 min_capacity=None):
+                 min_capacity=None, ingress_groups_to_add=None,
+                 ports_to_authorize=None, classic_link=False):
 
         self.instance_type = instance_type
         self.group = group
@@ -52,6 +53,9 @@ class Server(object):
         self.desired_capacity = desired_capacity
         self.max_capacity = max_capacity
         self.min_capacity = min_capacity
+        self.ingress_groups_to_add = ingress_groups_to_add
+        self.ports_to_authorize = ports_to_authorize
+        self.classic_link = classic_link
 
     def establish_logger(self):
 
@@ -105,8 +109,8 @@ class Server(object):
         if self.desired_capacity is None:
             self.desired_capacity = 3
 
-        if self.maximum_capacity is None:
-            self.maximum_capacity = 3
+        if self.max_capacity is None:
+            self.max_capacity = 3
 
         self.environment = self.environment.lower()
 
@@ -813,18 +817,22 @@ named {name}""".format(path = d['path'], name = d['name']))
             self.autoscale.get_all_launch_configurations(names=[self.envcl])
         except:
             log.info("Creating new launch_configuration: {0}".format(self.envcl))
-            lc = LaunchConfiguration(name=self.envcl, image_id=self.ami,
-                                     key_name=self.keypair, security_groups=self.security_groups)
+            #userDataPlainText = "{'bucket':'hudl-config','key':'" + self.environment[0] + "-mv-web/init.config.json','mongos': '$Mongos', 'mongoServers': '$MongoServers'}"
+            lc = LaunchConfiguration(name=self.envcl, 
+                                     image_id=self.ami,
+                                     key_name=self.keypair, 
+                                     security_groups=self.security_groups)
             conn.create_launch_configuration(lc)
             self.launnch_configuration = lc
-
 
     def autoscaling_group(self):
         try:
             exiting_asg = self.autoscale.get_all_groups(names=[self.envcl])
+            self.log.info('Autoscaling group already exists.')
         except:
+            raise
             if not existing_asg:
-                log.info("Creating new autoscaling group: {0}".format(self.group))
+                self.log.info("Creating new autoscaling group: {0}".format(self.group))
     
                 ag = AutoScalingGroup(name=self.group,
                                       load_balancers=self.load_balancers,
@@ -839,12 +847,23 @@ named {name}""".format(path = d['path'], name = d['name']))
                 conn.create_auto_scaling_group(ag)
 
     def ingress_rules(self):
-        try:
-            grps = conn.get_all_security_groups(groupnames=[self.envcl])
-            grps[0].authorize(src_grp=self.ingress_groups_to_add)
-        except:
-            self.log.error("Unable to add ingress rules!")
-            raise e
+        grp_id = self.get_security_group_ids([self.envcl])
+        grps = self.ec2.get_all_security_groups(group_ids=grp_id)
+        for ing in self.ingress_groups_to_add:
+            self.log.info('Adding ingress rules for group: {0}'
+                          .format(ing))
+            grp_id = self.get_security_group_ids([ing])
+            grp_obj = self.ec2.get_all_security_groups(group_ids=grp_id[0])[0]
+            for port in self.ports_to_authorize:
+                self.log.info("Adding port {0} to {1}.".format(port, ing))
+                try:
+                    grps[0].authorize(ip_protocol='tcp',
+                                      from_port=port,
+                                      to_port=port,
+                                      src_group=grp_obj)
+                except boto.exception.EC2ResponseError:
+                    self.log.warning("Unable to add ingress rule.  May already exist.")
+
 
     @property
     def connection(self):

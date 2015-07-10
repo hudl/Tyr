@@ -110,7 +110,7 @@ allow_web_initialization_prod = """{
       "Sid": "Stmt1370289990000",
       "Resource": [
         "arn:aws:s3:::hudl-config/common/*",
-        "arn:aws:s3:::hudl-config/prod-mv-web/*"
+        "arn:aws:s3:::hudl-config/p-mv-web/*"
       ],
       "Effect": "Allow"
     },
@@ -121,7 +121,7 @@ allow_web_initialization_prod = """{
       "Sid": "Stmt1370290042000",
       "Condition": {
         "StringLike": {
-          "s3:prefix": "prod-mv-web/*"
+          "s3:prefix": "p-mv-web/*"
         }
       },
       "Resource": [
@@ -158,7 +158,7 @@ allow_web_initialization_stage = """{
       "Sid": "Stmt1370289990000",
       "Resource": [
         "arn:aws:s3:::hudl-config/common/*",
-        "arn:aws:s3:::hudl-config/stage-mv-web/*"
+        "arn:aws:s3:::hudl-config/s-mv-web/*"
       ],
       "Effect": "Allow"
     },
@@ -169,7 +169,7 @@ allow_web_initialization_stage = """{
       "Sid": "Stmt1370290042000",
       "Condition": {
         "StringLike": {
-          "s3:prefix": "stage-mv-web/*"
+          "s3:prefix": "s-mv-web/*"
         }
       },
       "Resource": [
