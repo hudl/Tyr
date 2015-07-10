@@ -9,8 +9,6 @@ import time
 from boto.ec2.networkinterface import NetworkInterfaceSpecification
 import json
 from boto.ec2.networkinterface import NetworkInterfaceCollection
-from boto.ec2.autoscale import AutoScaleConnection
-from boto.ec2.autoscale import LaunchConfiguration
 import urllib
 from boto.vpc import VPCConnection
 from paramiko.client import AutoAddPolicy, SSHClient
@@ -31,8 +29,7 @@ class Server(object):
                  environment=None, ami=None, region=None, role=None,
                  keypair=None, availability_zone=None, security_groups=None,
                  block_devices=None, chef_path=None, subnet_id=None,
-                 dns_zones=None, desired_capacity=None, max_capacity=None,
-                 min_capacity=None, ingress_groups_to_add=None,
+                 dns_zones=None, ingress_groups_to_add=None,
                  ports_to_authorize=None, classic_link=False):
 
         self.instance_type = instance_type
@@ -50,9 +47,6 @@ class Server(object):
         self.dns_zones = dns_zones
         self.subnet_id = subnet_id
         self.vpc_id = None
-        self.desired_capacity = desired_capacity
-        self.max_capacity = max_capacity
-        self.min_capacity = min_capacity
         self.ingress_groups_to_add = ingress_groups_to_add
         self.ports_to_authorize = ports_to_authorize
         self.classic_link = classic_link
@@ -106,12 +100,6 @@ class Server(object):
             self.log.warn('No environment provided')
             self.environment = 'test'
 
-        if self.desired_capacity is None:
-            self.desired_capacity = 3
-
-        if self.max_capacity is None:
-            self.max_capacity = 3
-
         self.environment = self.environment.lower()
 
         self.log.info('Using Environment "{environment}"'.format(
@@ -135,7 +123,6 @@ class Server(object):
         self.establish_ec2_connection()
         self.establish_iam_connection()
         self.establish_route53_connection()
-        self.establish_autoscale_connection()
 
         if self.ami is None:
             self.log.warn('No AMI provided')
@@ -667,14 +654,6 @@ named {name}""".format(path = d['path'], name = d['name']))
             self.log.error(str(e))
             raise e
 
-    def establish_autoscale_connection(self):
-        try:
-            self.autoscale = boto.ec2.autoscale.connect_to_region(self.region)
-            self.log.info('Established connection to autoscale')
-        except Exception, e:
-            self.log.error(str(e))
-            raise e
-
     def get_security_group_ids(self, security_groups, vpc_id=None):
             security_group_ids = []
             for group in security_groups:
@@ -812,39 +791,6 @@ named {name}""".format(path = d['path'], name = d['name']))
                     self.log.error(str(e))
                     raise e
 
-    def launch_configuration(self):
-        try:
-            self.autoscale.get_all_launch_configurations(names=[self.envcl])
-        except:
-            log.info("Creating new launch_configuration: {0}".format(self.envcl))
-            #userDataPlainText = "{'bucket':'hudl-config','key':'" + self.environment[0] + "-mv-web/init.config.json','mongos': '$Mongos', 'mongoServers': '$MongoServers'}"
-            lc = LaunchConfiguration(name=self.envcl, 
-                                     image_id=self.ami,
-                                     key_name=self.keypair, 
-                                     security_groups=self.security_groups)
-            conn.create_launch_configuration(lc)
-            self.launnch_configuration = lc
-
-    def autoscaling_group(self):
-        try:
-            exiting_asg = self.autoscale.get_all_groups(names=[self.envcl])
-            self.log.info('Autoscaling group already exists.')
-        except:
-            raise
-            if not existing_asg:
-                self.log.info("Creating new autoscaling group: {0}".format(self.group))
-    
-                ag = AutoScalingGroup(name=self.group,
-                                      load_balancers=self.load_balancers,
-                                      availability_zones=self.availability_zones,
-                                      desired_capacity=self.desired_capacity,
-                                      health_check_period=self.health_check_grace_period,
-                                      launch_config=self.launnch_configuration, 
-                                      min_size=self.min_size,
-                                      max_size=self.max_size,
-                                      default_cooldown=cooldown,
-                                      connection=self.autoscale)
-                conn.create_auto_scaling_group(ag)
 
     def ingress_rules(self):
         grp_id = self.get_security_group_ids([self.envcl])
@@ -939,95 +885,95 @@ named {name}""".format(path = d['path'], name = d['name']))
             return state
 
     def bake(self):
+        if  self.CHEF_RUNLIST:
+            chef_path = os.path.expanduser(self.chef_path)
+            self.chef_api = chef.autoconfigure(chef_path)
 
-        chef_path = os.path.expanduser(self.chef_path)
-        self.chef_api = chef.autoconfigure(chef_path)
+            with self.chef_api:
+                try:
+                    node = chef.Node(self.name)
+                    node.delete()
 
-        with self.chef_api:
-            try:
-                node = chef.Node(self.name)
-                node.delete()
+                    self.log.info('Removed previous chef node "{node}"'.format(
+                                    node = self.name))
+                except chef.exceptions.ChefServerNotFoundError:
+                    pass
+                except Exception as e:
+                    self.log.error(str(e))
+                    raise e
 
-                self.log.info('Removed previous chef node "{node}"'.format(
-                                node = self.name))
-            except chef.exceptions.ChefServerNotFoundError:
-                pass
-            except Exception as e:
-                self.log.error(str(e))
-                raise e
+                try:
+                    client = chef.Client(self.name)
+                    client = client.delete()
 
-            try:
-                client = chef.Client(self.name)
-                client = client.delete()
+                    self.log.info('Removed previous chef client "{client}"'.format(
+                                    client = self.name))
+                except chef.exceptions.ChefServerNotFoundError:
+                    pass
+                except Exception as e:
+                    self.log.error(str(e))
+                    raise e
 
-                self.log.info('Removed previous chef client "{client}"'.format(
-                                client = self.name))
-            except chef.exceptions.ChefServerNotFoundError:
-                pass
-            except Exception as e:
-                self.log.error(str(e))
-                raise e
+                node = chef.Node.create(self.name)
 
-            node = chef.Node.create(self.name)
+                self.chef_node = node
 
-            self.chef_node = node
+                self.log.info('Created new Chef Node "{node}"'.format(
+                                    node = self.name))
 
-            self.log.info('Created new Chef Node "{node}"'.format(
-                                node = self.name))
+                self.chef_node.chef_environment = self.environment
 
-            self.chef_node.chef_environment = self.environment
+                self.log.info('Set the Chef Environment to "{env}"'.format(
+                            env = self.chef_node.chef_environment))
 
-            self.log.info('Set the Chef Environment to "{env}"'.format(
-                        env = self.chef_node.chef_environment))
+                self.chef_node.run_list = self.CHEF_RUNLIST
 
-            self.chef_node.run_list = self.CHEF_RUNLIST
+                self.log.info('Set Chef run list to {list}'.format(
+                                                list = self.chef_node.run_list))
 
-            self.log.info('Set Chef run list to {list}'.format(
-                                            list = self.chef_node.run_list))
-
-            self.chef_node.save()
-            self.log.info('Saved the Chef Node configuration')
+                self.chef_node.save()
+                self.log.info('Saved the Chef Node configuration')
 
     def baked(self):
+        if self.CHEF_RUNLIST:
+            self.log.info('Determining status of "{node}"'.format(
+                                                node = self.hostname))
 
-        self.log.info('Determining status of "{node}"'.format(
-                                            node = self.hostname))
+            self.log.info('Waiting for Chef Client to start')
 
-        self.log.info('Waiting for Chef Client to start')
+            while True:
+                r = self.run('ls -l /var/log')
 
-        while True:
-            r = self.run('ls -l /var/log')
+                if 'chef-client.log' in r['out']:
+                    break
+                else:
+                    time.sleep(10)
 
-            if 'chef-client.log' in r['out']:
-                break
+            self.log.info('Chef Client has started')
+
+            self.log.info('Waiting for Chef Client to finish')
+
+            while True:
+                r = self.run('pgrep chef-client')
+
+                if len(r['out']) > 0:
+                    time.sleep(10)
+                else:
+                    break
+
+            self.log.info('Chef Client has finished')
+
+            self.log.info('Determining Node state')
+
+            r = self.run('tail /var/log/chef-client.log')
+
+            if 'Chef Run complete in' in r['out']:
+                self.log.info('Chef Client was successful')
+                return True
             else:
-                time.sleep(10)
-
-        self.log.info('Chef Client has started')
-
-        self.log.info('Waiting for Chef Client to finish')
-
-        while True:
-            r = self.run('pgrep chef-client')
-
-            if len(r['out']) > 0:
-                time.sleep(10)
-            else:
-                break
-
-        self.log.info('Chef Client has finished')
-
-        self.log.info('Determining Node state')
-
-        r = self.run('tail /var/log/chef-client.log')
-
-        if 'Chef Run complete in' in r['out']:
-            self.log.info('Chef Client was successful')
-            return True
-        else:
-            self.log.info('Chef Client was not successful')
-            self.log.debug(r['out'])
-            return False
+                self.log.info('Chef Client was not successful')
+                self.log.debug(r['out'])
+                return False
 
     def autorun(self):
 
