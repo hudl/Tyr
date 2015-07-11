@@ -3,6 +3,7 @@ from tyr.servers.mongo import MongoDataNode, MongoArbiterNode
 import time
 import json
 
+
 class MongoCluster(object):
 
     log = logging.getLogger('Clusters.Mongo')
@@ -11,17 +12,17 @@ class MongoCluster(object):
     ch.setLevel(logging.DEBUG)
     formatter = logging.Formatter(
             '%(asctime)s [%(name)s] %(levelname)s: %(message)s',
-            datefmt = '%H:%M:%S')
+            datefmt='%H:%M:%S')
     ch.setFormatter(formatter)
     log.addHandler(ch)
 
-    def __init__(self, group = None, server_type = None, instance_type = None,
-                    environment = None, ami = None, region = None, role = None,
-                    keypair = None, chef_path = None, dns_zones = None,
-                    replica_set = None, security_groups = None,
-                    block_devices = None, data_volume_size=None,
-                    data_volume_iops=None, data_nodes=None,
-                    mongodb_version=None):
+    def __init__(self, group=None, server_type=None, instance_type=None,
+                 environment=None, ami=None, region=None, role=None,
+                 keypair=None, chef_path=None, dns_zones=None,
+                 replica_set=None, security_groups=None,
+                 block_devices=None, data_volume_size=None,
+                 data_volume_iops=None, data_nodes=None,
+                 mongodb_version=None):
 
         self.nodes = []
 
@@ -59,41 +60,43 @@ class MongoCluster(object):
 
         for i in range(self.data_nodes):
 
-            node = MongoDataNode(group = self.group, server_type = self.server_type,
-                                    instance_type = self.instance_type,
-                                    environment = self.environment,
-                                    ami = self.ami, region = self.region,
-                                    role = self.role, keypair = self.keypair,
-                                    chef_path = self.chef_path,
-                                    dns_zones = self.dns_zones,
-                                    replica_set = self.replica_set,
-                                    security_groups = self.security_groups,
-                                    block_devices = self.block_devices,
-                                    availability_zone = zones[i],
-                                    data_volume_size = self.data_volume_size,
-                                    data_volume_iops = self.data_volume_iops,
-                                    mongodb_version = self.mongodb_version)
+            node = MongoDataNode(group=self.group,
+                                 server_type=self.server_type,
+                                 instance_type=self.instance_type,
+                                 environment=self.environment,
+                                 ami=self.ami, region=self.region,
+                                 role=self.role, keypair=self.keypair,
+                                 chef_path=self.chef_path,
+                                 dns_zones=self.dns_zones,
+                                 replica_set=self.replica_set,
+                                 security_groups=self.security_groups,
+                                 block_devices=self.block_devices,
+                                 availability_zone=zones[i],
+                                 data_volume_size=self.data_volume_size,
+                                 data_volume_iops=self.data_volume_iops,
+                                 mongodb_version=self.mongodb_version)
 
             node.autorun()
 
             self.nodes.append(node)
 
-        if (self.data_nodes%2) == 0:
+        if (self.data_nodes % 2) == 0:
 
             self.log.info('Including Arbiter Node')
 
-            node = MongoArbiterNode(group = self.group, server_type = self.server_type,
-                                    instance_type = self.instance_type,
-                                    environment = self.environment,
-                                    ami = self.ami, region = self.region,
-                                    role = self.role, keypair = self.keypair,
-                                    chef_path = self.chef_path,
-                                    dns_zones = self.dns_zones,
-                                    replica_set = self.replica_set,
-                                    security_groups = self.security_groups,
-                                    block_devices = self.block_devices,
-                                    availability_zone = zones[i+1],
-                                    mongodb_version = self.mongodb_version)
+            node = MongoArbiterNode(group=self.group,
+                                    server_type=self.server_type,
+                                    instance_type=self.instance_type,
+                                    environment=self.environment,
+                                    ami=self.ami, region=self.region,
+                                    role=self.role, keypair=self.keypair,
+                                    chef_path=self.chef_path,
+                                    dns_zones=self.dns_zones,
+                                    replica_set=self.replica_set,
+                                    security_groups=self.security_groups,
+                                    block_devices=self.block_devices,
+                                    availability_zone=zones[i+1],
+                                    mongodb_version=self.mongodb_version)
 
             node.autorun()
 
@@ -118,14 +121,14 @@ class MongoCluster(object):
     def add(self, node):
 
         self.log.info('Adding "{node}" to the replica set'.format(
-                                    node = node.hostname))
+                                    node=node.hostname))
 
         template = 'rs.add(\'{node}:27018\')'
 
         if node.__class__.__name__ == 'MongoArbiterNode':
             template = 'rs.addArb(\'{node}:27018\')'
 
-        return self.nodes[0].run_mongo(template.format(node = node.hostname))
+        return self.nodes[0].run_mongo(template.format(node=node.hostname))
 
     def add_all(self):
 
@@ -141,7 +144,8 @@ class MongoCluster(object):
             while True:
                 try:
                     if len(self.status()['members']) > 0:
-                        if self.status()['members'][0]['stateStr'] == 'PRIMARY':
+                        if self.status()['members'][0]['stateStr'] \
+                          == 'PRIMARY':
                             break
                 except KeyError:
                     pass

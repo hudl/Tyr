@@ -10,7 +10,8 @@ policies = {
     'allow-download-scripts-s3-fulla': s3.allow_download_scripts_s3_fulla,
     'allow-mongo-backup-snapshot': ec2.allow_mongo_backup_snapshot,
     'allow-mongo-snapshot-cleanup': ec2.allow_mongo_snapshot_cleanup,
-    'allow-download-script-s3-stage-updater': s3.allow_download_script_s3_stage_updater,
+    'allow-download-script-s3-stage-updater':
+    s3.allow_download_script_s3_stage_updater,
     'allow-get-nginx-config': s3.allow_get_nginx_config,
     'allow-describe-elbs': elb.allow_describe_elbs,
     'allow-modify-nginx-elbs-stage': elb.allow_modify_nginx_elbs_stage,
