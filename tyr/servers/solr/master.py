@@ -4,7 +4,7 @@ from tyr.servers.server import Server
 class SolrMasterNode(Server):
 
     SERVER_TYPE = 'solr'
-    CHEF_RUNLIST = ['role[Solr]']
+    CHEF_RUNLIST = ['role[RoleSolr]']
     IAM_ROLE_POLICIES = ['allow-volume-control']
 
     def __init__(self, group=None, server_type=None, instance_type=None,
