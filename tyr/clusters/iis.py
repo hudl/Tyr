@@ -1,6 +1,8 @@
 import logging
 from tyr.servers.iis import IISNode
 from tyr.autoscaler import AutoScaler
+from itertools import cycle
+
 
 class IISCluster():
     log = logging.getLogger('Clusters.IIS')
@@ -19,7 +21,7 @@ class IISCluster():
                  environment=None,
                  ami=None,
                  region=None,
-                 subnet_id=None,
+                 subnet_ids=[],
                  role=None,
                  keypair=None,
                  security_groups=None,
@@ -27,13 +29,10 @@ class IISCluster():
                  desired_capacity=1,
                  max_size=1,
                  min_size=1,
-                 launch_nodes=0,
                  default_cooldown=300,
-                 availability_zone=None,
+                 availability_zones=None,
                  health_check_grace_period=300,
                  launch_configuration=None):
-
-        self.nodes = []
 
         self.group = group
         self.server_type = server_type
@@ -42,18 +41,22 @@ class IISCluster():
         self.ami = ami
         self.region = region
         self.role = role
-        self.subnet_id = subnet_id
+        self.subnet_ids = subnet_ids
         self.keypair = keypair
         self.security_groups = security_groups
         self.autoscaling_group = autoscaling_group
         self.desired_capacity = desired_capacity
         self.max_size = max_size
         self.min_size = min_size
-        self.launch_nodes = launch_nodes
         self.default_cooldown = default_cooldown
-        self.availability_zone = availability_zone
+        self.availability_zones = availability_zones
         self.health_check_grace_period = health_check_grace_period
         self.launch_configuration = launch_configuration
+
+        if self.availability_zones:
+            self.node_zone = availability_zones[0]
+        else:
+            self.node_zone = None
 
     def provision(self):
 
@@ -61,8 +64,8 @@ class IISCluster():
             self.launch_configuration = "{0}-{1}-web".format(
                 self.environment[0], self.group)
         if not self.autoscaling_group:
-            if self.subnet_id:
-                templ = "{0}-{1}-web-asg-vpn"
+            if self.subnet_ids:
+                templ = "{0}-{1}-web-asg-vpc"
             else:
                 templ = "{0}-{1}-web-asg"
             self.autoscaling_group = templ.format(
@@ -76,9 +79,9 @@ class IISCluster():
                        region=self.region,
                        role=self.role,
                        keypair=self.keypair,
-                       availability_zone=self.availability_zone,
+                       availability_zone=self.node_zone,
                        security_groups=self.security_groups,
-                       subnet_id=self.subnet_id)
+                       subnet_id=self.subnet_ids[0])
         node.configure()
 
         auto = AutoScaler(launch_configuration=self.launch_configuration,
@@ -87,32 +90,12 @@ class IISCluster():
                           max_size=self.max_size,
                           min_size=self.min_size,
                           default_cooldown=self.default_cooldown,
-                          availability_zone=self.availability_zone,
+                          availability_zones=self.availability_zones,
                           health_check_grace_period=self.health_check_grace_period,
                           node_obj=node)
         auto.autorun()
-        
-        # You can launch instances manually if required, but autoscale will
-        # launch them automatically if desired_capacity is set > 0
-        for i in range(self.launch_nodes):
-
-            node = IISNode(group=self.group,
-                           server_type=self.server_type,
-                           instance_type=self.instance_type,
-                           environment=self.environment,
-                           ami=self.ami,
-                           region=self.region,
-                           role=self.role,
-                           keypair=self.keypair,
-                           availability_zone=self.availability_zone,
-                           security_groups=self.security_groups,
-                           subnet_id=self.subnet_id)
-
-            node.autorun()
-            self.nodes.append(node)
 
     def baked(self):
-
         return all([node.baked() for node in self.nodes])
 
     def autorun(self):

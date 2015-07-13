@@ -27,17 +27,43 @@ class AutoScaler(object):
                  max_size=1,
                  min_size=1,
                  default_cooldown=300,
-                 availability_zone=None,
-                 health_check_grace_period=300):
+                 availability_zones=None,
+                 subnet_ids=None,
+                 health_check_grace_period=300,
+                 enable_classiclink=False):
 
         self.launch_configuration = launch_configuration
         self.autoscaling_group = autoscaling_group
         self.desired_capacity = desired_capacity
+
+        # You can set a list of availability zones explicitly, else it will
+        # just use the one from the node object
+        if availability_zones:
+            self.autoscale_availability_zones = availability_zones
+        else:
+            self.autoscale_availability_zones = [node_obj.availability_zone]
+
+        # If you set these they must match the availability zones
+        if subnet_ids:
+            self.autoscale_subnets = subnet_ids
+        else:
+            self.autoscale_subnets = [node_obj.subnet_id]
+
+        self.availability_zones = availability_zones
         self.node_obj = node_obj
         self.max_size = max_size
         self.min_size = min_size
         self.default_cooldown = default_cooldown
         self.health_check_grace_period = health_check_grace_period
+        self.enable_classiclink = enable_classiclink
+
+        if self.enable_classiclink:
+            self.vpc_security_groups = self.node_obj.get_security_group_ids(
+                self.node_obj.classic_link_vpc_security_groups)
+            self.classiclink_vpc_id = node_obj.subnet_id
+        else:
+            self.vpc_security_groups = None
+            self.classiclink_vpc_id = None
 
     def establish_autoscale_connection(self):
         try:
@@ -60,7 +86,10 @@ class AutoScaler(object):
                                      key_name=self.node_obj.keypair,
                                      security_groups=self.node_obj.get_security_group_ids(
                                          self.node_obj.security_groups),
-                                     user_data=self.node_obj.user_data)
+                                     classic_link_vpc_security_groups=self.vpc_security_groups,
+                                     classic_link_vpc_id=self.classiclink_vpc_id,
+                                     user_data=self.node_obj.user_data,
+                                     instance_profile_name=self.node_obj.role)
             self.conn.create_launch_configuration(lc)
             self.launch_configuration = lc
 
@@ -73,14 +102,14 @@ class AutoScaler(object):
                           .format(self.autoscaling_group))
 
             ag = AutoScalingGroup(name=self.autoscaling_group,
-                                  availability_zones=[self.node_obj.availability_zone],
+                                  availability_zones=self.autoscale_availability_zones,
                                   desired_capacity=self.desired_capacity,
                                   health_check_period=self.health_check_grace_period,
                                   launch_config=self.launch_configuration,
                                   min_size=self.min_size,
                                   max_size=self.max_size,
                                   default_cooldown=self.default_cooldown,
-                                  vpc_zone_identifier=[self.node_obj.subnet_id],
+                                  vpc_zone_identifier=self.autoscale_subnets,
                                   connection=self.conn)
             self.conn.create_auto_scaling_group(ag)
         else:

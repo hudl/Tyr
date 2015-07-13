@@ -30,7 +30,8 @@ class Server(object):
                  keypair=None, availability_zone=None, security_groups=None,
                  block_devices=None, chef_path=None, subnet_id=None,
                  dns_zones=None, ingress_groups_to_add=None,
-                 ports_to_authorize=None, classic_link=False):
+                 ports_to_authorize=None, classic_link=False,
+                 add_route53_dns=True):
 
         self.instance_type = instance_type
         self.group = group
@@ -50,6 +51,7 @@ class Server(object):
         self.ingress_groups_to_add = ingress_groups_to_add
         self.ports_to_authorize = ports_to_authorize
         self.classic_link = classic_link
+        self.add_route53_dns = add_route53_dns
 
     def establish_logger(self):
 
@@ -224,6 +226,9 @@ class Server(object):
 
         self.log.info('Using Chef path "{path}"'.format(
                                 path = self.chef_path))
+
+        if self.ingress_groups_to_add:
+            self.ingress_rules()
 
         if self.dns_zones is None:
             self.log.warn('No DNS zones specified')
@@ -462,7 +467,7 @@ named {name}""".format(path = d['path'], name = d['name']))
             vpc_id = subnets[0].vpc_id
             return vpc_id
         elif len(subnets) == 0:
-            raise NoSubnetReturned("No subnets returned")
+            raise NoSubnetReturned("No subnets returned for: {}".format(subnet_id))
         else:
             raise Exception("More than 1 subnet returned")
 
@@ -981,5 +986,6 @@ named {name}""".format(path = d['path'], name = d['name']))
         self.configure()
         self.launch(wait=True)
         self.tag()
-        self.route()
+        if self.add_route53_dns:
+            self.route()
         self.bake()
