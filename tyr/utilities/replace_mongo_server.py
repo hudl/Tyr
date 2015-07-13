@@ -1,6 +1,7 @@
 import os
 import sys
-from tyr.servers.mongo import MongoDataNode, MongoDataWarehousingNode, MongoArbiterNode
+from tyr.servers.mongo import MongoDataNode, MongoDataWarehousingNode, \
+    MongoArbiterNode
 import json
 import time
 from paramiko.client import AutoAddPolicy, SSHClient
@@ -8,6 +9,7 @@ import requests
 import boto.ec2
 import boto.route53
 import logging
+
 
 def timeit(method):
 
@@ -17,8 +19,8 @@ def timeit(method):
         end = time.time()
 
         log.debug('Executed {name} in {elapsed} seconds'.format(
-                                                        name = method.__name__,
-                                                        elapsed = end-start))
+                                                        name=method.__name__,
+                                                        elapsed=end-start))
 
         return response
 
@@ -34,6 +36,7 @@ if not log.handlers:
             datefmt='%H:%M:%S')
     ch.setFormatter(formatter)
     log.addHandler(ch)
+
 
 class ReplicaSet(object):
 
@@ -53,7 +56,7 @@ class ReplicaSet(object):
 
         self.primary = primary
 
-        log.debug('The primary is {primary}'.format(primary = self.primary))
+        log.debug('The primary is {primary}'.format(primary=self.primary))
 
     @property
     @timeit
@@ -62,7 +65,7 @@ class ReplicaSet(object):
         log.debug('Retrieving the replica set\'s status using rs.status()')
         status = run_mongo_command(self.primary, 'rs.status()')
 
-        log.debug('The status is {status}'.format(status = status))
+        log.debug('The status is {status}'.format(status=status))
 
         return status
 
@@ -105,13 +108,14 @@ class ReplicaSet(object):
         self.determine_primary(member)
 
     @timeit
-    def add_member(self, address, arbiter=False, hidden=False, accessible=None):
+    def add_member(self, address, arbiter=False, hidden=False,
+                   accessible=None):
 
         log.debug('Re-determining the replica set primary')
         self.determine_primary(self.primary)
 
         log.debug('Checking if mongod is running on {address}'.format(
-                                                        address = address))
+                                                        address=address))
 
         if accessible is None:
             output = run_command(address, 'pgrep mongod')
@@ -120,37 +124,37 @@ class ReplicaSet(object):
 
         if len(output) == 0:
             log.debug('mongod is not running on {address}'.format(
-                                                        address = address))
+                                                        address=address))
             log.debug('Starting the mongo service on {address}'.format(
-                                                        address = address))
+                                                        address=address))
             run_command(address, 'sudo service mongod start')
 
         else:
             log.debug('mongod is already running on {address}'.format(
-                                                        address = address))
+                                                        address=address))
 
-        log.debug('Adding {address} to the replica set'.format(address=address))
+        log.debug('Adding {address} to the replica set'.format(
+                                                        address=address))
 
-        name = '{address}:27018'.format(address = address)
+        name = '{address}:27018'.format(address=address)
 
-        command = 'rs.add(\'{name}\')'.format(name = name)
+        command = 'rs.add(\'{name}\')'.format(name=name)
 
         if arbiter:
-            command = 'rs.addArb(\'{name}\')'.format(name = name)
+            command = 'rs.addArb(\'{name}\')'.format(name=name)
 
         if hidden:
             ids = [int(member['_id']) for member in self.status['members']]
 
             id_ = max(ids) + 1
 
-            command = 'rs.add({{_id:{id_}, host:\'{name}\', priority:0, hidden: true}})'.format(
-                                                                    id_ = id_,
-                                                                    name=name)
+            command = ('rs.add({{_id:{id_}, host:\'{name}\', priority:0, '
+                       'hidden: true}})').format(id_=id_, name=name)
 
-        log.debug('Using the command {command}'.format(command = command))
+        log.debug('Using the command {command}'.format(command=command))
         response = run_mongo_command(self.primary, command)
 
-        log.debug('Received response {response}'.format(response = response))
+        log.debug('Received response {response}'.format(response=response))
 
         if response['ok'] == 0:
             log.critical('The response was not okay')
@@ -163,19 +167,20 @@ class ReplicaSet(object):
         self.determine_primary(self.primary)
 
         log.debug('Stopping the mongo service on {address}'.format(
-                                                            address = address))
+                                                            address=address))
         run_command(address, 'sudo service mongod stop')
 
-        log.debug('Removing {address} from the replica set'.format(address=address))
+        log.debug('Removing {address} from the replica set'.format(
+                                                            address=address))
 
-        name = '{address}:27018'.format(address = address)
+        name = '{address}:27018'.format(address=address)
 
-        command = 'rs.remove(\'{name}\')'.format(name = name)
+        command = 'rs.remove(\'{name}\')'.format(name=name)
 
-        log.debug('Using the command {command}'.format(command = command))
+        log.debug('Using the command {command}'.format(command=command))
         response = run_mongo_command(self.primary, command)
 
-        log.debug('Received response {response}'.format(response = response))
+        log.debug('Received response {response}'.format(response=response))
 
         log.debug('Sleeping for 20 seconds')
         time.sleep(20)
@@ -195,8 +200,9 @@ class ReplicaSet(object):
 
         if clean:
             log.debug('Removing an mongo data from {address}'.format(
-                                                        address = address))
+                                                        address=address))
             run_command(address, 'sudo rm -rf /volr/*')
+
 
 @timeit
 def run_command(address, command):
@@ -210,7 +216,7 @@ def run_command(address, command):
             keys = [os.path.expanduser(key) for key in keys]
 
             connection.connect(address, username='ec2-user',
-                                key_filename=keys)
+                               key_filename=keys)
             break
         except Exception:
             log.warn('Unable to establish an SSH connection')
@@ -219,7 +225,7 @@ def run_command(address, command):
 
     log.debug('Established an SSH connection')
     log.debug('Running {command} on {address}'.format(command=command,
-                                                        address=address))
+                                                      address=address))
 
     stdin, stdout, stderr = connection.exec_command(command)
 
@@ -238,66 +244,70 @@ def run_command(address, command):
     except IOError:
         stderr = None
 
-    log.debug('STDIN: {stdin}'.format(stdin = stdin))
-    log.debug('STDOUT: {stdout}'.format(stdout = stdout))
-    log.debug('STDERR: {stderr}'.format(stderr = stderr))
+    log.debug('STDIN: {stdin}'.format(stdin=stdin))
+    log.debug('STDOUT: {stdout}'.format(stdout=stdout))
+    log.debug('STDERR: {stderr}'.format(stderr=stderr))
 
     return stdout
+
 
 @timeit
 def run_mongo_command(address, command):
 
     log.debug('Running the mongo command {command} on {address}'.format(
-                                                        command = command,
-                                                        address = address))
+                                                        command=command,
+                                                        address=address))
 
     template = 'mongo --port 27018 --eval "JSON.stringify({command})"'
-    command = template.format(command = command)
+    command = template.format(command=command)
 
     response = run_command(address, command)
 
-    log.debug('Received response {response}'.format(response = response))
+    log.debug('Received response {response}'.format(response=response))
 
     try:
         return json.loads(response.split('\n')[2])
     except ValueError:
         return response
 
+
 @timeit
 def launch_server(environment, group, subnet_id, instance_type,
-                    availability_zone, replica_set, data_volume_size,
-                    data_volume_iops, mongodb_package_version, node_type,
-                    replica_set_template):
+                  availability_zone, replica_set, data_volume_size,
+                  data_volume_iops, mongodb_package_version, node_type,
+                  replica_set_template):
 
     log.debug('Preparing to launch a new node')
 
     node = None
 
     if node_type == 'data':
-        node = MongoDataNode(group = group, instance_type = instance_type,
-                                environment = environment,
-                                subnet_id = subnet_id,
-                                availability_zone = availability_zone,
-                                replica_set = replica_set,
-                                data_volume_size = data_volume_size,
-                                data_volume_iops = data_volume_iops,
-                                mongodb_version = mongodb_package_version)
+        node = MongoDataNode(group=group, instance_type=instance_type,
+                             environment=environment,
+                             subnet_id=subnet_id,
+                             availability_zone=availability_zone,
+                             replica_set=replica_set,
+                             data_volume_size=data_volume_size,
+                             data_volume_iops=data_volume_iops,
+                             mongodb_version=mongodb_package_version)
 
     elif node_type == 'datawarehousing':
-        node = MongoDataWarehousingNode(group = group, instance_type = instance_type,
-                                environment = environment,
-                                subnet_id = subnet_id,
-                                availability_zone = availability_zone,
-                                replica_set = replica_set,
-                                data_volume_size = data_volume_size,
-                                mongodb_version = mongodb_package_version)
+        node = MongoDataWarehousingNode(group=group,
+                                        instance_type=instance_type,
+                                        environment=environment,
+                                        subnet_id=subnet_id,
+                                        availability_zone=availability_zone,
+                                        replica_set=replica_set,
+                                        data_volume_size=data_volume_size,
+                                        mongodb_version=mongodb_package_version
+                                        )
     elif node_type == 'arbiter':
-        node = MongoArbiterNode(group = group, instance_type = instance_type,
-                                environment = environment,
-                                subnet_id = subnet_id,
-                                availability_zone = availability_zone,
-                                replica_set = replica_set,
-                                mongodb_version = mongodb_package_version)
+        node = MongoArbiterNode(group=group, instance_type=instance_type,
+                                environment=environment,
+                                subnet_id=subnet_id,
+                                availability_zone=availability_zone,
+                                replica_set=replica_set,
+                                mongodb_version=mongodb_package_version)
 
     if replica_set_template is not None:
         node.REPLICA_SET_TEMPLATE = replica_set_template
@@ -315,28 +325,30 @@ def launch_server(environment, group, subnet_id, instance_type,
         log.critical('chef-client failed to finish running')
         sys.exit(1)
 
+
 @timeit
-def registered_in_stackdriver(stackdriver_username, stackdriver_api_key, instance_id):
+def registered_in_stackdriver(stackdriver_username, stackdriver_api_key,
+                              instance_id):
 
     log.debug('Checking if {instance_id} is listed in Stackdriver'.format(
-                                                    instance_id = instance_id))
+                                                    instance_id=instance_id))
 
     headers = headers = {
         'x-stackdriver-apikey': stackdriver_api_key,
         'Content-Type': 'application/json'
     }
 
-    log.debug('Using the headers {headers}'.format(headers = headers))
+    log.debug('Using the headers {headers}'.format(headers=headers))
 
     template = 'https://api.stackdriver.com/v0.2/instances/{id_}'
 
-    endpoint = template.format(id_ = instance_id)
+    endpoint = template.format(id_=instance_id)
 
-    log.debug('Using the endpoint {endpoint}'.format(endpoint = endpoint))
+    log.debug('Using the endpoint {endpoint}'.format(endpoint=endpoint))
 
     r = requests.get(endpoint, headers=headers)
 
-    log.debug('Received status code {code}'.format(code = r.status_code))
+    log.debug('Received status code {code}'.format(code=r.status_code))
 
     listed = (r.status_code != 404)
 
@@ -347,11 +359,13 @@ def registered_in_stackdriver(stackdriver_username, stackdriver_api_key, instanc
 
     return listed
 
+
 @timeit
-def set_maintenance_mode(stackdriver_username, stackdriver_api_key, instance_id):
+def set_maintenance_mode(stackdriver_username, stackdriver_api_key,
+                         instance_id):
 
     log.debug('Placing {instance_id} into maintenance mode'.format(
-                                                    instance_id = instance_id))
+                                                    instance_id=instance_id))
 
     while not registered_in_stackdriver(stackdriver_username,
                                         stackdriver_api_key, instance_id):
@@ -365,12 +379,12 @@ def set_maintenance_mode(stackdriver_username, stackdriver_api_key, instance_id)
         'Content-Type': 'application/json'
     }
 
-    log.debug('Using the headers {headers}'.format(headers = headers))
+    log.debug('Using the headers {headers}'.format(headers=headers))
 
     template = 'https://api.stackdriver.com/v0.2/instances/{id_}/maintenance/'
-    endpoint = template.format(id_ = instance_id)
+    endpoint = template.format(id_=instance_id)
 
-    log.debug('Using the endpoint {endpoint}'.format(endpoint = endpoint))
+    log.debug('Using the endpoint {endpoint}'.format(endpoint=endpoint))
 
     body = {
         'username': stackdriver_username,
@@ -378,39 +392,41 @@ def set_maintenance_mode(stackdriver_username, stackdriver_api_key, instance_id)
         'maintenance': True
     }
 
-    log.debug('Using the body {body}'.format(body = body))
+    log.debug('Using the body {body}'.format(body=body))
 
     data = json.dumps(body)
 
     r = requests.put(endpoint, data=data, headers=headers)
 
-    log.debug('Received status code {code}'.format(code = r.status_code))
+    log.debug('Received status code {code}'.format(code=r.status_code))
 
     if r.status_code != 200:
-        log.critical('Failed to put the node into maintenance mode. Received code {code}'.format(
-                                                    code = r.status_code))
+        log.critical('Failed to put the node into maintenance mode. '
+                     'Received code {code}'.format(code=r.status_code))
         sys.exit(1)
 
     else:
         log.debug('Placed the node into maintenance mode')
 
+
 @timeit
-def unset_maintenance_mode(stackdriver_username, stackdriver_api_key, instance_id):
+def unset_maintenance_mode(stackdriver_username, stackdriver_api_key,
+                           instance_id):
 
     log.debug('Removing {instance_id} from maintenance mode'.format(
-                                                    instance_id = instance_id))
+                                                    instance_id=instance_id))
 
     headers = {
         'x-stackdriver-apikey': stackdriver_api_key,
         'Content-Type': 'application/json'
     }
 
-    log.debug('Using the headers {headers}'.format(headers = headers))
+    log.debug('Using the headers {headers}'.format(headers=headers))
 
     template = 'https://api.stackdriver.com/v0.2/instances/{id_}/maintenance/'
-    endpoint = template.format(id_ = instance_id)
+    endpoint = template.format(id_=instance_id)
 
-    log.debug('Using the endpoint {endpoint}'.format(endpoint = endpoint))
+    log.debug('Using the endpoint {endpoint}'.format(endpoint=endpoint))
 
     body = {
         'username': stackdriver_username,
@@ -418,23 +434,24 @@ def unset_maintenance_mode(stackdriver_username, stackdriver_api_key, instance_i
         'maintenance': False
     }
 
-    log.debug('Using the body {body}'.format(body = body))
+    log.debug('Using the body {body}'.format(body=body))
 
     data = json.dumps(body)
 
     r = requests.put(endpoint, data=data, headers=headers)
 
-    log.debug('Received status code {code}'.format(code = r.status_code))
+    log.debug('Received status code {code}'.format(code=r.status_code))
 
     if r.status_code != 200:
 
-        log.critical('Failed to remove the node from maintenance mode. Received code {code}'.format(
-                                                    code = r.status_code))
+        log.critical('Failed to remove the node from maintenance mode. '
+                     'Received code {code}'.format(code=r.status_code))
         sys.exit(1)
 
     else:
 
         log.debug('Removed the node from maintenance mode.')
+
 
 @timeit
 def wait_for_sync(node):
@@ -443,7 +460,8 @@ def wait_for_sync(node):
 
     while True:
 
-        status = run_mongo_command(node.instance.private_dns_name, 'rs.status()')
+        status = run_mongo_command(node.instance.private_dns_name,
+                                   'rs.status()')
 
         if status['ok'] != 1:
 
@@ -473,58 +491,62 @@ def wait_for_sync(node):
 
     log.debug('The node has finished syncing')
 
+
 @timeit
 def stop_decommissioned_node(address, terminate=False,
-                                stackdriver_username=None,
-                                stackdriver_api_key=None):
+                             stackdriver_username=None,
+                             stackdriver_api_key=None):
 
     log.debug('Stopping or terminating the node at {address}'.format(
-                                                        address = address))
+                                                        address=address))
 
     log.debug('Retrieving the instance ID')
     command = 'curl http://169.254.169.254/latest/meta-data/instance-id'
     instance_id = run_command(address, command)
 
-    log.debug('The instance ID is {id_}'.format(id_ = instance_id))
+    log.debug('The instance ID is {id_}'.format(id_=instance_id))
 
-    set_maintenance_mode(stackdriver_username, stackdriver_api_key, instance_id)
+    set_maintenance_mode(stackdriver_username, stackdriver_api_key,
+                         instance_id)
 
     log.debug('Establishing a connection to AWS EC2 us-east-1')
     conn = boto.ec2.connect_to_region('us-east-1')
 
     if terminate:
-        log.debug('Terminating {instance}'.format(instance = instance_id))
+        log.debug('Terminating {instance}'.format(instance=instance_id))
         response = conn.terminate_instances(instance_ids=[instance_id])
     else:
-        log.debug('Stopping `{instance}'.format(instance = instance_id))
+        log.debug('Stopping `{instance}'.format(instance=instance_id))
         response = conn.stop_instances(instance_ids=[instance_id])
 
-    log.debug('Received the response {response}'.format(response = response))
+    log.debug('Received the response {response}'.format(response=response))
 
     terminated = [instance.id for instance in response]
 
     if instance_id in terminated:
         if terminate:
             log.debug('Successfully terminated {instance}'.format(
-                                                        instance = instance_id))
+                                                        instance=instance_id))
         else:
             log.debug('Successfully stopped {instance}'.format(
-                                                        instance = instance_id))
+                                                        instance=instance_id))
     else:
         if terminate:
             log.debug('Failed to terminate {instance}'.format(
-                                                        instance = instance_id))
+                                                        instance=instance_id))
         else:
             log.debug('Failed to stop {instance}'.format(
-                                                        instance = instance_id))
+                                                        instance=instance_id))
+
+
 @timeit
 def replace_server(environment=None, group=None, subnet_id=None,
-                    instance_type=None, availability_zone=None,
-                    replica_set_index=None, data_volume_size=None,
-                    data_volume_iops=None, mongodb_package_version=None,
-                    member=None, replace=False, node_type='data',
-                    reroute=False, replica_set_template=None, terminate=False,
-                    prompt_before_replace=True):
+                   instance_type=None, availability_zone=None,
+                   replica_set_index=None, data_volume_size=None,
+                   data_volume_iops=None, mongodb_package_version=None,
+                   member=None, replace=False, node_type='data',
+                   reroute=False, replica_set_template=None, terminate=False,
+                   prompt_before_replace=True):
 
     if member is None:
 
@@ -535,14 +557,16 @@ def replace_server(environment=None, group=None, subnet_id=None,
 
     if not stackdriver_api_key:
 
-        log.critical('The environment variable STACKDRIVER_API_KEY is undefined')
+        log.critical('The environment variable STACKDRIVER_API_KEY '
+                     'is undefined')
         sys.exit(1)
 
     stackdriver_username = os.environ.get('STACKDRIVER_USERNAME', False)
 
     if not stackdriver_username:
 
-        log.critical('The environment variable STACKDRIVER_USERNAME is undefined')
+        log.critical('The environment variable STACKDRIVER_USERNAME '
+                     'is undefined')
         sys.exit(1)
 
     replica_set = ReplicaSet(member)
@@ -551,7 +575,7 @@ def replace_server(environment=None, group=None, subnet_id=None,
 
         log.warn('The replica set\'s primary address is private')
         log.debug('The replica set\'s primary is {primary}'.format(
-                                                primary = replica_set.primary))
+                                                primary=replica_set.primary))
         log.info('To continue, the replica set must be failed over')
 
         log.debug('Connecting to AWS EC2 us-east-1')
@@ -562,17 +586,17 @@ def replace_server(environment=None, group=None, subnet_id=None,
         old_primary = replica_set.primary
 
         private_ip = '.'.join([components[1], components[2], components[3],
-                                    components[4]])
+                               components[4]])
 
         log.debug('Using the private IP address {ip} for the primary'.format(
-                                                            ip = private_ip))
+                                                            ip=private_ip))
 
         log.debug('Filtering AWS instances by private IP address')
         reservations = conn.get_all_instances(
                                     filters={'private-ip-address': private_ip})
 
         instance = reservations[0].instances[0]
-        log.debug('Found instance {id_}'.format(id_ = instance.id))
+        log.debug('Found instance {id_}'.format(id_=instance.id))
 
         public_address = None
 
@@ -597,7 +621,7 @@ def replace_server(environment=None, group=None, subnet_id=None,
             public_address = instance.private_dns_name
 
         log.debug('Proceeding using {address} to contact the primary'.format(
-                                                    address = public_address))
+                                                    address=public_address))
 
         log.debug('Instructing the primary to step down')
         run_mongo_command(public_address, 'rs.stepDown()')
@@ -608,18 +632,20 @@ def replace_server(environment=None, group=None, subnet_id=None,
         log.debug('Determining the new primary')
         replica_set.determine_primary(member)
 
-        log.debug('(Temporarily) removing the old primary from the replica set')
+        log.debug('(Temporarily) removing the old primary from '
+                  'the replica set')
         replica_set.remove_member(old_primary)
 
         log.debug('Sleeping for 120 seconds')
         time.sleep(120)
 
-        log.debug('Adding the old primary back into the replica set with the new address')
+        log.debug('Adding the old primary back into the replica '
+                  'set with the new address')
         replica_set.add_member(public_address)
 
     replica_set_name = replica_set.status['set']
 
-    log.info('Using the replica set name {name}'.format(name = replica_set_name))
+    log.info('Using the replica set name {name}'.format(name=replica_set_name))
 
     if node_type == 'arbiter':
 
@@ -627,16 +653,17 @@ def replace_server(environment=None, group=None, subnet_id=None,
 
         log.info('Launching the new node')
         node = launch_server(environment, group, subnet_id, instance_type,
-                                availability_zone, replica_set_index,
-                                data_volume_size, data_volume_iops,
-                                mongodb_package_version, node_type,
-                                replica_set_template=replica_set_name)
+                             availability_zone, replica_set_index,
+                             data_volume_size, data_volume_iops,
+                             mongodb_package_version, node_type,
+                             replica_set_template=replica_set_name)
 
         log.info('Retreiving the replica set\'s current arbiter')
         arbiter = replica_set.arbiter
 
         if arbiter is not None:
-            log.info('The current arbiter is {arbiter}'.format(arbiter = arbiter))
+            log.info('The current arbiter is {arbiter}'.format(
+                                                        arbiter=arbiter))
             log.info('Removing the old arbiter from the replica set')
             replica_set.remove_member(arbiter, clean=True)
         else:
@@ -644,43 +671,43 @@ def replace_server(environment=None, group=None, subnet_id=None,
 
         log.info('Adding the new arbiter to the replica set')
         replica_set.add_member(node.hostname, arbiter=True,
-                                accessible=node.instance.private_dns_name)
+                               accessible=node.instance.private_dns_name)
 
         if replace:
             log.info('Terminating the previous arbiter')
             stop_decommissioned_node(member, terminate=terminate,
-                                        stackdriver_username=stackdriver_username,
-                                        stackdriver_api_key=stackdriver_api_key)
+                                     stackdriver_username=stackdriver_username,
+                                     stackdriver_api_key=stackdriver_api_key)
 
         return
 
-    log.info('The node being added is a {type_} node'.format(type_ = node_type))
+    log.info('The node being added is a {type_} node'.format(type_=node_type))
 
     log.info('Launching the new node')
     node = launch_server(environment, group, subnet_id, instance_type,
-                            availability_zone, replica_set_index,
-                            data_volume_size, data_volume_iops,
-                            mongodb_package_version, node_type,
-                            replica_set_template=replica_set_name)
+                         availability_zone, replica_set_index,
+                         data_volume_size, data_volume_iops,
+                         mongodb_package_version, node_type,
+                         replica_set_template=replica_set_name)
 
     log.info('Placing the new node in maintenance mode')
     set_maintenance_mode(stackdriver_username, stackdriver_api_key,
-                            node.instance.id)
+                         node.instance.id)
 
     log.info('Adding the new node to the replica set')
 
     if node_type == 'datawarehousing':
         replica_set.add_member(node.hostname, hidden=True,
-                                accessible=node.instance.private_dns_name)
+                               accessible=node.instance.private_dns_name)
     else:
         replica_set.add_member(node.hostname,
-                                accessible=node.instance.private_dns_name)
+                               accessible=node.instance.private_dns_name)
 
     log.info('Retreiving the replica set\'s arbiter')
     arbiter = replica_set.arbiter
 
     if arbiter is not None:
-        log.debug('The arbiter is {arbiter}'.format(arbiter = arbiter))
+        log.debug('The arbiter is {arbiter}'.format(arbiter=arbiter))
         log.info('(Temporarily) removing the arbiter from the replica set')
         replica_set.remove_member(arbiter, clean=True)
     else:
@@ -691,7 +718,7 @@ def replace_server(environment=None, group=None, subnet_id=None,
 
     log.info('Removing the node from maintenance mode')
     unset_maintenance_mode(stackdriver_username, stackdriver_api_key,
-                            node.instance.id)
+                           node.instance.id)
 
     if arbiter is not None:
         log.info('Adding the arbiter back into the replica set')
@@ -718,8 +745,8 @@ def replace_server(environment=None, group=None, subnet_id=None,
 
         log.info('Terminating the previous node')
         stop_decommissioned_node(member, terminate=terminate,
-                                    stackdriver_username=stackdriver_username,
-                                    stackdriver_api_key = stackdriver_api_key)
+                                 stackdriver_username=stackdriver_username,
+                                 stackdriver_api_key=stackdriver_api_key)
 
         if node_type == 'data' and reroute:
             log.info('Redirecting previous DNS entry')
@@ -743,4 +770,3 @@ def replace_server(environment=None, group=None, subnet_id=None,
             else:
                 log.debug('Updating the DNS CNAME record')
                 zone.update_cname(member+'.', node.instance.private_dns_name)
-
