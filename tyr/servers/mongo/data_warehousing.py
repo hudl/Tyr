@@ -1,10 +1,11 @@
 from member import MongoReplicaSetMember
 
+
 class MongoDataWarehousingNode(MongoReplicaSetMember):
 
     NAME_TEMPLATE = '{envcl}-rs{replica_set}-{location}-fulla'
     NAME_SEARCH_PREFIX = '{envcl}-rs{replica_set}-{location}-'
-    NAME_AUTO_INDEX=False
+    NAME_AUTO_INDEX = False
 
     IAM_ROLE_POLICIES = [
         'allow-volume-control',
@@ -15,25 +16,25 @@ class MongoDataWarehousingNode(MongoReplicaSetMember):
     CHEF_RUNLIST = ['role[RoleMongo]']
     CHEF_MONGODB_TYPE = 'data_warehousing'
 
-    def __init__(self, group = None, server_type = None, instance_type = None,
-                    environment = None, ami = None, region = None, role = None,
-                    keypair = None, availability_zone = None,
-                    security_groups = None, block_devices = None,
-                    chef_path = None, subnet_id = None, dns_zones = None,
-                    replica_set = None, data_volume_size = None,
-                    mongodb_version = None):
+    def __init__(self, group=None, server_type=None, instance_type=None,
+                 environment=None, ami=None, region=None, role=None,
+                 keypair=None, availability_zone=None,
+                 security_groups=None, block_devices=None,
+                 chef_path=None, subnet_id=None, dns_zones=None,
+                 replica_set=None, data_volume_size=None,
+                 mongodb_version=None):
 
         super(MongoDataWarehousingNode, self).__init__(group, server_type,
-                                                        instance_type,
-                                                        environment,  ami,
-                                                        region, role, keypair,
-                                                        availability_zone,
-                                                        security_groups,
-                                                        block_devices,
-                                                        chef_path, subnet_id,
-                                                        dns_zones,
-                                                        replica_set,
-                                                        mongodb_version)
+                                                       instance_type,
+                                                       environment,  ami,
+                                                       region, role, keypair,
+                                                       availability_zone,
+                                                       security_groups,
+                                                       block_devices,
+                                                       chef_path, subnet_id,
+                                                       dns_zones,
+                                                       replica_set,
+                                                       mongodb_version)
 
         self.data_volume_size = data_volume_size
 
@@ -49,7 +50,7 @@ class MongoDataWarehousingNode(MongoReplicaSetMember):
             sys.exit(1)
 
         self.log.info('Using data volume size "{size}"'.format(
-                                            size = self.data_volume_size))
+                                            size=self.data_volume_size))
 
     def bake(self):
 

@@ -3,6 +3,7 @@ import json
 import yaml
 import click
 
+
 @click.command()
 @click.argument('source', type=click.Path(exists=True))
 def replace_servers(source):
