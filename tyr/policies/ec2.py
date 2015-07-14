@@ -184,7 +184,8 @@ allow_web_initialization_stage = """{
         "cloudwatch:ListMetrics",
         "cloudwatch:PutMetricAlarm",
         "cloudwatch:PutMetricData",
-        "cloudwatch:SetAlarmState"
+        "cloudwatch:SetAlarmState",
+        "route53:ChangeResourceRecordSets",
       ],
       "Sid": "Stmt1370290134000",
       "Resource": [
