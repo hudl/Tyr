@@ -31,11 +31,5 @@ class ScriptsServer(Server):
                                             chef_path, subnet_id, dns_zones)
 
     def configure(self):
-        if not self.instance_type:
-            if self.environment == 'prod':
-                self.instance_type = 't2.micro'
-            else:
-                self.instance_type = 't2.micro'
+        self.instance_type = 't2.micro'
         super(ScriptsServer, self).configure()
-
-        self.resolve_iam_role()
