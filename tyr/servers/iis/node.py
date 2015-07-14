@@ -17,7 +17,6 @@ class IISNode(Server):
         'allow-set-cloudwatch-alarms',
         'allow-remove-cloudwatch-alarms',
         'allow-deploy-web-updates',
-
     ]
 
     def __init__(self, group=None, server_type=None, instance_type=None,
@@ -48,7 +47,7 @@ class IISNode(Server):
         env_prefix = self.environment[0]
 
         self.security_groups = [
-            "{0}-management".format(env_prefix),
+            "management",
             "{0}-mv-web".format(env_prefix),
             "{0}-{1}-web".format(env_prefix, self.group),
             "{0}-hudl-{1}".format(env_prefix, self.group),
