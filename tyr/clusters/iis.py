@@ -42,6 +42,12 @@ class IISCluster():
         self.region = region
         self.role = role
         self.subnet_ids = subnet_ids
+
+        if subnet_ids:
+            self.node_subnet = self.subnet_ids[0]
+        else:
+            self.node_subnet = None
+
         self.keypair = keypair
         self.security_groups = security_groups
         self.autoscaling_group = autoscaling_group
@@ -81,7 +87,7 @@ class IISCluster():
                        keypair=self.keypair,
                        availability_zone=self.node_zone,
                        security_groups=self.security_groups,
-                       subnet_id=self.subnet_ids[0])
+                       subnet_id=self.node_subnet)
         node.configure()
 
         auto = AutoScaler(launch_configuration=self.launch_configuration,
@@ -91,6 +97,7 @@ class IISCluster():
                           min_size=self.min_size,
                           default_cooldown=self.default_cooldown,
                           availability_zones=self.availability_zones,
+                          subnet_ids=self.subnet_ids,
                           health_check_grace_period=self.health_check_grace_period,
                           node_obj=node)
         auto.autorun()

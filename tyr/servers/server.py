@@ -104,7 +104,7 @@ class Server(object):
         self.environment = self.environment.lower()
 
         self.log.info('Using Environment "{environment}"'.format(
-                        environment=self.environment))
+                      environment=self.environment))
 
         if self.region is None:
             self.log.warn('No region provided')
@@ -115,11 +115,11 @@ class Server(object):
         if not valid(self.region):
 
             error = '"{region}" is not a valid EC2 region'.format(
-                        region=self.region)
+                    region=self.region)
             raise RegionDoesNotExist(error)
 
         self.log.info('Using EC2 Region "{region}"'.format(
-                        region=self.region))
+                      region=self.region))
 
         self.establish_ec2_connection()
         self.establish_iam_connection()
@@ -131,7 +131,7 @@ class Server(object):
 
         try:
             self.ec2.get_all_images(image_ids=[self.ami])
-        except Exception, e:
+        except Exception as e:
             self.log.error(str(e))
             if 'Invalid id' in str(e):
                 error = '"{ami}" is not a valid AMI'.format(ami=self.ami)
@@ -154,17 +154,17 @@ class Server(object):
                 self.keypair = 'bkaiserkey'
 
         valid = lambda k: k in [pair.name for pair in
-                self.ec2.get_all_key_pairs()]
+                                self.ec2.get_all_key_pairs()]
 
         if not valid(self.keypair):
             error = '"{keypair}" is not a valid EC2 keypair'.format(
-                        keypair=self.keypair)
+                    keypair=self.keypair)
             raise InvalidKeyPair(error)
 
         self.log.info('Using EC2 Key Pair "{keypair}"'.format(
-                        keypair=self.keypair))
+                      keypair=self.keypair))
 
-        if self.subnet_id is None: 
+        if self.subnet_id is None:
             if self.availability_zone is None:
                 self.log.warn('No EC2 availability zone provided,'
                               ' using zone c')
@@ -177,10 +177,10 @@ class Server(object):
             self.vpc_id = self.get_subnet_vpc_id(self.subnet_id)
             self.log.info("Using VPC {vpc_id}".format(vpc_id=self.vpc_id))
             self.availability_zone = self.get_subnet_availability_zone(
-                                        self.subnet_id)
+                self.subnet_id)
             self.log.info("Using VPC, using availability zone " +
                           "{availability_zone}".format(
-                           availability_zone=self.availability_zone))
+                              availability_zone=self.availability_zone))
 
         if len(self.availability_zone) == 1:
             self.availability_zone = self.region+self.availability_zone
@@ -193,7 +193,7 @@ class Server(object):
             raise InvalidAvailabilityZone(error)
 
         self.log.info('Using EC2 Availability Zone "{zone}"'.format(
-                        zone=self.availability_zone))
+                      zone=self.availability_zone))
 
         if self.security_groups is None:
             self.log.warn('No EC2 security groups provided')
@@ -202,7 +202,7 @@ class Server(object):
             self.security_groups.append(self.envcl)
 
         self.log.info('Using security groups {groups}'.format(
-                        groups=', '.join(self.security_groups)))
+                      groups=', '.join(self.security_groups)))
 
         self.resolve_security_groups()
 
@@ -216,7 +216,7 @@ class Server(object):
                                   }]
 
         self.log.info('Using EC2 block devices {devices}'.format(
-                        devices=self.block_devices))
+                      devices=self.block_devices))
 
         if self.chef_path is None:
             self.log.warn('No Chef path provided')
@@ -225,7 +225,7 @@ class Server(object):
         self.chef_path = os.path.expanduser(self.chef_path)
 
         self.log.info('Using Chef path "{path}"'.format(
-                                path=self.chef_path))
+                      path=self.chef_path))
 
         if self.ingress_groups_to_add:
             self.ingress_rules()
@@ -287,7 +287,7 @@ class Server(object):
         }
 
         return '{region}{zone}'.format(region=region_map[self.region],
-                                        zone=self.availability_zone[-1:])
+                                       zone=self.availability_zone[-1:])
 
     def next_index(self, supplemental={}):
 
@@ -465,21 +465,22 @@ named {name}""".format(path=d['path'], name=d['name']))
             vpc_id = subnets[0].vpc_id
             return vpc_id
         elif len(subnets) == 0:
-            raise NoSubnetReturned("No subnets returned for: {}".format(subnet_id))
+            raise NoSubnetReturned("No subnets returned for: {}"
+                                   .format(subnet_id))
         else:
             raise Exception("More than 1 subnet returned")
 
     def resolve_security_groups(self):
         filters = {}
         self.log.info("Resolving security groups")
-        
+
         # If the server is being spun up in a vpc, search only that vpc
         exists = lambda s: s in [group.name for group in
                                  self.ec2.get_all_security_groups()
                                  if self.vpc_id == group.vpc_id]
 
         for index, group in enumerate(self.security_groups):
-            
+
             if not exists(group):
                 self.log.info('Security Group {group} does not exist'
                               .format(group=group))
@@ -503,7 +504,7 @@ named {name}""".format(path=d['path'], name=d['name']))
         try:
             profile = self.iam.get_instance_profile(self.role)
             profile_exists = True
-        except Exception, e:
+        except Exception as e:
             if '404 Not Found' in str(e):
                 pass
             else:
@@ -514,16 +515,16 @@ named {name}""".format(path=d['path'], name=d['name']))
             try:
                 instance_profile = self.iam.create_instance_profile(self.role)
                 self.log.info('Created IAM Profile {profile}'.format(
-                                profile=self.role))
+                              profile=self.role))
 
-            except Exception, e:
+            except Exception as e:
                 self.log.error(str(e))
                 raise e
 
         try:
             role = self.iam.get_role(self.role)
             role_exists = True
-        except Exception, e:
+        except Exception as e:
             if '404 Not Found' in str(e):
                 pass
             else:
@@ -538,9 +539,9 @@ named {name}""".format(path=d['path'], name=d['name']))
                 self.iam.add_role_to_instance_profile(self.role, self.role)
                 self.log.info('Attached Role {role}'
                               ' to Profile {profile}'.format(
-                                role=self.role, profile=self.role))
+                                  role=self.role, profile=self.role))
 
-            except Exception, e:
+            except Exception as e:
                 self.log.error(str(e))
                 raise e
 
@@ -559,22 +560,22 @@ named {name}""".format(path=d['path'], name=d['name']))
             if policy not in existing_policies:
 
                 self.log.info('Policy "{policy}" does not exist'.format(
-                                        policy=policy))
+                              policy=policy))
 
                 try:
                     self.iam.put_role_policy(self.role, policy,
                                              policies[policy])
 
                     self.log.info('Added policy "{policy}"'.format(
-                                        policy=policy))
-                except Exception, e:
+                                  policy=policy))
+                except Exception as e:
                     self.log.error(str(e))
                     raise e
 
             else:
 
                 self.log.info('Policy "{policy}" already exists'.format(
-                                        policy=policy))
+                              policy=policy))
 
                 tyr_copy = json.loads(policies[policy])
 
@@ -587,19 +588,19 @@ named {name}""".format(path=d['path'], name=d['name']))
 
                 if tyr_copy == aws_copy:
                     self.log.info('Policy "{policy}" is accurate'.format(
-                                        policy=policy))
+                                  policy=policy))
 
                 else:
 
                     self.log.warn('Policy "{policy}" has been modified'.format(
-                                        policy=policy))
+                                  policy=policy))
 
                     try:
                         self.iam.delete_role_policy(self.role, policy)
 
                         self.log.info('Removed policy "{policy}"'.format(
-                                            policy=policy))
-                    except Exception, e:
+                                      policy=policy))
+                    except Exception as e:
                         self.log.error(str(e))
                         raise e
 
@@ -608,21 +609,21 @@ named {name}""".format(path=d['path'], name=d['name']))
                                                  policies[policy])
 
                         self.log.info('Added policy "{policy}"'.format(
-                                            policy=policy))
-                    except Exception, e:
+                                      policy=policy))
+                    except Exception as e:
                         self.log.error(str(e))
                         raise e
 
     def establish_ec2_connection(self):
 
         self.log.info('Using EC2 Region "{region}"'.format(
-                        region=self.region))
+                      region=self.region))
         self.log.info("Attempting to connect to EC2")
 
         try:
             self.ec2 = boto.ec2.connect_to_region(self.region)
             self.log.info('Established connection to EC2')
-        except Exception, e:
+        except Exception as e:
             self.log.error(str(e))
             raise e
 
@@ -668,7 +669,7 @@ named {name}""".format(path=d['path'], name=d['name']))
 
                 security_groups = [group for group in
                                    self.ec2.get_all_security_groups(
-                                    filters=filters)
+                                   filters=filters)
                                    if self.vpc_id == group.vpc_id]
 
                 if len(security_groups) == 1:
@@ -755,7 +756,7 @@ named {name}""".format(path=d['path'], name=d['name']))
             for record in dns_zone['records']:
 
                 self.log.info('Processing DNS record {record}'.format(
-                                                                record=record))
+                              record=record))
 
                 formatting_params = {
                     'hostname': self.hostname,
@@ -773,10 +774,10 @@ named {name}""".format(path=d['path'], name=d['name']))
                 record['value'] = record['value'].format(**formatting_params)
 
                 self.log.info('Adding DNS record {record}'.format(
-                                                            record=record))
+                              record=record))
 
                 existing_records = zone.find_records(name=record['name'],
-                                                        type=record['type'])
+                                                     type=record['type'])
 
                 if existing_records:
                     self.log.info('The DNS record already exists')
@@ -799,25 +800,24 @@ named {name}""".format(path=d['path'], name=d['name']))
                     self.log.error(str(e))
                     raise e
 
-
     def ingress_rules(self):
         grp_id = self.get_security_group_ids([self.envcl])
-        grps = self.ec2.get_all_security_groups(group_ids=grp_id)
+        main_group = self.ec2.get_all_security_groups(group_ids=grp_id)
         for ing in self.ingress_groups_to_add:
             self.log.info('Adding ingress rules for group: {0}'
                           .format(ing))
             grp_id = self.get_security_group_ids([ing])
             grp_obj = self.ec2.get_all_security_groups(group_ids=grp_id[0])[0]
             for port in self.ports_to_authorize:
-                self.log.info("Adding port {0} to {1}.".format(port, ing))
+                self.log.info("Adding port {0} from {1} to {2}."
+                    .format(port, ing, main_group[0]))
                 try:
-                    grps[0].authorize(ip_protocol='tcp',
+                    main_group[0].authorize(ip_protocol='tcp',
                                       from_port=port,
                                       to_port=port,
                                       src_group=grp_obj)
-                except boto.exception.EC2ResponseError:
-                    self.log.warning("Unable to add ingress rule.  May already exist.")
-
+                except boto.exception.EC2ResponseError as e:
+                    self.log.warning("Unable to add ingress rule. May already exist. ")
 
     @property
     def connection(self):
@@ -850,8 +850,8 @@ named {name}""".format(path=d['path'], name=d['name']))
                 keys = [os.path.expanduser(key) for key in keys]
 
                 connection.connect(self.instance.private_dns_name,
-                                    username='ec2-user',
-                                    key_filename=keys)
+                                   username='ec2-user',
+                                   key_filename=keys)
                 break
             except Exception:
                 self.log.warn('Unable to establish SSH connection')
@@ -893,95 +893,95 @@ named {name}""".format(path=d['path'], name=d['name']))
             return state
 
     def bake(self):
-        if  self.CHEF_RUNLIST:
-        chef_path = os.path.expanduser(self.chef_path)
-        self.chef_api = chef.autoconfigure(chef_path)
+        if self.CHEF_RUNLIST:
+            chef_path = os.path.expanduser(self.chef_path)
+            self.chef_api = chef.autoconfigure(chef_path)
 
-        with self.chef_api:
-            try:
-                node = chef.Node(self.name)
-                node.delete()
+            with self.chef_api:
+                try:
+                    node = chef.Node(self.name)
+                    node.delete()
 
-                self.log.info('Removed previous chef node "{node}"'.format(
-                                node=self.name))
-            except chef.exceptions.ChefServerNotFoundError:
-                pass
-            except Exception as e:
-                self.log.error(str(e))
-                raise e
+                    self.log.info('Removed previous chef node "{node}"'.format(
+                                  node=self.name))
+                except chef.exceptions.ChefServerNotFoundError:
+                    pass
+                except Exception as e:
+                    self.log.error(str(e))
+                    raise e
 
-            try:
-                client = chef.Client(self.name)
-                client = client.delete()
+                try:
+                    client = chef.Client(self.name)
+                    client = client.delete()
 
-                self.log.info('Removed previous chef client "{client}"'.format(
-                                client=self.name))
-            except chef.exceptions.ChefServerNotFoundError:
-                pass
-            except Exception as e:
-                self.log.error(str(e))
-                raise e
+                    self.log.info('Removed previous chef client "{client}"'
+                                  .format(client=self.name))
+                except chef.exceptions.ChefServerNotFoundError:
+                    pass
+                except Exception as e:
+                    self.log.error(str(e))
+                    raise e
 
-            node = chef.Node.create(self.name)
+                node = chef.Node.create(self.name)
 
-            self.chef_node = node
+                self.chef_node = node
 
-            self.log.info('Created new Chef Node "{node}"'.format(
-                                node=self.name))
+                self.log.info('Created new Chef Node "{node}"'.format(
+                              node=self.name))
 
-            self.chef_node.chef_environment = self.environment
+                self.chef_node.chef_environment = self.environment
 
-            self.log.info('Set the Chef Environment to "{env}"'.format(
-                        env=self.chef_node.chef_environment))
+                self.log.info('Set the Chef Environment to "{env}"'.format(
+                              env=self.chef_node.chef_environment))
 
-            self.chef_node.run_list = self.CHEF_RUNLIST
+                self.chef_node.run_list = self.CHEF_RUNLIST
 
-            self.log.info('Set Chef run list to {list}'.format(
-                                            list=self.chef_node.run_list))
+                self.log.info('Set Chef run list to {list}'.format(
+                              list=self.chef_node.run_list))
 
-            self.chef_node.save()
-            self.log.info('Saved the Chef Node configuration')
+                self.chef_node.save()
+                self.log.info('Saved the Chef Node configuration')
 
     def baked(self):
         if self.CHEF_RUNLIST:
-        self.log.info('Determining status of "{node}"'.format(
-                                            node=self.hostname))
+            self.log.info('Determining status of "{node}"'.format(
+                          node=self.hostname))
 
-        self.log.info('Waiting for Chef Client to start')
+            self.log.info('Waiting for Chef Client to start')
 
-        while True:
-            r = self.run('ls -l /var/log')
+            while True:
+                r = self.run('ls -l /var/log')
 
-            if 'chef-client.log' in r['out']:
-                break
+                if 'chef-client.log' in r['out']:
+                    break
+                else:
+                    time.sleep(10)
+
+            self.log.info('Chef Client has started')
+
+            self.log.info('Waiting for Chef Client to finish')
+
+            while True:
+                r = self.run('pgrep chef-client')
+
+                if len(r['out']) > 0:
+                    time.sleep(10)
+                else:
+                    break
+
+            self.log.info('Chef Client has finished')
+
+            self.log.info('Determining Node state')
+
+            r = self.run('tail /var/log/chef-client.log')
+
+            if 'Chef Run complete in' in r['out']:
+                self.log.info('Chef Client was successful')
+                return True
             else:
-                time.sleep(10)
-
-        self.log.info('Chef Client has started')
-
-        self.log.info('Waiting for Chef Client to finish')
-
-        while True:
-            r = self.run('pgrep chef-client')
-
-            if len(r['out']) > 0:
-                time.sleep(10)
-            else:
-                break
-
-        self.log.info('Chef Client has finished')
-
-        self.log.info('Determining Node state')
-
-        r = self.run('tail /var/log/chef-client.log')
-
-        if 'Chef Run complete in' in r['out']:
-            self.log.info('Chef Client was successful')
-            return True
-        else:
-            self.log.info('Chef Client was not successful')
-            self.log.debug(r['out'])
-            return False
+                self.log.info('Chef Client was not successful')
+                self.log.debug(r['out'])
+                return False
 
     def autorun(self):
 
@@ -990,5 +990,5 @@ named {name}""".format(path=d['path'], name=d['name']))
         self.launch(wait=True)
         self.tag()
         if self.add_route53_dns:
-        self.route()
+            self.route()
         self.bake()
