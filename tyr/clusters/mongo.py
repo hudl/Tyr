@@ -2,19 +2,10 @@ import logging
 from tyr.servers.mongo import MongoDataNode, MongoArbiterNode
 import time
 import json
+from tyr.utilities.log_level import get_log_level
 
 
 class MongoCluster(object):
-
-    log = logging.getLogger('Clusters.Mongo')
-    log.setLevel(logging.DEBUG)
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.DEBUG)
-    formatter = logging.Formatter(
-            '%(asctime)s [%(name)s] %(levelname)s: %(message)s',
-            datefmt='%H:%M:%S')
-    ch.setFormatter(formatter)
-    log.addHandler(ch)
 
     def __init__(self, group=None, server_type=None, instance_type=None,
                  environment=None, ami=None, region=None, role=None,
@@ -22,7 +13,7 @@ class MongoCluster(object):
                  replica_set=None, security_groups=None,
                  block_devices=None, data_volume_size=None,
                  data_volume_iops=None, data_nodes=None,
-                 mongodb_version=None):
+                 mongodb_version=None, log_level=None):
 
         self.nodes = []
 
@@ -43,6 +34,28 @@ class MongoCluster(object):
         self.data_nodes = data_nodes
         self.mongodb_version = mongodb_version
         self.dns_zones = dns_zones
+        self.log_level = log_level
+
+    def establish_logger(self):
+
+        try:
+            return self.log
+        except:
+            pass
+
+        log = logging.getLogger('Clusters.Mongo')
+
+        if not log.handlers:
+            log.setLevel(get_log_level(self.log_level))
+            ch = logging.StreamHandler()
+            ch.setLevel(get_log_level(self.log_level))
+            formatter = logging.Formatter(
+                    '%(asctime)s [%(name)s] %(levelname)s: %(message)s',
+                    datefmt='%H:%M:%S')
+            ch.setFormatter(formatter)
+            log.addHandler(ch)
+
+        self.log = log
 
     def provision(self):
 
@@ -137,6 +150,7 @@ class MongoCluster(object):
 
     def autorun(self):
 
+        self.establish_logger()
         self.provision()
         if self.baked():
             self.initiate()

@@ -13,6 +13,7 @@ import urllib
 from boto.vpc import VPCConnection
 from paramiko.client import AutoAddPolicy, SSHClient
 from tyr.policies import policies
+from tyr.utilities.log_level import get_log_level
 
 
 class Server(object):
@@ -29,7 +30,7 @@ class Server(object):
                  environment=None, ami=None, region=None, role=None,
                  keypair=None, availability_zone=None, security_groups=None,
                  block_devices=None, chef_path=None, subnet_id=None,
-                 dns_zones=None):
+                 dns_zones=None, log_level=None):
 
         self.instance_type = instance_type
         self.group = group
@@ -45,6 +46,7 @@ class Server(object):
         self.chef_path = chef_path
         self.dns_zones = dns_zones
         self.subnet_id = subnet_id
+        self.log_level = log_level
         self.vpc_id = None
 
     def establish_logger(self):
@@ -57,9 +59,9 @@ class Server(object):
         log = logging.getLogger(self.__class__.__name__)
 
         if not log.handlers:
-            log.setLevel(logging.DEBUG)
+            log.setLevel(get_log_level(self.log_level))
             ch = logging.StreamHandler()
-            ch.setLevel(logging.DEBUG)
+            ch.setLevel(get_log_level(self.log_level))
             formatter = logging.Formatter(
                     '%(asctime)s [%(name)s] %(levelname)s: %(message)s',
                     datefmt='%H:%M:%S')
