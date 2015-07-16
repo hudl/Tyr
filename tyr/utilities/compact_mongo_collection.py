@@ -16,4 +16,8 @@ def get_client(host, port):
         return client
 
 
+def fetch_databases(host, port):
+
+    client = get_client(host, port)
+    return client.database_names()
 
