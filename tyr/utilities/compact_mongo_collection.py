@@ -21,3 +21,8 @@ def fetch_databases(host, port):
     client = get_client(host, port)
     return client.database_names()
 
+
+def fetch_collections(host, port, database):
+
+    client = get_client(host, port)
+    return client[database].collection_names()
