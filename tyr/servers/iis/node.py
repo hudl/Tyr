@@ -6,7 +6,7 @@ class IISNode(Server):
 
     SERVER_TYPE = 'web'
 
-    AMI_NAME = ''
+    AMI_NAME = None
     # Do not run chef
     CHEF_RUNLIST = []
 
@@ -23,7 +23,7 @@ class IISNode(Server):
                  environment=None, ami=None, region=None, role=None,
                  keypair=None, availability_zone=None, security_groups=None,
                  subnet_id=None, mongos_service="MongosHost",
-                 mongo_servers=None):
+                 mongo_servers=""):
 
         if server_type is None:
             server_type = self.SERVER_TYPE
