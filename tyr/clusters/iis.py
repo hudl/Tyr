@@ -1,19 +1,9 @@
 import logging
 from tyr.servers.iis import IISNode
-from tyr.autoscaler import AutoScaler
-from itertools import cycle
+from tyr.clusters.autoscaling import AutoScaler
 
 
 class IISCluster():
-    log = logging.getLogger('Clusters.IIS')
-    log.setLevel(logging.DEBUG)
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.DEBUG)
-    formatter = logging.Formatter(
-        '%(asctime)s [%(name)s] %(levelname)s: %(message)s',
-        datefmt='%H:%M:%S')
-    ch.setFormatter(formatter)
-    log.addHandler(ch)
 
     def __init__(self, group=None,
                  server_type=None,
@@ -34,6 +24,7 @@ class IISCluster():
                  health_check_grace_period=300,
                  launch_configuration=None):
 
+        self.log = logging.getLogger('Tyr.Clusters.IISCluster')
         self.group = group
         self.server_type = server_type
         self.instance_type = instance_type
@@ -42,11 +33,6 @@ class IISCluster():
         self.region = region
         self.role = role
         self.subnet_ids = subnet_ids
-
-        if subnet_ids:
-            self.node_subnet = self.subnet_ids[0]
-        else:
-            self.node_subnet = None
 
         self.keypair = keypair
         self.security_groups = security_groups
@@ -58,6 +44,11 @@ class IISCluster():
         self.availability_zones = availability_zones
         self.health_check_grace_period = health_check_grace_period
         self.launch_configuration = launch_configuration
+
+        if subnet_ids:
+            self.node_subnet = self.subnet_ids[0]
+        else:
+            self.node_subnet = None
 
         if self.availability_zones:
             self.node_zone = availability_zones[0]
@@ -77,6 +68,7 @@ class IISCluster():
             self.autoscaling_group = templ.format(
                 self.environment[0], self.group)
 
+        # Template to use with an autoscaling group
         node = IISNode(group=self.group,
                        server_type=self.server_type,
                        instance_type=self.instance_type,
@@ -98,7 +90,8 @@ class IISCluster():
                           default_cooldown=self.default_cooldown,
                           availability_zones=self.availability_zones,
                           subnet_ids=self.subnet_ids,
-                          health_check_grace_period=self.health_check_grace_period,
+                          health_check_grace_period=self.
+                          health_check_grace_period,
                           node_obj=node)
         auto.autorun()
 

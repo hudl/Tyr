@@ -60,7 +60,7 @@ class Server(object):
         except:
             pass
 
-        log = logging.getLogger(self.__class__.__name__)
+        log = logging.getLogger('Tyr.{c}'.format(c=self.__class__.__name__))
 
         if not log.handlers:
             log.setLevel(logging.DEBUG)
@@ -801,23 +801,24 @@ named {name}""".format(path=d['path'], name=d['name']))
                     raise e
 
     def ingress_rules(self):
-        grp_id = self.get_security_group_ids([self.envcl])
+        grp_id = self.get_security_group_ids([self.envcl], vpc_id=self.vpc_id)
         main_group = self.ec2.get_all_security_groups(group_ids=grp_id)
         for ing in self.ingress_groups_to_add:
             self.log.info('Adding ingress rules for group: {0}'
                           .format(ing))
-            grp_id = self.get_security_group_ids([ing])
+            grp_id = self.get_security_group_ids([ing], vpc_id=self.vpc_id)
             grp_obj = self.ec2.get_all_security_groups(group_ids=grp_id[0])[0]
             for port in self.ports_to_authorize:
                 self.log.info("Adding port {0} from {1} to {2}."
                     .format(port, ing, main_group[0]))
                 try:
                     main_group[0].authorize(ip_protocol='tcp',
-                                      from_port=port,
-                                      to_port=port,
-                                      src_group=grp_obj)
+                                            from_port=port,
+                                            to_port=port,
+                                            src_group=grp_obj)
                 except boto.exception.EC2ResponseError as e:
-                    self.log.warning("Unable to add ingress rule. May already exist. ")
+                    self.log.warning(
+                        "Unable to add ingress rule. May already exist. ")
 
     @property
     def connection(self):
