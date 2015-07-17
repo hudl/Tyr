@@ -18,7 +18,8 @@ class AutoScaler(object):
                  availability_zones=None,
                  subnet_ids=None,
                  health_check_grace_period=300):
-        self.log = logging.getLogger('Tyr.Clusters.AutoScaler')
+        self.log = logging.getLogger('tyr.clusters.AutoScaler')
+        self.log.setLevel(logging.DEBUG)
 
         self.launch_configuration = launch_configuration
         self.autoscaling_group = autoscaling_group

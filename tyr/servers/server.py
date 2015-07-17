@@ -60,19 +60,19 @@ class Server(object):
         except:
             pass
 
-        log = logging.getLogger('Tyr.{c}'.format(c=self.__class__.__name__))
+        log = logging.getLogger('tyr.{c}'
+                                .format(c=self.__class__.__name__))
+        log.setLevel(logging.DEBUG)
+        self.log = log
 
         if not log.handlers:
-            log.setLevel(logging.DEBUG)
-            ch = logging.StreamHandler()
-            ch.setLevel(logging.DEBUG)
-            formatter = logging.Formatter(
-                    '%(asctime)s [%(name)s] %(levelname)s: %(message)s',
-                    datefmt='%H:%M:%S')
-            ch.setFormatter(formatter)
-            log.addHandler(ch)
-
-        self.log = log
+            # Configure a root logger
+            logging.basicConfig(level=logging.INFO,
+                                format='%(asctime)s [%(name)s]'
+                                ' %(levelname)s: %(message)s',
+                                datefmt='%H:%M:%S')
+            # Reduce boto logging
+            logging.getLogger('boto').setLevel(logging.CRITICAL)
 
     def configure(self):
 
@@ -81,7 +81,7 @@ class Server(object):
             self.instance_type = 't2.medium'
 
         self.log.info('Using Instance Type "{instance_type}"'.format(
-                                            instance_type=self.instance_type))
+                      instance_type=self.instance_type))
 
         if self.group is None:
             self.log.warn('No group provided')

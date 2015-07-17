@@ -24,7 +24,7 @@ class IISCluster():
                  health_check_grace_period=300,
                  launch_configuration=None):
 
-        self.log = logging.getLogger('Tyr.Clusters.IISCluster')
+        self.log = logging.getLogger('tyr.clusters.IISCluster')
         self.group = group
         self.server_type = server_type
         self.instance_type = instance_type
@@ -57,6 +57,7 @@ class IISCluster():
 
     def provision(self):
 
+        self.log.info('Provisioning IISCluster')
         if not self.launch_configuration:
             self.launch_configuration = "{0}-{1}-web".format(
                 self.environment[0], self.group)
@@ -82,6 +83,7 @@ class IISCluster():
                        subnet_id=self.node_subnet)
         node.configure()
 
+        self.log.info('Creating autoscaler')
         auto = AutoScaler(launch_configuration=self.launch_configuration,
                           autoscaling_group=self.autoscaling_group,
                           desired_capacity=self.desired_capacity,
