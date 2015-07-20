@@ -141,7 +141,7 @@ def compact_mongodb_server(host, version):
 
         log.debug('Setting maintenance mode for {host}'.format(host=address))
         set_maintenance_mode(stackdriver_username, stackdriver_api_key,
-                             id_for_host(secondary['name'].split(':')[0]))
+                             id_for_host(address))
 
         log.info('Compacting {host}'.format(host=address))
         compact(address)
@@ -155,7 +155,7 @@ def compact_mongodb_server(host, version):
         log.debug('Unsetting maintenance mode for {host}'.format(
             host=address))
         unset_maintenance_mode(stackdriver_username, stackdriver_api_key,
-                               id_for_host(secondary['name'].split(':')[0]))
+                               id_for_host(address))
 
     log.debug('Retrieving current primary')
     secondaries = [node for node in replica_set.status['members']
@@ -178,7 +178,7 @@ def compact_mongodb_server(host, version):
 
         log.debug('Setting maintenance mode for {host}'.format(host=address))
         set_maintenance_mode(stackdriver_username, stackdriver_api_key,
-                             id_for_host(secondary['name'].split(':')[0]))
+                             id_for_host(address))
 
         log.info('Compacting {host}'.format(host=address))
         compact(address)
@@ -192,4 +192,4 @@ def compact_mongodb_server(host, version):
         log.debug('Unsetting maintenance mode for {host}'.format(
             host=address))
         unset_maintenance_mode(stackdriver_username, stackdriver_api_key,
-                               id_for_host(secondary['name'].split(':')[0]))
+                               id_for_host(address))
