@@ -29,6 +29,10 @@ def fetch_script(host, version):
     run_command(host, command)
 
 
+def compact(host):
+    run_command(host, 'mongo --port 27018 /home/ec2-user/compact.js')
+
+
 def compact_mongodb_server(host, version):
     replica_set = ReplicaSet(host)
 
@@ -40,3 +44,5 @@ def compact_mongodb_server(host, version):
     for secondary in secondaries:
         address = secondary['name'].split(':')[0]
         fetch_script(address, version)
+
+        compact(address)
