@@ -63,6 +63,18 @@ def recovering(replica_set, host):
 
 
 @timeit
+def id_for_host(host):
+    log.debug('Retrieving the instance ID')
+
+    command = 'curl http://169.254.169.254/latest/meta-data/instance-id'
+    instance_id = run_command(host, command)
+
+    log.debug('The instance ID is {id_}'.format(id_=instance_id))
+
+    return instance_id
+
+
+@timeit
 def compact_mongodb_server(host, version):
     replica_set = ReplicaSet(host)
 
