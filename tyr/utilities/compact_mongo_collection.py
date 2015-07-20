@@ -1,5 +1,6 @@
 from tyr.utilities.replace_mongo_server import ReplicaSet
 from tyr.utilities.replace_mongo_server import run_command, run_mongo_command
+import time
 
 
 def validate_sync_to(replica_set):
@@ -33,6 +34,18 @@ def compact(host):
     run_command(host, 'mongo --port 27018 /home/ec2-user/compact.js')
 
 
+def recovering(replica_set, host):
+    nodes = replica_set.status['members']
+    recovering = True
+
+    for node in nodes:
+        if node['name'] == host:
+            if node['stateStr'] != 'RECOVERING':
+                recovering = False
+
+    return recovering
+
+
 def compact_mongodb_server(host, version):
     replica_set = ReplicaSet(host)
 
@@ -46,3 +59,6 @@ def compact_mongodb_server(host, version):
         fetch_script(address, version)
 
         compact(address)
+
+        while recovering(replica_set, secondary['name']):
+            time.sleep(30)
