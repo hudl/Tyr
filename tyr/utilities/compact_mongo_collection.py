@@ -1,8 +1,9 @@
-from tyr.utilities.replace_mongo_server import ReplicaSet
-from tyr.utilities.replace_mongo_server import run_command, run_mongo_command
+from tyr.utilities.replace_mongo_server import (ReplicaSet, run_command,
+                                                run_mongo_command, timeit)
 import time
 
 
+@timeit
 def validate_sync_to(replica_set):
     nodes = [node for node in replica_set.status['members']
              if node['stateStr'] == 'SECONDARY']
@@ -19,6 +20,7 @@ def validate_sync_to(replica_set):
             break
 
 
+@timeit
 def fetch_script(host, version):
     run_command(host, 'rm -rf /home/ec2-user/compact.js')
 
@@ -30,10 +32,12 @@ def fetch_script(host, version):
     run_command(host, command)
 
 
+@timeit
 def compact(host):
     run_command(host, 'mongo --port 27018 /home/ec2-user/compact.js')
 
 
+@timeit
 def recovering(replica_set, host):
     nodes = replica_set.status['members']
     recovering = True
@@ -46,6 +50,7 @@ def recovering(replica_set, host):
     return recovering
 
 
+@timeit
 def compact_mongodb_server(host, version):
     replica_set = ReplicaSet(host)
 
