@@ -22,16 +22,31 @@ if not log.handlers:
 
 @timeit
 def validate_sync_to(replica_set):
+    log.debug('Retrieving list of secondaries')
+
     nodes = [node for node in replica_set.status['members']
              if node['stateStr'] == 'SECONDARY']
+
+    log.debug('Secondaries: {secondaries}'.format(
+        secondaries=[n['address'] for n in nodes]))
+
+    log.debug('Retrieving the primary')
 
     primary = [node for node in replica_set.status['members']
                if node['stateStr'] == 'PRIMARY'][0]
 
+    log.debug('Primary: {primary}'.format(primary=primary['address']))
+
+    log.debug('Checking value of the syncTo property')
+
     for node in nodes:
         if node['syncingTo'] != primary['name']:
+            log.warning('{node} is syncing to {target}'.format(
+                node=node['address'],
+                target=node['syncingTo']))
             command = 'rs.syncFrom(\'{primary}:27018\')'.format(
                 primary=replica_set.primary)
+            log.info('Correcting using rs.syncFrom')
             run_mongo_command(replica_set.primary, command)
 
             break
@@ -39,10 +54,13 @@ def validate_sync_to(replica_set):
 
 @timeit
 def fetch_script(host, version):
+    log.debug('Removing compact.js if it exists')
     run_command(host, 'rm -rf /home/ec2-user/compact.js')
 
     uri = 'https://s3.amazonaws.com/hudl-chef-artifacts/mongodb/compact-{v}.js'
     uri = uri.format(v=version)
+
+    log.debug('Retrieving compact.js from {uri}'.format(uri=uri))
 
     command = 'curl -o /home/ec2-user/compact.js {uri}'.format(uri=uri)
 
@@ -51,11 +69,14 @@ def fetch_script(host, version):
 
 @timeit
 def compact(host):
+    log.debug('Running compact.js on {host}'.format(host=host))
     run_command(host, 'mongo --port 27018 /home/ec2-user/compact.js')
 
 
 @timeit
 def recovering(replica_set, host):
+    log.debug('Confirming {host} is finished recovering'.format(host=host))
+
     nodes = replica_set.status['members']
     recovering = True
 
@@ -63,6 +84,11 @@ def recovering(replica_set, host):
         if node['name'] == host:
             if node['stateStr'] != 'RECOVERING':
                 recovering = False
+
+    if recovering:
+        log.debug('{host} is still recovering'.format(host=host))
+    else:
+        log.debug('{host} has finished recovering'.format(host=host))
 
     return recovering
 
@@ -95,46 +121,75 @@ def compact_mongodb_server(host, version):
                      'is undefined')
         sys.exit(1)
 
+    log.debug('Retrieving replica set for host {host}'.format(host=host))
     replica_set = ReplicaSet(host)
 
+    log.debug('Validating and fixing the syncingTo property on nodes')
     validate_sync_to(replica_set)
 
     secondaries = [node for node in replica_set.status['members']
                    if node['stateStr'] == 'SECONDARY']
 
+    log.info('Compacting {nodes}'.format(
+        nodes=[s['address'] for s in secondaries]))
+
     for secondary in secondaries:
         address = secondary['name'].split(':')[0]
+
+        log.debug('Retrieving compact.js on {host}'.format(host=address))
         fetch_script(address, version)
 
+        log.debug('Setting maintenance mode for {host}'.format(host=address))
         set_maintenance_mode(stackdriver_username, stackdriver_api_key,
                              id_for_host(secondary['name'].split(':')[0]))
 
+        log.info('Compacting {host}'.format(host=address))
         compact(address)
 
+        log.info('Waiting for {host} to recover'.format(host=address))
         while recovering(replica_set, secondary['name']):
+            log.warning('{host} is still recovering.'.format(host=address))
+            log.debug('Sleeping for 30 seconds.')
             time.sleep(30)
 
+        log.debug('Unsetting maintenance mode for {host}'.format(
+            host=address))
         unset_maintenance_mode(stackdriver_username, stackdriver_api_key,
                                id_for_host(secondary['name'].split(':')[0]))
 
+    log.debug('Retrieving current primary')
     secondaries = [node for node in replica_set.status['members']
                    if node['stateStr'] == 'PRIMARY']
 
+    log.debug('Preparing to compact primary {host}'.format(
+        host=secondaries[0]['address']))
+
+    log.debug('Instructing the replica set to fail over')
     replica_set.failover()
 
+    log.debug('Validating and fixing the syncingTo property on nodes')
     validate_sync_to(replica_set)
 
     for secondary in secondaries:
         address = secondary['name'].split(':')[0]
+
+        log.debug('Retrieving compact.js on {host}'.format(host=address))
         fetch_script(address, version)
 
+        log.debug('Setting maintenance mode for {host}'.format(host=address))
         set_maintenance_mode(stackdriver_username, stackdriver_api_key,
                              id_for_host(secondary['name'].split(':')[0]))
 
+        log.info('Compacting {host}'.format(host=address))
         compact(address)
 
+        log.info('Waiting for {host} to recover'.format(host=address))
         while recovering(replica_set, secondary['name']):
+            log.warning('{host} is still recovering.'.format(host=address))
+            log.debug('Sleeping for 30 seconds.')
             time.sleep(30)
 
+        log.debug('Unsetting maintenance mode for {host}'.format(
+            host=address))
         unset_maintenance_mode(stackdriver_username, stackdriver_api_key,
                                id_for_host(secondary['name'].split(':')[0]))
