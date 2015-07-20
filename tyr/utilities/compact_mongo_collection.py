@@ -62,3 +62,19 @@ def compact_mongodb_server(host, version):
 
         while recovering(replica_set, secondary['name']):
             time.sleep(30)
+
+    secondaries = [node for node in replica_set.status['members']
+                   if node['stateStr'] == 'PRIMARY']
+
+    replica_set.failover()
+
+    validate_sync_to(replica_set, version)
+
+    for secondary in secondaries:
+        address = secondary['name'].split(':')[0]
+        fetch_script(address, version)
+
+        compact(address)
+
+        while recovering(replica_set, secondary['name']):
+            time.sleep(30)
