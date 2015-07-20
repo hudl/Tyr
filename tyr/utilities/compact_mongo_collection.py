@@ -1,6 +1,18 @@
 from tyr.utilities.replace_mongo_server import (ReplicaSet, run_command,
                                                 run_mongo_command, timeit)
 import time
+import logging
+
+log = logging.getLogger('Tyr.Utilities.ReplaceMongoServer')
+if not log.handlers:
+    log.setLevel(logging.DEBUG)
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(
+        '%(asctime)s [%(name)s] %(levelname)s: %(message)s',
+        datefmt='%H:%M:%S')
+    ch.setFormatter(formatter)
+    log.addHandler(ch)
 
 
 @timeit
