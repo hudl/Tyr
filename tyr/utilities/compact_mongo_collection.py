@@ -1,5 +1,5 @@
 from tyr.utilities.replace_mongo_server import ReplicaSet
-from tyr.utilities.replace_mongo_server import run_mongo_command
+from tyr.utilities.replace_mongo_server import run_command, run_mongo_command
 
 
 def validate_sync_to(replica_set):
@@ -18,8 +18,25 @@ def validate_sync_to(replica_set):
             break
 
 
-def compact_mongodb_server(host):
+def fetch_script(host, version):
+    run_command(host, 'rm -rf /home/ec2-user/compact.js')
 
+    uri = 'https://s3.amazonaws.com/hudl-chef-artifacts/mongodb/compact-{v}.js'
+    uri = uri.format(v=version)
+
+    command = 'curl -o /home/ec2-user/compact.js {uri}'.format(uri=uri)
+
+    run_command(host, command)
+
+
+def compact_mongodb_server(host, version):
     replica_set = ReplicaSet(host)
 
-    validate_sync_to(replica_set)
+    validate_sync_to(replica_set, version)
+
+    secondaries = [node for node in replica_set.status['members']
+                   if node['stateStr'] == 'SECONDARY']
+
+    for secondary in secondaries:
+        address = secondary['name'].split(':')[0]
+        fetch_script(address, version)
