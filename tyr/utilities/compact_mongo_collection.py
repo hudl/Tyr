@@ -1,7 +1,12 @@
 from tyr.utilities.replace_mongo_server import (ReplicaSet, run_command,
-                                                run_mongo_command, timeit)
+                                                run_mongo_command, timeit,
+                                                set_maintenance_mode,
+                                                unset_maintenance_mode)
 import time
 import logging
+import os
+import sys
+
 
 log = logging.getLogger('Tyr.Utilities.ReplaceMongoServer')
 if not log.handlers:
@@ -25,7 +30,7 @@ def validate_sync_to(replica_set):
 
     for node in nodes:
         if node['syncingTo'] != primary['name']:
-            command = 'rs.syncFrom(\'{primary}\')'.format(
+            command = 'rs.syncFrom(\'{primary}:27018\')'.format(
                 primary=replica_set.primary)
             run_mongo_command(replica_set.primary, command)
 
@@ -76,6 +81,20 @@ def id_for_host(host):
 
 @timeit
 def compact_mongodb_server(host, version):
+    stackdriver_api_key = os.environ.get('STACKDRIVER_API_KEY', False)
+
+    if not stackdriver_api_key:
+        log.critical('The environment variable STACKDRIVER_API_KEY '
+                     'is undefined')
+        sys.exit(1)
+
+    stackdriver_username = os.environ.get('STACKDRIVER_USERNAME', False)
+
+    if not stackdriver_username:
+        log.critical('The environment variable STACKDRIVER_USERNAME '
+                     'is undefined')
+        sys.exit(1)
+
     replica_set = ReplicaSet(host)
 
     validate_sync_to(replica_set)
@@ -87,10 +106,16 @@ def compact_mongodb_server(host, version):
         address = secondary['name'].split(':')[0]
         fetch_script(address, version)
 
+        set_maintenance_mode(stackdriver_username, stackdriver_api_key,
+                             id_for_host(secondary['name'].split(':')[0]))
+
         compact(address)
 
         while recovering(replica_set, secondary['name']):
             time.sleep(30)
+
+        unset_maintenance_mode(stackdriver_username, stackdriver_api_key,
+                               id_for_host(secondary['name'].split(':')[0]))
 
     secondaries = [node for node in replica_set.status['members']
                    if node['stateStr'] == 'PRIMARY']
@@ -103,7 +128,13 @@ def compact_mongodb_server(host, version):
         address = secondary['name'].split(':')[0]
         fetch_script(address, version)
 
+        set_maintenance_mode(stackdriver_username, stackdriver_api_key,
+                             id_for_host(secondary['name'].split(':')[0]))
+
         compact(address)
 
         while recovering(replica_set, secondary['name']):
             time.sleep(30)
+
+        unset_maintenance_mode(stackdriver_username, stackdriver_api_key,
+                               id_for_host(secondary['name'].split(':')[0]))
