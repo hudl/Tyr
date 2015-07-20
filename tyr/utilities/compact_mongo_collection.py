@@ -49,7 +49,7 @@ def recovering(replica_set, host):
 def compact_mongodb_server(host, version):
     replica_set = ReplicaSet(host)
 
-    validate_sync_to(replica_set, version)
+    validate_sync_to(replica_set)
 
     secondaries = [node for node in replica_set.status['members']
                    if node['stateStr'] == 'SECONDARY']
@@ -68,7 +68,7 @@ def compact_mongodb_server(host, version):
 
     replica_set.failover()
 
-    validate_sync_to(replica_set, version)
+    validate_sync_to(replica_set)
 
     for secondary in secondaries:
         address = secondary['name'].split(':')[0]
