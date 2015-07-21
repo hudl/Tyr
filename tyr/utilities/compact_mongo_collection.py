@@ -142,7 +142,7 @@ def id_for_host(host):
 
 
 @timeit
-def compact_mongodb_server(host, version):
+def compact_mongodb_server(host, version, prompt_before_failover=True):
     stackdriver_api_key = os.environ.get('STACKDRIVER_API_KEY', False)
 
     if not stackdriver_api_key:
@@ -203,6 +203,12 @@ def compact_mongodb_server(host, version):
 
     log.debug('Preparing to compact primary {host}'.format(
         host=secondaries[0]['name']))
+
+    log.info('Preparing to fail over replica set')
+
+    if prompt_before_failover:
+        print '\a'
+        _ = raw_input('Press return to continue')
 
     log.debug('Instructing the replica set to fail over')
     replica_set.failover()
