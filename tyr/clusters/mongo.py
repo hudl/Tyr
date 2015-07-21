@@ -23,7 +23,7 @@ class MongoCluster(object):
                  replica_set=None, security_groups=None,
                  block_devices=None, data_volume_size=None,
                  data_volume_iops=None, data_nodes=None,
-                 mongodb_version=None, vpc_id=None):
+                 mongodb_version=None, subnet_ids=None):
 
         self.nodes = []
 
@@ -44,7 +44,8 @@ class MongoCluster(object):
         self.data_nodes = data_nodes
         self.mongodb_version = mongodb_version
         self.dns_zones = dns_zones
-        self.vpc_id = vpc_id
+        if subnet_ids:
+            self.subnet_ids= [subnet_id.strip() for subnet_id in subnet_ids.split(',')]
 
     def provision(self):
 
@@ -56,25 +57,13 @@ class MongoCluster(object):
 
             zones += zones
 
-        subnets = []
+        if len(self.subnet_ids) < 1:
 
-        if self.vpc_id:
-            
-            self.log.info("VPC ID provided. Checking for subnets.")
+            self.subnet_ids = [None]
 
-            conn = boto.connect_vpc()
-            all_subnets = conn.get_all_subnets()
+        while len(self.subnet_ids) < (self.data_nodes+1):
 
-            subnets = [subnet.id for subnet in all_subnets
-                        if subnet.vpc_id == self.vpc_id]
-
-        if not subnets:
-            
-            subnets = [None]
-
-        while len(subnets) < (self.data_nodes+1):
-
-            subnets += subnets
+            self.subnet_ids += self.subnet_ids
 
         self.log.info('Provisioning MongoDB Data Nodes')
 
@@ -97,7 +86,7 @@ class MongoCluster(object):
                                  data_volume_size=self.data_volume_size,
                                  data_volume_iops=self.data_volume_iops,
                                  mongodb_version=self.mongodb_version,
-                                 subnet_id=subnets[i])
+                                 subnet_id=self.subnet_ids[i])
 
             node.autorun()
 
@@ -120,7 +109,7 @@ class MongoCluster(object):
                                     block_devices=self.block_devices,
                                     availability_zone=zones[i+1],
                                     mongodb_version=self.mongodb_version,
-                                    subnet_id=subnets[i+1])
+                                    subnet_id=self.subnet_ids[i+1])
 
             node.autorun()
 
