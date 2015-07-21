@@ -46,13 +46,42 @@ def validate_sync_to(replica_set):
 
     for node in nodes:
         if node['syncingTo'] != primary['name']:
-            log.warning('{node} is syncing to {target}'.format(
-                node=node['name'],
-                target=node['syncingTo']))
-            command = 'rs.syncFrom(\'{primary}:27018\')'.format(
-                primary=replica_set.primary)
-            log.info('Correcting using rs.syncFrom')
-            run_mongo_command(node['name'].split(':')[0], command)
+            return False
+
+    return True
+
+
+@timeit
+def enforce_sync_to(replica_set):
+    log.debug('Replica set status')
+    for line in pprint.pformat(replica_set.status).split('\n'):
+        log.debug(line)
+
+    log.debug('Retrieving list of secondaries')
+
+    nodes = [node for node in replica_set.status['members']
+             if node['stateStr'] == 'SECONDARY']
+
+    log.debug('Secondaries: {secondaries}'.format(
+        secondaries=[n['name'] for n in nodes]))
+
+    log.debug('Retrieving the primary')
+
+    primary = [node for node in replica_set.status['members']
+               if node['stateStr'] == 'PRIMARY'][0]
+
+    log.debug('Primary: {primary}'.format(primary=primary['name']))
+
+    log.debug('Checking value of the syncTo property')
+
+    for node in nodes:
+        log.warning('{node} is syncing to {target}'.format(
+            node=node['name'],
+            target=node['syncingTo']))
+        command = 'rs.syncFrom(\'{primary}:27018\')'.format(
+            primary=replica_set.primary)
+        log.info('Correcting using rs.syncFrom')
+        run_mongo_command(node['name'].split(':')[0], command)
 
     log.debug('Replica set status')
     for line in pprint.pformat(replica_set.status).split('\n'):
@@ -131,8 +160,12 @@ def compact_mongodb_server(host, version):
     log.debug('Retrieving replica set for host {host}'.format(host=host))
     replica_set = ReplicaSet(host)
 
-    log.debug('Validating and fixing the syncingTo property on nodes')
-    validate_sync_to(replica_set)
+    log.debug('Validating the syncingTo property on nodes')
+    while not validate_sync_to(replica_set):
+        log.debug('Enforcing the syncingTo property on nodes')
+        enforce_sync_to(replica_set)
+
+    log.debug('Validation of syncingTo property on nodes complete')
 
     secondaries = [node for node in replica_set.status['members']
                    if node['stateStr'] == 'SECONDARY']
@@ -174,8 +207,12 @@ def compact_mongodb_server(host, version):
     log.debug('Instructing the replica set to fail over')
     replica_set.failover()
 
-    log.debug('Validating and fixing the syncingTo property on nodes')
-    validate_sync_to(replica_set)
+    log.debug('Validating the syncingTo property on nodes')
+    while not validate_sync_to(replica_set):
+        log.debug('Enforcing the syncingTo property on nodes')
+        enforce_sync_to(replica_set)
+
+    log.debug('Validation of syncingTo property on nodes complete')
 
     for secondary in secondaries:
         address = secondary['name'].split(':')[0]
