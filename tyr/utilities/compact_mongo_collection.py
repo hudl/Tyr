@@ -6,6 +6,7 @@ import time
 import logging
 import os
 import sys
+import pprint
 
 
 log = logging.getLogger('Tyr.Utilities.ReplaceMongoServer')
@@ -22,34 +23,40 @@ if not log.handlers:
 
 @timeit
 def validate_sync_to(replica_set):
+    log.debug('Replica set status')
+    for line in pprint.pformat(replica_set.status).split('\n'):
+        log.debug(line)
+
     log.debug('Retrieving list of secondaries')
 
     nodes = [node for node in replica_set.status['members']
              if node['stateStr'] == 'SECONDARY']
 
     log.debug('Secondaries: {secondaries}'.format(
-        secondaries=[n['address'] for n in nodes]))
+        secondaries=[n['name'] for n in nodes]))
 
     log.debug('Retrieving the primary')
 
     primary = [node for node in replica_set.status['members']
                if node['stateStr'] == 'PRIMARY'][0]
 
-    log.debug('Primary: {primary}'.format(primary=primary['address']))
+    log.debug('Primary: {primary}'.format(primary=primary['name']))
 
     log.debug('Checking value of the syncTo property')
 
     for node in nodes:
         if node['syncingTo'] != primary['name']:
             log.warning('{node} is syncing to {target}'.format(
-                node=node['address'],
+                node=node['name'],
                 target=node['syncingTo']))
             command = 'rs.syncFrom(\'{primary}:27018\')'.format(
                 primary=replica_set.primary)
             log.info('Correcting using rs.syncFrom')
-            run_mongo_command(replica_set.primary, command)
+            run_mongo_command(node['name'].split(':')[0], command)
 
-            break
+    log.debug('Replica set status')
+    for line in pprint.pformat(replica_set.status).split('\n'):
+        log.debug(line)
 
 
 @timeit
@@ -131,7 +138,7 @@ def compact_mongodb_server(host, version):
                    if node['stateStr'] == 'SECONDARY']
 
     log.info('Compacting {nodes}'.format(
-        nodes=[s['address'] for s in secondaries]))
+        nodes=[s['name'] for s in secondaries]))
 
     for secondary in secondaries:
         address = secondary['name'].split(':')[0]
@@ -162,7 +169,7 @@ def compact_mongodb_server(host, version):
                    if node['stateStr'] == 'PRIMARY']
 
     log.debug('Preparing to compact primary {host}'.format(
-        host=secondaries[0]['address']))
+        host=secondaries[0]['name']))
 
     log.debug('Instructing the replica set to fail over')
     replica_set.failover()
