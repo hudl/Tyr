@@ -72,7 +72,7 @@ def enforce_sync_to(replica_set):
 
     log.debug('Primary: {primary}'.format(primary=primary['name']))
 
-    log.debug('Checking value of the syncTo property')
+    log.debug('Enforcing value of the syncTo property')
 
     for node in nodes:
         log.warning('{node} is syncing to {target}'.format(
