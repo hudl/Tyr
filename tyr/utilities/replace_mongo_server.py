@@ -56,15 +56,15 @@ class ReplicaSet(object):
         try:
             primary = response['primary'].split(':')[0]
         except TypeError as e:
-            log.critical(e)
+            log.critical(str(e))
             log.critical('The response from MongoDB was not a JSON object.')
             sys.exit(1)
         except KeyError as e:
-            log.critical(e)
+            log.critical(str(e))
             log.critical('The primary property was not defined.')
             sys.exit(1)
         except AttributeError as e:
-            log.critical(e)
+            log.critical(str(e))
             log.critical('The primary property is not a string.')
             sys.exit(1)
 
