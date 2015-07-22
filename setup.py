@@ -18,6 +18,7 @@ setup(
         'requests'
     ],
     scripts=[
-        'scripts/replace-mongodb-servers'
+        'scripts/replace-mongodb-servers',
+        'scripts/compact-mongodb-servers'
     ]
 )
