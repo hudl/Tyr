@@ -9,7 +9,7 @@ import sys
 import pprint
 
 
-log = logging.getLogger('Tyr.Utilities.ReplaceMongoServer')
+log = logging.getLogger('Tyr.Utilities.CompactMongoCollection')
 if not log.handlers:
     log.setLevel(logging.DEBUG)
     ch = logging.StreamHandler()
