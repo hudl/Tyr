@@ -54,7 +54,7 @@ class MongoCluster(object):
 
             zones += zones
 
-        if len(self.subnet_ids) < 1:
+        if len(self.subnet_ids) == 0:
 
             self.subnet_ids = [None]
 
