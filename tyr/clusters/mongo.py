@@ -2,8 +2,6 @@ import logging
 from tyr.servers.mongo import MongoDataNode, MongoArbiterNode
 import time
 import json
-import boto
-
 
 class MongoCluster(object):
 
@@ -23,7 +21,7 @@ class MongoCluster(object):
                  replica_set=None, security_groups=None,
                  block_devices=None, data_volume_size=None,
                  data_volume_iops=None, data_nodes=None,
-                 mongodb_version=None, subnet_ids=None):
+                 mongodb_version=None, subnet_ids=[None]):
 
         self.nodes = []
 
@@ -44,8 +42,7 @@ class MongoCluster(object):
         self.data_nodes = data_nodes
         self.mongodb_version = mongodb_version
         self.dns_zones = dns_zones
-        if subnet_ids:
-            self.subnet_ids= [subnet_id.strip() for subnet_id in subnet_ids.split(',')]
+        self.subnet_ids = subnet_ids
 
     def provision(self):
 
