@@ -81,6 +81,7 @@ class PostfixMaster(Server):
 
         return elastic_ip
 
+    # Assigns an EIP to an instance
     def assign_eip(self):
         ec2_conn    = self.ec2
         instance_id = self.instance.id
@@ -100,7 +101,7 @@ class PostfixMaster(Server):
                                                 network_interface_id=None,
                                                 private_ip_address=None,
                                                 allow_reassociation=True,
-                                                dry_run=True)
+                                                dry_run=False)
             if result:
                 self.log.info('Successfully assigned EIP: {elastic_ip} '
                               'to {mail_name}'.format(elastic_ip=elastic_ip,
@@ -111,6 +112,8 @@ class PostfixMaster(Server):
         except Exception,e:
             self.log.error(str(e))
 
+    # Params: Take the boto.ec2.connection object
+    # Return: the allocation ID that's associated with an EIP (must be in VPC)
     def get_alloc_id(self,ec2_conn):
         try:
             eip_addresses = ec2_conn.get_all_addresses()
@@ -130,6 +133,7 @@ class PostfixMaster(Server):
     def bake(self):
         super(PostfixMaster, self).bake()
 
+        # Add the myhostname attribute for the main.cf postfix config
         with self.chef_api:
             self.chef_node.attributes.set_dotted('postfix.main.myhostname',
                                                  self.mail_name)
@@ -142,5 +146,6 @@ class PostfixMaster(Server):
     def autorun(self):
         super(PostfixMaster, self).autorun()
 
+        # Must assign the EIP after the instance is up and configured.
         if self.baked():
            self.assign_eip()
