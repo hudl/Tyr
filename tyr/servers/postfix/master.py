@@ -10,8 +10,6 @@ class PostfixMaster(Server):
     CHEF_RUNLIST = ['role[RolePostfix]']
     ELASTIC_IP   = ''
 
-    #IAM_ROLE_POLICIES = [ ]
-
     def __init__(self, group=None, server_type=None, instance_type=None,
                  environment=None, ami=None, region=None, role=None,
                  keypair=None, availability_zone=None,
