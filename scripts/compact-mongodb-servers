@@ -1,0 +1,29 @@
+#!/usr/bin/env python
+
+from tyr.utilities.compact_mongo_collection import compact_mongodb_server
+import json
+import yaml
+import click
+
+
+@click.command()
+@click.argument('source', type=click.Path(exists=True))
+def compact_servers(source):
+
+    file_extension = source.split('.')[-1]
+
+    servers = None
+    data = open(source, 'r')
+
+    if file_extension == 'yaml' or file_extension == 'yml':
+        servers = yaml.load(data)
+
+    elif file_extension == 'json':
+        servers = json.load(data)
+
+    for server in servers:
+        compact_mongodb_server(**server)
+
+if __name__ == '__main__':
+
+    compact_servers()
