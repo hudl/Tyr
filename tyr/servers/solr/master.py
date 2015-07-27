@@ -29,5 +29,8 @@ class SolrMasterNode(Server):
             self.chef_node.attributes.set_dotted('solr.is_master', True)
             self.log.info('Set solr.is_master to True')
 
+            self.chef_node.attributes.set_dotted('solr.group', self.group)
+            self.log.info('Set solr.group to {group}'.format(group=self.group))
+
             self.chef_node.save()
             self.log.info('Saved the Chef Node configuration')
