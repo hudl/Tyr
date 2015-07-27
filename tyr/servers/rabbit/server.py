@@ -1,4 +1,5 @@
 from tyr.servers.server import Server
+import sys
 
 
 class RabbitMQServer(Server):
@@ -29,6 +30,18 @@ class RabbitMQServer(Server):
                                              keypair, availability_zone,
                                              security_groups, block_devices,
                                              chef_path, subnet_id, dns_zones)
+
+    def configure(self):
+        """Make sure the IOPS to Size ratio is not greater than 30 for an EBS"""
+
+        super(RabbitMQServer, self).configure()
+
+        iops_size_ratio = self.vol_iops/self.vol_size
+        self.log.info('The IOPS to Size ratio is "{ratio}"'.format(ratio=iops_size_ratio))
+        if iops_size_ratio > 30:
+            self.log.critical('The IOPS to Size ratio is greater than 30')
+            sys.exit(1)
+
 
     def bake(self):
         """Add IOPS and Volume Size attributes based on dynamic values from tyr"""
