@@ -17,12 +17,36 @@ class RabbitMQServer(Server):
                     environment=None, ami=None, region=None, role=None,
                     keypair=None, availability_zone=None, security_groups=None,
                     block_devices=None, chef_path=None, subnet_id=None,
-                    dns_zones=None):
+                    dns_zones=None,vol_iops=500,vol_size=100):
 
         if server_type is None: server_type = self.SERVER_TYPE
+
+        self.vol_iops = vol_iops
+        self.vol_size = vol_size
 
         super(RabbitMQServer, self).__init__(group, server_type, instance_type,
                                              environment, ami, region, role,
                                              keypair, availability_zone,
                                              security_groups, block_devices,
                                              chef_path, subnet_id, dns_zones)
+
+    def bake(self):
+        """Add IOPS and Volume Size attributes based on dynamic values from tyr"""
+
+        super(RabbitMQServer, self).bake()
+
+        with self.chef_api:
+
+            self.chef_node.attributes.set_dotted('rabbitmq.volumes.iops',
+                                                 self.vol_iops)
+            self.log.info('Set the rabbitmq volume IOPS to '
+                          '{vol_iops}'.format(vol_iops=self.vol_iops))
+
+            self.chef_node.attributes.set_dotted('rabbitmq.volumes.size',
+                                                 self.vol_size)
+            self.log.info('Set the rabbitmq volume size to '
+                          '{vol_size}'.format(vol_size=self.vol_size))
+
+            self.chef_node.save()
+            self.log.info('Saved the Chef node configuration')
+
