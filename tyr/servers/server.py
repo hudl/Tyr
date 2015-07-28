@@ -3,7 +3,7 @@ import boto.ec2
 import boto.route53
 import boto.ec2.networkinterface
 import logging
-import os.path
+import os
 import chef
 import time
 from boto.ec2.networkinterface import NetworkInterfaceSpecification
@@ -13,6 +13,7 @@ import urllib
 from boto.vpc import VPCConnection
 from paramiko.client import AutoAddPolicy, SSHClient
 from tyr.policies import policies
+from tyr.utilities.replace_mongo_server import stop_decommissioned_node
 
 
 class Server(object):
@@ -24,6 +25,8 @@ class Server(object):
     IAM_ROLE_POLICIES = []
 
     CHEF_RUNLIST = ['role[RoleBase]']
+    STACKDRIVER_API_KEY  = os.environ.get('STACKDRIVER_API_KEY', False)
+    STACKDRIVER_USERNAME = os.environ.get('STACKDRIVER_USERNAME', False)
 
     def __init__(self, group=None, server_type=None, instance_type=None,
                  environment=None, ami=None, region=None, role=None,
@@ -862,6 +865,16 @@ named {name}""".format(path=d['path'], name=d['name']))
                 pass
 
             return state
+
+    def terminate(self):
+        """
+        Terminate a node from AWS
+        """
+
+        address = self.instance.private_ip_address
+        stop_decommissioned_node(address=address,terminate=True,
+                                 stackdriver_username=self.STACKDRIVER_USERNAME,
+                                 stackdriver_api_key=self.STACKDRIVER_API_KEY)
 
     def bake(self):
 

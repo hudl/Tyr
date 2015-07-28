@@ -10,8 +10,6 @@ class PostfixMaster(Server):
     SERVER_TYPE          = 'postfix'
     CHEF_RUNLIST         = ['role[RolePostfix]']
     ELASTIC_IP           = ''
-    STACKDRIVER_API_KEY  = os.environ.get('STACKDRIVER_API_KEY', False)
-    STACKDRIVER_USERNAME = os.environ.get('STACKDRIVER_USERNAME', False)
 
     def __init__(self, group=None, server_type=None, instance_type=None,
                  environment=None, ami=None, region=None, role=None,
@@ -40,56 +38,61 @@ class PostfixMaster(Server):
         except Exception,e:
             self.log.critical(str(e))
             raise e
-            sys.exit(1)
 
     def configure(self):
         super(PostfixMaster, self).configure()
 
         if self.mail_name:
-            route53_conn = self.route53
-            elastic_ip   = self.check_mail_server(route53_conn)
+            elastic_ip   = self.check_mail_server()
             self.ELASTIC_IP = elastic_ip
             self.log.info('Found mail server!')
         else:
             self.log.critical('Must specify a mail server configured in route53!')
-            sys.exit(1)
+            raise Exception('Must specify a mail server configured in route53!')
 
-    def check_mail_server(self,route53_conn):
-        """Verify the mail server exists in DNS ans has an EIP
+    def check_mail_server(self):
+        """
+        Verify the mail server exists in DNS ans has an EIP
 
-        :param route53_conn: The route53 boto object.
-        :type route53_conn: obj.
         :returns: str -- A string with the elastic IP.
         """
+
         hosted_zone    = 'hudl.com'
-        zone_obj       = route53_conn.get_zone(hosted_zone)
+        zone_obj       = self.route53.get_zone(hosted_zone)
         try:
             a_record = zone_obj.get_a(self.mail_name)
             if a_record:
-                a_record_str    = str(a_record)
-                a_record_format = a_record_str.translate(None, '<>')
-                elastic_ip      = a_record_format.split(':')[3]
-                self.log.info('Using Elastic IP {elastic_ip}...'.format(
-                                                    elastic_ip=elastic_ip))
+                a_record_str = str(a_record)
+                pattern = '^.+{mail_name}.+A:(([0-9]{{1,3}}\.){{3}}[0-9]{{1,3}}).*?$'.format(
+                            mail_name=self.mail_name)
+                m = re.match(pattern,a_record_str)
+
+                if m:
+                    elastic_ip = m.group(1)
+                    self.log.info('Using Elastic IP {elastic_ip}...'.format(
+                                                        elastic_ip=elastic_ip))
+                else:
+                    raise Exception('Unable to retrieve EIP from record!')
             else:
                 raise Exception('Unable to find mail server {mail_name} in '
                                 'route53!'.format(mail_name=self.mail_name))
         except Exception, e:
             self.log.critical(str(e))
             raise e
-            sys.exit(1)
 
         return elastic_ip
 
     def assign_eip(self):
-        """Assigns an EIP to an instance"""
-        ec2_conn    = self.ec2
+        """
+        Assigns an EIP to an instance
+        """
+
         instance_id = self.instance.id
         address     = self.instance.ip_address
 
         try:
-            alloc_id = self.get_alloc_id(ec2_conn)
-            result   = ec2_conn.associate_address(instance_id=instance_id,
+            alloc_id = self.get_alloc_id()
+            result   = self.ec2.associate_address(instance_id=instance_id,
                                                   public_ip=None,
                                                   allocation_id=alloc_id,
                                                   network_interface_id=None,
@@ -105,22 +108,20 @@ class PostfixMaster(Server):
                                 'Exiting...'.format(eip=elastic_ip))
         except Exception,e:
             self.log.critical(str(e))
-            self.terminate_node(address)
+            self.terminate()
             raise e
-            sys.exit(1)
 
-    def get_alloc_id(self,ec2_conn):
-        """Determine the allocation ID for an EIP.
+    def get_alloc_id(self):
+        """
+        Determine the allocation ID for an EIP.
 
-        :param ec2_conn: The boto ec2 connection object.
-        :type ec2_conn: obj.
         :returns: str -- the allocation ID
         """
 
         address  = self.instance.ip_address
         alloc_id = None
         try:
-            eip_addresses = ec2_conn.get_all_addresses()
+            eip_addresses = self.ec2.get_all_addresses()
 
             for address_obj in eip_addresses:
                 address_str = str(address_obj)
@@ -138,19 +139,15 @@ class PostfixMaster(Server):
 
         except Exception,e:
             self.log.critical(str(e))
-            self.terminate_node(address)
+            self.terminate()
             raise e
-            sys.exit(1)
 
         return alloc_id
 
-    def terminate_node(self,address):
-        stop_decommissioned_node(address=address,terminate=True,
-                                 stackdriver_username=self.STACKDRIVER_USERNAME,
-                                 stackdriver_api_key=self.STACKDRIVER_API_KEY)
-
     def bake(self):
-        """ Add the myhostname attribute for the main.cf postfix config"""
+        """
+        Add the myhostname attribute for the main.cf postfix config
+        """
 
         super(PostfixMaster, self).bake()
 
@@ -163,7 +160,9 @@ class PostfixMaster(Server):
             self.log.info('Saved the Chef node configuration')
 
     def autorun(self):
-        """Asign the EIP after the instance is up and configured."""
+        """
+        Asign the EIP after the instance is up and configured.
+        """
 
         super(PostfixMaster, self).autorun()
 
