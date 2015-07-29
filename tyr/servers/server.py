@@ -552,6 +552,14 @@ named {name}""".format(path=d['path'], name=d['name']))
 
             if policy not in existing_policies:
 
+                rolePolicy = policies[policy]
+
+                if rolePolicy is None:
+                    self.log.info("No policy defined for {policy}".format(
+                                  policy=policy))
+                    continue  # Go to the next policy
+
+
                 self.log.info('Policy "{policy}" does not exist'.format(
                                         policy=policy))
 
