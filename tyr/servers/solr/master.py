@@ -13,7 +13,8 @@ class SolrMasterNode(Server):
                  block_devices=None, chef_path=None, subnet_id=None,
                  dns_zones=None):
 
-        if server_type is None: server_type = self.SERVER_TYPE
+        if server_type is None:
+            server_type = self.SERVER_TYPE
 
         super(SolrMasterNode, self).__init__(group, server_type, instance_type,
                                              environment, ami, region, role,
@@ -22,7 +23,6 @@ class SolrMasterNode(Server):
                                              chef_path, subnet_id, dns_zones)
 
     def bake(self):
-
         super(SolrMasterNode, self).bake()
 
         with self.chef_api:
@@ -31,6 +31,11 @@ class SolrMasterNode(Server):
 
             self.chef_node.attributes.set_dotted('solr.group', self.group)
             self.log.info('Set solr.group to {group}'.format(group=self.group))
+
+            self.chef_node.attributes.set_dotted('solr.master_host',
+                                                 self.hostname)
+            self.log.info('Set solr.master_host to {master}'.format(
+                          master=self.hostname))
 
             self.chef_node.save()
             self.log.info('Saved the Chef Node configuration')
