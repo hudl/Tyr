@@ -565,7 +565,7 @@ named {name}""".format(path=d['path'], name=d['name']))
 
                 try:
                     self.iam.put_role_policy(self.role, policy,
-                                             policies[policy])
+                                             rolePolicy)
 
                     self.log.info('Added policy "{policy}"'.format(
                                         policy=policy))
