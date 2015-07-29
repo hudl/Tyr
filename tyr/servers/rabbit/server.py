@@ -45,7 +45,9 @@ class RabbitMQServer(Server):
                                              chef_path, subnet_id, dns_zones)
 
     def configure(self):
-        """Make sure the IOPS to Size ratio is not greater than 30 for an EBS"""
+        """
+        Make sure the IOPS to Size ratio is not greater than 30 for an EBS
+        """
 
         super(RabbitMQServer, self).configure()
 
