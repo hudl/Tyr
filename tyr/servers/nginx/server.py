@@ -15,7 +15,8 @@ class NginxServer(Server):
         'allow-describe-instances',
         'allow-describe-tags',
         'allow-describe-elbs',
-        'allow-get-nginx-config'
+        'allow-get-nginx-config',
+        'allow-modify-nginx-elbs-{environment}'
     ]
 
     def __init__(self, group=None, server_type=None, instance_type=None,
@@ -36,9 +37,3 @@ class NginxServer(Server):
     def configure(self):
 
         super(NginxServer, self).configure()
-
-        if self.environment == 'stage':
-            self.IAM_ROLE_POLICIES.append('allow-modify-nginx-elbs-stage')
-        elif self.environment == 'prod':
-            self.IAM_ROLE_POLICIES.append('allow-modify-nginx-elbs-prod')
-        self.resolve_iam_role()
