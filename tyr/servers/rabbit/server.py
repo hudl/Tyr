@@ -18,12 +18,24 @@ class RabbitMQServer(Server):
                     environment=None, ami=None, region=None, role=None,
                     keypair=None, availability_zone=None, security_groups=None,
                     block_devices=None, chef_path=None, subnet_id=None,
-                    dns_zones=None,vol_iops=500,vol_size=100):
+                    dns_zones=None,vol_iops=500,vol_size=100,rabbit_user=None,rabbit_pass=None):
 
         if server_type is None: server_type = self.SERVER_TYPE
 
         self.vol_iops = vol_iops
         self.vol_size = vol_size
+
+        if rabbit_user is None:
+            raise Exception("A rabbit user was not defined!")
+            sys.exit(1)
+        else:
+            self.rabbit_user = rabbit_user
+
+        if rabbit_pass is None:
+            raise Exception("A rabbit user password was not defined!")
+            sys.exit(1)
+        else:
+            self.rabbit_pass = rabbit_pass
 
         super(RabbitMQServer, self).__init__(group, server_type, instance_type,
                                              environment, ami, region, role,
@@ -59,6 +71,15 @@ class RabbitMQServer(Server):
                                                  self.vol_size)
             self.log.info('Set the rabbitmq volume size to '
                           '{vol_size}'.format(vol_size=self.vol_size))
+
+            self.chef_node.attributes.set_dotted('rabbitmq.user',
+                                                 self.rabbit_user)
+            self.log.info('Set the rabbitmq user to '
+                          '{rabbit_user}'.format(rabbit_user=self.rabbit_user))
+
+            self.chef_node.attributes.set_dotted('rabbitmq.passwd',
+                                                 self.rabbit_pass)
+            self.log.info('Set the rabbitmq password to ... something secret')
 
             self.chef_node.save()
             self.log.info('Saved the Chef node configuration')
