@@ -559,7 +559,6 @@ named {name}""".format(path=d['path'], name=d['name']))
                                   policy=policy))
                     continue  # Go to the next policy
 
-
                 self.log.info('Policy "{policy}" does not exist'.format(
                                         policy=policy))
 
