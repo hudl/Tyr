@@ -9,6 +9,7 @@ import requests
 import boto.ec2
 import boto.route53
 import logging
+from tyr.utilities.log_level import get_log_level
 
 
 def timeit(method):
@@ -26,26 +27,39 @@ def timeit(method):
 
     return timed
 
-log = logging.getLogger('Tyr.Utilities.ReplaceMongoServer')
-if not log.handlers:
-    log.setLevel(logging.DEBUG)
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.DEBUG)
-    formatter = logging.Formatter(
-            '%(asctime)s [%(name)s] %(levelname)s: %(message)s',
-            datefmt='%H:%M:%S')
-    ch.setFormatter(formatter)
-    log.addHandler(ch)
-
 
 class ReplicaSet(object):
 
     primary = None
 
-    def __init__(self, member):
+    def __init__(self, member, log_level=None):
+
+        self.log_level = log_level
+        self.establish_logger()
 
         log.debug('Determing the primary for the replica set')
         self.determine_primary(member)
+
+    def establish_logger(self):
+
+        try:
+            return self.log
+        except:
+            pass
+
+        log = logging.getLogger('Tyr.Utilities.ReplaceMongoServer')
+
+        if not log.handlers:
+            log.setLevel(get_log_level(self.log_level))
+            ch = logging.StreamHandler()
+            ch.setLevel(get_log_level(self.log_level))
+            formatter = logging.Formatter(
+                    '%(asctime)s [%(name)s] %(levelname)s: %(message)s',
+                    datefmt='%H:%M:%S')
+            ch.setFormatter(formatter)
+            log.addHandler(ch)
+
+        self.log = log
 
     @timeit
     def determine_primary(self, member):
