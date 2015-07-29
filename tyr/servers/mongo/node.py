@@ -1,6 +1,7 @@
 from tyr.servers.server import Server
 import json
 
+
 class MongoNode(Server):
 
     SERVER_TYPE = 'mongo'
@@ -10,16 +11,17 @@ class MongoNode(Server):
 
     IAM_ROLE_POLICIES = ['allow-volume-control']
 
-    def __init__(self, group = None, server_type = None, instance_type = None,
-                    environment = None, ami = None, region = None, role = None,
-                    keypair = None, availability_zone = None,
-                    security_groups = None, block_devices = None,
-                    chef_path = None, subnet_id = None, dns_zones = None,
-                    mongodb_version=None):
+    def __init__(self, group=None, server_type=None, instance_type=None,
+                 environment=None, ami=None, region=None, role=None,
+                 keypair=None, availability_zone=None,
+                 security_groups=None, block_devices=None,
+                 chef_path=None, subnet_id=None, dns_zones=None,
+                 mongodb_version=None):
 
         self.mongodb_version = mongodb_version
 
-        if server_type is None: server_type = self.SERVER_TYPE
+        if server_type is None:
+            server_type = self.SERVER_TYPE
 
         super(MongoNode, self).__init__(group, server_type, instance_type,
                                         environment, ami, region, role,
@@ -43,7 +45,7 @@ class MongoNode(Server):
             self.mongodb_version = '2.4.13'
 
         self.log.info('Using version {version} of MongoDB'.format(
-                                                version = self.mongodb_version))
+                                                version=self.mongodb_version))
 
         # This is just a temporary fix to override the default security
         # groups for MongoDB nodes until the security_groups argument
@@ -62,7 +64,7 @@ class MongoNode(Server):
 
         template = 'mongo --port 27018 --eval "JSON.stringify({command})"'
 
-        command = template.format(command = command)
+        command = template.format(command=command)
 
         r = self.run(command)
 
@@ -77,17 +79,19 @@ class MongoNode(Server):
             self.chef_node.attributes.set_dotted(
                                             'mongodb.cluster_name', self.group)
             self.log.info('Set the cluster name to "{group}"'.format(
-                                        group = self.group))
+                                        group=self.group))
 
             self.chef_node.attributes.set_dotted(
-                                'mongodb.package_version', self.mongodb_version)
+                                'mongodb.package_version',
+                                self.mongodb_version)
 
-            self.log.info('Set the MongoDB package version to {version}'.format(
-                                                version = self.mongodb_version))
+            self.log.info('Set the MongoDB package version to '
+                          '{version}'.format(version=self.mongodb_version))
 
-            self.chef_node.attributes.set_dotted('mongodb.node_type', self.CHEF_MONGODB_TYPE)
+            self.chef_node.attributes.set_dotted('mongodb.node_type',
+                                                 self.CHEF_MONGODB_TYPE)
             self.log.info('Set the MongoDB node type to "{type_}"'.format(
-                                            type_ = self.CHEF_MONGODB_TYPE))
+                                            type_=self.CHEF_MONGODB_TYPE))
 
             self.chef_node.save()
             self.log.info('Saved the Chef Node configuration')

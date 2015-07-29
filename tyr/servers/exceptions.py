@@ -1,29 +1,38 @@
 class RegionDoesNotExist(Exception):
     pass
 
+
 class InvalidRole(Exception):
     pass
+
 
 class InvalidCluster(Exception):
     pass
 
+
 class InvalidKeyPair(Exception):
     pass
+
 
 class InvalidAMI(Exception):
     pass
 
+
 class InvalidAvailabilityZone(Exception):
     pass
 
+
 class NoSubnetReturned(Exception):
-	pass
+    pass
+
 
 class NoVPCReturned(Exception):
-	pass
+    pass
+
 
 class NoSecurityGroupsReturned(Exception):
-	pass
+    pass
+
 
 class MultipleSecurityGroupsReturned(Exception):
-	pass
+    pass

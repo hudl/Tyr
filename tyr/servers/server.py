@@ -14,15 +14,16 @@ from boto.vpc import VPCConnection
 from paramiko.client import AutoAddPolicy, SSHClient
 from tyr.policies import policies
 
+
 class Server(object):
 
-    NAME_TEMPLATE='{envcl}-{location}-{index}'
-    NAME_SEARCH_PREFIX='{envcl}-{location}-'
-    NAME_AUTO_INDEX=True
+    NAME_TEMPLATE = '{envcl}-{location}-{index}'
+    NAME_SEARCH_PREFIX = '{envcl}-{location}-'
+    NAME_AUTO_INDEX = True
 
     IAM_ROLE_POLICIES = []
 
-    CHEF_RUNLIST=['role[RoleBase]']
+    CHEF_RUNLIST = ['role[RoleBase]']
 
     def __init__(self, group=None, server_type=None, instance_type=None,
                  environment=None, ami=None, region=None, role=None,
@@ -74,22 +75,21 @@ class Server(object):
             self.instance_type = 't2.medium'
 
         self.log.info('Using Instance Type "{instance_type}"'.format(
-                                            instance_type = self.instance_type))
+                                            instance_type=self.instance_type))
 
         if self.group is None:
             self.log.warn('No group provided')
             raise InvalidCluster('A group must be specified.')
 
         self.log.info('Using group "{group}"'.format(
-                        group = self.group))
+                        group=self.group))
 
         if self.server_type is None:
             self.log.warn('No type provided')
             raise InvalidCluster('A type must be specified.')
 
         self.log.info('Using type "{server_type}"'.format(
-                        server_type = self.server_type))
-
+                        server_type=self.server_type))
 
         if self.environment is None:
             self.log.warn('No environment provided')
@@ -98,7 +98,7 @@ class Server(object):
         self.environment = self.environment.lower()
 
         self.log.info('Using Environment "{environment}"'.format(
-                        environment = self.environment))
+                        environment=self.environment))
 
         if self.region is None:
             self.log.warn('No region provided')
@@ -113,7 +113,7 @@ class Server(object):
             raise RegionDoesNotExist(error)
 
         self.log.info('Using EC2 Region "{region}"'.format(
-                        region = self.region))
+                        region=self.region))
 
         self.establish_ec2_connection()
         self.establish_iam_connection()
@@ -128,16 +128,16 @@ class Server(object):
         except Exception, e:
             self.log.error(str(e))
             if 'Invalid id' in str(e):
-                error = '"{ami}" is not a valid AMI'.format(ami = self.ami)
+                error = '"{ami}" is not a valid AMI'.format(ami=self.ami)
                 raise InvalidAMI(error)
 
-        self.log.info('Using EC2 AMI "{ami}"'.format(ami = self.ami))
+        self.log.info('Using EC2 AMI "{ami}"'.format(ami=self.ami))
 
         if self.role is None:
             self.log.warn('No IAM Role provided')
             self.role = self.envcl
 
-        self.log.info('Using IAM Role "{role}"'.format(role = self.role))
+        self.log.info('Using IAM Role "{role}"'.format(role=self.role))
 
         self.resolve_iam_role()
 
@@ -148,7 +148,7 @@ class Server(object):
                 self.keypair = 'bkaiserkey'
 
         valid = lambda k: k in [pair.name for pair in
-                self.ec2.get_all_key_pairs()]
+                                self.ec2.get_all_key_pairs()]
 
         if not valid(self.keypair):
             error = '"{keypair}" is not a valid EC2 keypair'.format(
@@ -158,9 +158,10 @@ class Server(object):
         self.log.info('Using EC2 Key Pair "{keypair}"'.format(
                         keypair=self.keypair))
 
-        if self.subnet_id is None: 
+        if self.subnet_id is None:
             if self.availability_zone is None:
-                self.log.warn('No EC2 availability zone provided, using zone c')
+                self.log.warn('No EC2 availability zone provided,'
+                              ' using zone c')
                 self.availability_zone = 'c'
         else:
             if self.availability_zone is not None:
@@ -209,7 +210,7 @@ class Server(object):
                                   }]
 
         self.log.info('Using EC2 block devices {devices}'.format(
-                        devices = self.block_devices))
+                        devices=self.block_devices))
 
         if self.chef_path is None:
             self.log.warn('No Chef path provided')
@@ -218,7 +219,7 @@ class Server(object):
         self.chef_path = os.path.expanduser(self.chef_path)
 
         self.log.info('Using Chef path "{path}"'.format(
-                                path = self.chef_path))
+                                path=self.chef_path))
 
         if self.dns_zones is None:
             self.log.warn('No DNS zones specified')
@@ -277,7 +278,7 @@ class Server(object):
         }
 
         return '{region}{zone}'.format(region=region_map[self.region],
-                                        zone=self.availability_zone[-1:])
+                                       zone=self.availability_zone[-1:])
 
     def next_index(self, supplemental={}):
 
@@ -325,11 +326,11 @@ class Server(object):
     def envcl(self):
 
         template = '{environment}-{group}-{server_type}'
-        envcl = template.format(environment = self.environment[0],
-                                  group = self.group,
-                                  server_type = self.server_type)
+        envcl = template.format(environment=self.environment[0],
+                                group=self.group,
+                                server_type=self.server_type)
 
-        self.log.info('Using envcl {envcl}'.format(envcl = envcl))
+        self.log.info('Using envcl {envcl}'.format(envcl=envcl))
 
         return envcl
 
@@ -355,7 +356,7 @@ class Server(object):
 
         self.unique_name = template.format(**supplemental)
 
-        self.log.info('Using node name {name}'.format(name = self.unique_name))
+        self.log.info('Using node name {name}'.format(name=self.unique_name))
 
         return self.unique_name
 
@@ -369,9 +370,9 @@ class Server(object):
         elif self.environment == 'prod':
             template = '{name}.app.hudl.com'
 
-        hostname = template.format(name = self.name)
+        hostname = template.format(name=self.name)
 
-        self.log.info('Using hostname {hostname}'.format(hostname = hostname))
+        self.log.info('Using hostname {hostname}'.format(hostname=hostname))
 
         return hostname
 
@@ -383,6 +384,8 @@ sed -i '/requiretty/d' /etc/sudoers
 hostname {hostname}
 mkdir /etc/chef
 touch /etc/chef/client.rb
+mkdir -p /etc/chef/ohai/hints
+touch /etc/chef/ohai/hints/ec2.json
 echo '{validation_key}' > /etc/chef/validation.pem
 echo 'chef_server_url "http://chef.app.hudl.com/"
 node_name "{name}"
@@ -395,10 +398,10 @@ chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}"""
         validation_key_file = open(validation_key_path, 'r')
         validation_key = validation_key_file.read()
 
-        return template.format(hostname = self.hostname,
-                                validation_key = validation_key,
-                                name = self.name,
-                                logfile = '/var/log/chef-client.log')
+        return template.format(hostname=self.hostname,
+                               validation_key=validation_key,
+                               name=self.name,
+                               logfile='/var/log/chef-client.log')
 
     @property
     def tags(self):
@@ -409,7 +412,7 @@ chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}"""
         tags['Group'] = self.group
         tags['Role'] = 'Role'+self.server_type.capitalize()
 
-        self.log.info('Using instance tags {tags}'.format(tags = tags))
+        self.log.info('Using instance tags {tags}'.format(tags=tags))
 
         return tags
 
@@ -435,15 +438,15 @@ chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}"""
             if d['type'] == 'ephemeral':
                 if 'size' in d.keys():
                     self.log.info("""Created new ephemeral device at {path}
-named {name} of size {size}""".format(path = d['path'], name = d['name'],
-                                        size = d['size']))
+named {name} of size {size}""".format(path=d['path'], name=d['name'],
+                                      size=d['size']))
                 else:
                     self.log.info("""Created new ephemeral device at {path}
-named {name}""".format(path = d['path'], name = d['name']))
+named {name}""".format(path=d['path'], name=d['name']))
 
             else:
                 self.log.info("""Created new EBS device at {path} of size
-{size}""".format(path = d['path'], size = d['size']))
+{size}""".format(path=d['path'], size=d['size']))
 
         return bdm
 
@@ -462,14 +465,14 @@ named {name}""".format(path = d['path'], name = d['name']))
     def resolve_security_groups(self):
         filters = {}
         self.log.info("Resolving security groups")
-        
+
         # If the server is being spun up in a vpc, search only that vpc
         exists = lambda s: s in [group.name for group in
                                  self.ec2.get_all_security_groups()
                                  if self.vpc_id == group.vpc_id]
 
         for index, group in enumerate(self.security_groups):
-            
+
             if not exists(group):
                 self.log.info('Security Group {group} does not exist'.format(
                                 group=group))
@@ -504,7 +507,7 @@ named {name}""".format(path = d['path'], name = d['name']))
             try:
                 instance_profile = self.iam.create_instance_profile(self.role)
                 self.log.info('Created IAM Profile {profile}'.format(
-                                profile = self.role))
+                                profile=self.role))
 
             except Exception, e:
                 self.log.error(str(e))
@@ -524,10 +527,11 @@ named {name}""".format(path = d['path'], name = d['name']))
 
             try:
                 role = self.iam.create_role(self.role)
-                self.log.info('Created IAM Role {role}'.format(role = self.role))
+                self.log.info('Created IAM Role {role}'.format(role=self.role))
                 self.iam.add_role_to_instance_profile(self.role, self.role)
-                self.log.info('Attached Role {role} to Profile {profile}'.format(
-                            role = self.role, profile = self.role))
+                self.log.info('Attached Role {role}'
+                              ' to Profile {profile}'.format(
+                                role=self.role, profile=self.role))
 
             except Exception, e:
                 self.log.error(str(e))
@@ -538,7 +542,8 @@ named {name}""".format(path = d['path'], name = d['name']))
         result = response['list_role_policies_result']
         existing_policies = result['policy_names']
 
-        self.log.info('Existing policies: {policies}'.format(policies=existing_policies))
+        self.log.info('Existing policies: '
+                      '{policies}'.format(policies=existing_policies))
 
         for policy_template in self.IAM_ROLE_POLICIES:
             policy = policy_template.format(environment = self.environment)
@@ -548,13 +553,14 @@ named {name}""".format(path = d['path'], name = d['name']))
             if policy not in existing_policies:
 
                 self.log.info('Policy "{policy}" does not exist'.format(
-                                        policy = policy))
+                                        policy=policy))
 
                 try:
-                    self.iam.put_role_policy(self.role, policy, policies[policy])
+                    self.iam.put_role_policy(self.role, policy,
+                                             policies[policy])
 
                     self.log.info('Added policy "{policy}"'.format(
-                                        policy = policy))
+                                        policy=policy))
                 except Exception, e:
                     self.log.error(str(e))
                     raise e
@@ -562,7 +568,7 @@ named {name}""".format(path = d['path'], name = d['name']))
             else:
 
                 self.log.info('Policy "{policy}" already exists'.format(
-                                        policy = policy))
+                                        policy=policy))
 
                 tyr_copy = json.loads(policies[policy])
 
@@ -575,27 +581,28 @@ named {name}""".format(path = d['path'], name = d['name']))
 
                 if tyr_copy == aws_copy:
                     self.log.info('Policy "{policy}" is accurate'.format(
-                                        policy = policy))
+                                        policy=policy))
 
                 else:
 
                     self.log.warn('Policy "{policy}" has been modified'.format(
-                                        policy = policy))
+                                        policy=policy))
 
                     try:
                         self.iam.delete_role_policy(self.role, policy)
 
                         self.log.info('Removed policy "{policy}"'.format(
-                                            policy = policy))
+                                            policy=policy))
                     except Exception, e:
                         self.log.error(str(e))
                         raise e
 
                     try:
-                        self.iam.put_role_policy(self.role, policy, policies[policy])
+                        self.iam.put_role_policy(self.role, policy,
+                                                 policies[policy])
 
                         self.log.info('Added policy "{policy}"'.format(
-                                            policy = policy))
+                                            policy=policy))
                     except Exception, e:
                         self.log.error(str(e))
                         raise e
@@ -763,7 +770,7 @@ named {name}""".format(path = d['path'], name = d['name']))
                                                             record=record))
 
                 existing_records = zone.find_records(name=record['name'],
-                                                        type=record['type'])
+                                                     type=record['type'])
 
                 if existing_records:
                     self.log.info('The DNS record already exists')
@@ -777,7 +784,8 @@ named {name}""".format(path = d['path'], name = d['name']))
 
                     if wait:
                         while status.update() != 'INSYNC':
-                            self.log.debug('Waiting for DNS change to propagate')
+                            self.log.debug('Waiting for DNS '
+                                           'change to propagate')
                             time.sleep(10)
 
                     self.log.info('Added new DNS record')
@@ -816,8 +824,8 @@ named {name}""".format(path = d['path'], name = d['name']))
                 keys = [os.path.expanduser(key) for key in keys]
 
                 connection.connect(self.instance.private_dns_name,
-                                    username='ec2-user',
-                                    key_filename=keys)
+                                   username='ec2-user',
+                                   key_filename=keys)
                 break
             except Exception:
                 self.log.warn('Unable to establish SSH connection')
@@ -869,7 +877,7 @@ named {name}""".format(path = d['path'], name = d['name']))
                 node.delete()
 
                 self.log.info('Removed previous chef node "{node}"'.format(
-                                node = self.name))
+                                node=self.name))
             except chef.exceptions.ChefServerNotFoundError:
                 pass
             except Exception as e:
@@ -881,7 +889,7 @@ named {name}""".format(path = d['path'], name = d['name']))
                 client = client.delete()
 
                 self.log.info('Removed previous chef client "{client}"'.format(
-                                client = self.name))
+                                client=self.name))
             except chef.exceptions.ChefServerNotFoundError:
                 pass
             except Exception as e:
@@ -893,17 +901,17 @@ named {name}""".format(path = d['path'], name = d['name']))
             self.chef_node = node
 
             self.log.info('Created new Chef Node "{node}"'.format(
-                                node = self.name))
+                                node=self.name))
 
             self.chef_node.chef_environment = self.environment
 
             self.log.info('Set the Chef Environment to "{env}"'.format(
-                        env = self.chef_node.chef_environment))
+                        env=self.chef_node.chef_environment))
 
             self.chef_node.run_list = self.CHEF_RUNLIST
 
             self.log.info('Set Chef run list to {list}'.format(
-                                            list = self.chef_node.run_list))
+                                            list=self.chef_node.run_list))
 
             self.chef_node.save()
             self.log.info('Saved the Chef Node configuration')
@@ -911,7 +919,7 @@ named {name}""".format(path = d['path'], name = d['name']))
     def baked(self):
 
         self.log.info('Determining status of "{node}"'.format(
-                                            node = self.hostname))
+                                            node=self.hostname))
 
         self.log.info('Waiting for Chef Client to start')
 
