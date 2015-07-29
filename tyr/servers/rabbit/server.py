@@ -54,7 +54,6 @@ class RabbitMQServer(Server):
             self.log.critical('The IOPS to Size ratio is greater than 30')
             sys.exit(1)
 
-
     def bake(self):
         """Add IOPS and Volume Size attributes based on dynamic values from tyr"""
 
