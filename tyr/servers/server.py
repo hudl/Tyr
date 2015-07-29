@@ -878,8 +878,8 @@ named {name}""".format(path=d['path'], name=d['name']))
         instance_id = self.instance.id
 
         self.log.info('The instance ID is {id_}'.format(id_=instance_id))
-        #TODO maintenance mode with stackdriver?
-        set_maintenance_mode(self.log,instance_id)
+
+        set_maintenance_mode(instance_id)
 
         self.log.info('Terminating node at {address}'.format(address=address))
         response = self.ec2.terminate_instances(instance_ids=[instance_id])
