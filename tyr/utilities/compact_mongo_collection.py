@@ -143,19 +143,6 @@ def id_for_host(host):
 
 @timeit
 def compact_mongodb_server(host, version, prompt_before_failover=True):
-    stackdriver_api_key = os.environ.get('STACKDRIVER_API_KEY', False)
-
-    if not stackdriver_api_key:
-        log.critical('The environment variable STACKDRIVER_API_KEY '
-                     'is undefined')
-        sys.exit(1)
-
-    stackdriver_username = os.environ.get('STACKDRIVER_USERNAME', False)
-
-    if not stackdriver_username:
-        log.critical('The environment variable STACKDRIVER_USERNAME '
-                     'is undefined')
-        sys.exit(1)
 
     log.debug('Retrieving replica set for host {host}'.format(host=host))
     replica_set = ReplicaSet(host)
