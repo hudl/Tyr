@@ -384,6 +384,8 @@ sed -i '/requiretty/d' /etc/sudoers
 hostname {hostname}
 mkdir /etc/chef
 touch /etc/chef/client.rb
+mkdir -p /etc/chef/ohai/hints
+touch /etc/chef/ohai/hints/ec2.json
 echo '{validation_key}' > /etc/chef/validation.pem
 echo 'chef_server_url "http://chef.app.hudl.com/"
 node_name "{name}"
