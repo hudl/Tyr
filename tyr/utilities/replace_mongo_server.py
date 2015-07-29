@@ -436,22 +436,6 @@ def replace_server(environment=None, group=None, subnet_id=None,
         log.critical('No existing member defined.')
         sys.exit(1)
 
-    stackdriver_api_key = os.environ.get('STACKDRIVER_API_KEY', False)
-
-    if not stackdriver_api_key:
-
-        log.critical('The environment variable STACKDRIVER_API_KEY '
-                     'is undefined')
-        sys.exit(1)
-
-    stackdriver_username = os.environ.get('STACKDRIVER_USERNAME', False)
-
-    if not stackdriver_username:
-
-        log.critical('The environment variable STACKDRIVER_USERNAME '
-                     'is undefined')
-        sys.exit(1)
-
     replica_set = ReplicaSet(member)
 
     if replica_set.primary[:2] == 'ip':
@@ -558,9 +542,7 @@ def replace_server(environment=None, group=None, subnet_id=None,
 
         if replace:
             log.info('Terminating the previous arbiter')
-            stop_decommissioned_node(member, terminate=terminate,
-                                     stackdriver_username=stackdriver_username,
-                                     stackdriver_api_key=stackdriver_api_key)
+            stop_decommissioned_node(member, terminate=terminate)
 
         return
 
@@ -625,9 +607,7 @@ def replace_server(environment=None, group=None, subnet_id=None,
         replica_set.remove_member(member)
 
         log.info('Terminating the previous node')
-        stop_decommissioned_node(member, terminate=terminate,
-                                 stackdriver_username=stackdriver_username,
-                                 stackdriver_api_key=stackdriver_api_key)
+        stop_decommissioned_node(member, terminate=terminate)
 
         if node_type == 'data' and reroute:
             log.info('Redirecting previous DNS entry')
