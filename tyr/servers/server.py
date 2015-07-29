@@ -13,6 +13,8 @@ import urllib
 from boto.vpc import VPCConnection
 from paramiko.client import AutoAddPolicy, SSHClient
 from tyr.policies import policies
+from tyr.utilities.stackdriver import (set_maintenance_mode,
+                                       unset_maintenance_mode)
 
 
 class Server(object):
@@ -875,6 +877,8 @@ named {name}""".format(path=d['path'], name=d['name']))
 
         self.log.info('The instance ID is {id_}'.format(id_=instance_id))
         #TODO maintenance mode with stackdriver?
+        set_maintenance_mode(self.log,instance_id)
+
         self.log.info('Terminating node at {address}'.format(address=address))
         response = self.ec2.terminate_instances(instance_ids=[instance_id])
 
