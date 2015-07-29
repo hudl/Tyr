@@ -2,9 +2,33 @@ import requests
 import os
 import json
 import time
+import logging
+
+local_log = logging.getLogger('Tyr.Utilities.Stackdriver')
+if not local_log.handlers:
+    local_log.setLevel(logging.DEBUG)
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(
+            '%(asctime)s [%(name)s] %(levelname)s: %(message)s',
+            datefmt='%H:%M:%S')
+    ch.setFormatter(formatter)
+    local_log.addHandler(ch)
 
 STACKDRIVER_USERNAME = os.environ.get('STACKDRIVER_USERNAME',False)
+
+if not STACKDRIVER_USERNAME:
+    local_log.critical('The environment variable STACKDRIVER_USERNAME '
+                    'is undefined')
+    sys.exit(1)
+
 STACKDRIVER_API_KEY  = os.environ.get('STACKDRIVER_API_KEY',False)
+
+if not STACKDRIVER_API_KEY:
+    local_log.critical('The environment variable STACKDRIVER_API_KEY '
+                    'is undefined')
+    sys.exit(1)
+
 
 def registered_in_stackdriver(log,instance_id):
 

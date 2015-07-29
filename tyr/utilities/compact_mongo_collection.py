@@ -1,7 +1,7 @@
 from tyr.utilities.replace_mongo_server import (ReplicaSet, run_command,
                                                 run_mongo_command, timeit)
 
-import tyr.utilities.stackdriver
+from tyr.utilities.stackdriver import set_maintenance_mode, unset_maintenance_mode
 import time
 import logging
 import os
