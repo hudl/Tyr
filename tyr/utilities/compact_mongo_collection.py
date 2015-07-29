@@ -1,7 +1,7 @@
 from tyr.utilities.replace_mongo_server import (ReplicaSet, run_command,
-                                                run_mongo_command, timeit,
-                                                set_maintenance_mode,
-                                                unset_maintenance_mode)
+                                                run_mongo_command, timeit)
+
+import tyr.utilities.stackdriver
 import time
 import logging
 import os
@@ -180,8 +180,7 @@ def compact_mongodb_server(host, version, prompt_before_failover=True):
         fetch_script(address, version)
 
         log.debug('Setting maintenance mode for {host}'.format(host=address))
-        set_maintenance_mode(stackdriver_username, stackdriver_api_key,
-                             id_for_host(address))
+        set_maintenance_mode(log, id_for_host(address))
 
         log.info('Compacting {host}'.format(host=address))
         compact(address)
@@ -194,8 +193,7 @@ def compact_mongodb_server(host, version, prompt_before_failover=True):
 
         log.debug('Unsetting maintenance mode for {host}'.format(
             host=address))
-        unset_maintenance_mode(stackdriver_username, stackdriver_api_key,
-                               id_for_host(address))
+        unset_maintenance_mode(log, id_for_host(address))
 
     log.debug('Retrieving current primary')
     secondaries = [node for node in replica_set.status['members']
@@ -227,8 +225,7 @@ def compact_mongodb_server(host, version, prompt_before_failover=True):
         fetch_script(address, version)
 
         log.debug('Setting maintenance mode for {host}'.format(host=address))
-        set_maintenance_mode(stackdriver_username, stackdriver_api_key,
-                             id_for_host(address))
+        set_maintenance_mode(log, id_for_host(address))
 
         log.info('Compacting {host}'.format(host=address))
         compact(address)
@@ -241,5 +238,4 @@ def compact_mongodb_server(host, version, prompt_before_failover=True):
 
         log.debug('Unsetting maintenance mode for {host}'.format(
             host=address))
-        unset_maintenance_mode(stackdriver_username, stackdriver_api_key,
-                               id_for_host(address))
+        unset_maintenance_mode(log, id_for_host(address))
