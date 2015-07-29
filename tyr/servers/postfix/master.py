@@ -1,5 +1,4 @@
 from tyr.servers.server import Server
-from tyr.utilities.replace_mongo_server import stop_decommissioned_node
 import chef
 import sys
 import re

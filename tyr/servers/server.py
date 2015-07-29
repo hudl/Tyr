@@ -13,7 +13,6 @@ import urllib
 from boto.vpc import VPCConnection
 from paramiko.client import AutoAddPolicy, SSHClient
 from tyr.policies import policies
-from tyr.utilities.replace_mongo_server import stop_decommissioned_node
 
 
 class Server(object):
@@ -872,9 +871,23 @@ named {name}""".format(path=d['path'], name=d['name']))
         """
 
         address = self.instance.private_ip_address
-        stop_decommissioned_node(address=address,terminate=True,
-                                 stackdriver_username=self.STACKDRIVER_USERNAME,
-                                 stackdriver_api_key=self.STACKDRIVER_API_KEY)
+        instance_id = self.instance.id
+
+        self.log.info('The instance ID is {id_}'.format(id_=instance_id))
+        #TODO maintenance mode with stackdriver?
+        self.log.info('Terminating node at {address}'.format(address=address))
+        response = self.ec2.terminate_instances(instance_ids=[instance_id])
+
+        self.log.info('Received the response {response}'.format(response=response))
+
+        terminated = [instance.id for instance in response]
+
+        if instance_id in terminated:
+            self.log.info('Successfully terminated {instance}'.format(
+                                                        instance=instance_id))
+        else:
+            self.log.info('Failed to terminate {instance}'.format(
+                                                    instance=instance_id))
 
     def bake(self):
 
