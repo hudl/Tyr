@@ -9,7 +9,8 @@ import requests
 import boto.ec2
 import boto.route53
 import logging
-from tyr.utilities.stackdriver import set_maintenance_mode, unset_maintenance_mode
+from tyr.utilities.stackdriver import (set_maintenance_mode,
+                                       unset_maintenance_mode)
 
 
 def timeit(method):
