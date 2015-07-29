@@ -83,4 +83,3 @@ class RabbitMQServer(Server):
 
             self.chef_node.save()
             self.log.info('Saved the Chef node configuration')
-
