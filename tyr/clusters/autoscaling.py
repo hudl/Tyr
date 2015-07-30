@@ -4,6 +4,7 @@ import boto.ec2
 import logging
 
 
+
 class AutoScaler(object):
     '''
     Autoscaler setup class
