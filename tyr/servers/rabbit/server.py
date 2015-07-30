@@ -52,8 +52,8 @@ class RabbitMQServer(Server):
         super(RabbitMQServer, self).configure()
 
         iops_size_ratio = self.vol_iops/self.vol_size
-        iopslogTemplate = 'The IOPS to Size ratio is "{ratio}"'
-        self.log.info(iopslogTemplate.format(ratio=iops_size_ratio))
+        iops_log_template = 'The IOPS to Size ratio is "{ratio}"'
+        self.log.info(iops_log_template.format(ratio=iops_size_ratio))
         if iops_size_ratio > 30:
             self.log.critical('The IOPS to Size ratio is greater than 30')
             sys.exit(1)
