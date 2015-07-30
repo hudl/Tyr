@@ -1,0 +1,22 @@
+{
+    "heimdall":  {
+        "notification_type": "static_webhook",
+        "notify_on": "all",
+        "static_webhook": 65,
+        "status": "active"
+    },
+    "pagerduty": {
+        "notification_type": "pagerduty",
+        "notify_on": "all",
+        "resource": "/v0.2/settings/channels/pagerduty/183/",
+        "status": "active"
+    },
+    "general_1": {
+        "notification_type": "static_webhook",
+        "notification_value": 5
+    },
+    "general_2": {
+        "notification_type": "pagerduty",
+        "notification_value": 49
+    }
+}
