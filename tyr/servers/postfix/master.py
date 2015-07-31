@@ -1,14 +1,12 @@
 from tyr.servers.server import Server
-import chef
-import sys
 import re
-import os
+
 
 class PostfixMaster(Server):
 
-    SERVER_TYPE          = 'postfix'
-    CHEF_RUNLIST         = ['role[RolePostfix]']
-    ELASTIC_IP           = ''
+    SERVER_TYPE = 'postfix'
+    CHEF_RUNLIST = ['role[RolePostfix]']
+    ELASTIC_IP = ''
 
     def __init__(self, group=None, server_type=None, instance_type=None,
                  environment=None, ami=None, region=None, role=None,
@@ -28,13 +26,13 @@ class PostfixMaster(Server):
 
         try:
             if mail_name is not None:
-                if re.match('^.+hudl\.com$',mail_name) is None:
+                if re.match('^.+hudl\.com$', mail_name) is None:
                     self.mail_name = mail_name + '.hudl.com'
                 else:
                     self.mail_name = mail_name
             else:
                 raise Exception('Must pass existing mail server name!')
-        except Exception,e:
+        except Exception, e:
             self.log.critical(str(e))
             raise e
 
@@ -42,12 +40,14 @@ class PostfixMaster(Server):
         super(PostfixMaster, self).configure()
 
         if self.mail_name:
-            elastic_ip   = self.check_mail_server()
+            elastic_ip = self.check_mail_server()
             self.ELASTIC_IP = elastic_ip
             self.log.info('Found mail server!')
         else:
-            self.log.critical('Must specify a mail server configured in route53!')
-            raise Exception('Must specify a mail server configured in route53!')
+            self.log.critical('Must specify a mail server configured in '
+                              'route53!')
+            raise Exception('Must specify a mail server configured in '
+                            'route53!')
 
     def check_mail_server(self):
         """
@@ -56,20 +56,20 @@ class PostfixMaster(Server):
         :returns: str -- A string with the elastic IP.
         """
 
-        hosted_zone    = 'hudl.com'
-        zone_obj       = self.route53.get_zone(hosted_zone)
+        hosted_zone = 'hudl.com'
+        zone_obj = self.route53.get_zone(hosted_zone)
         try:
             a_record = zone_obj.get_a(self.mail_name)
             if a_record:
                 a_record_str = str(a_record)
                 pattern = '^.+{mail_name}.+A:(([0-9]{{1,3}}\.){{3}}[0-9]{{1,3}}).*?$'.format(
-                            mail_name=self.mail_name)
-                m = re.match(pattern,a_record_str)
+                          mail_name=self.mail_name)
+                m = re.match(pattern, a_record_str)
 
                 if m:
                     elastic_ip = m.group(1)
-                    self.log.info('Using Elastic IP {elastic_ip}...'.format(
-                                                        elastic_ip=elastic_ip))
+                    self.log.info('Using Elastic IP {elastic_ip}...'.
+                                  format(elastic_ip=elastic_ip))
                 else:
                     raise Exception('Unable to retrieve EIP from record!')
             else:
@@ -87,25 +87,25 @@ class PostfixMaster(Server):
         """
 
         instance_id = self.instance.id
-        address     = self.instance.ip_address
 
         try:
             alloc_id = self.get_alloc_id()
-            result   = self.ec2.associate_address(instance_id=instance_id,
-                                                  public_ip=None,
-                                                  allocation_id=alloc_id,
-                                                  network_interface_id=None,
-                                                  private_ip_address=None,
-                                                  allow_reassociation=True,
-                                                  dry_run=False)
+            result = self.ec2.associate_address(instance_id=instance_id,
+                                                public_ip=None,
+                                                allocation_id=alloc_id,
+                                                network_interface_id=None,
+                                                private_ip_address=None,
+                                                allow_reassociation=True,
+                                                dry_run=False)
             if result:
                 self.log.info('Successfully assigned EIP: {elastic_ip} '
-                              'to {mail_name}'.format(elastic_ip=elastic_ip,
-                                                      mail_name=self.mail_name))
+                              'to {mail_name}'.
+                              format(elastic_ip=self.ELASTIC_IP,
+                                     mail_name=self.mail_name))
             else:
                 raise Exception('Unable to assign EIP: {eip}! '
-                                'Exiting...'.format(eip=elastic_ip))
-        except Exception,e:
+                                'Exiting...'.format(eip=self.ELASTIC_IP))
+        except Exception, e:
             self.log.critical(str(e))
             self.terminate()
             raise e
@@ -117,7 +117,6 @@ class PostfixMaster(Server):
         :returns: str -- the allocation ID
         """
 
-        address  = self.instance.ip_address
         alloc_id = None
         try:
             eip_addresses = self.ec2.get_all_addresses()
@@ -132,11 +131,12 @@ class PostfixMaster(Server):
             if alloc_id is None:
                 raise Exception('The EIP associated with the DNS name for '
                                 '{mail_name} does not have an allocation ID '
-                                'associated with it. This issue can be resolved '
-                                'by migrating the EIP from EC2-Classic to '
-                                'EC2-VPC.'.format(mail_name=self.mail_name))
+                                'associated with it. This issue can be '
+                                'resolved by migrating the EIP from '
+                                'EC2-Classic to EC2-VPC.'.
+                                format(mail_name=self.mail_name))
 
-        except Exception,e:
+        except Exception, e:
             self.log.critical(str(e))
             self.terminate()
             raise e
@@ -166,4 +166,4 @@ class PostfixMaster(Server):
         super(PostfixMaster, self).autorun()
 
         if self.baked():
-           self.assign_eip()
+            self.assign_eip()
