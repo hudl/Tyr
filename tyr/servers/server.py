@@ -478,7 +478,6 @@ named {name}""".format(path=d['path'], name=d['name']))
             raise Exception("More than 1 subnet returned")
 
     def resolve_security_groups(self):
-        filters = {}
         self.log.info("Resolving security groups")
 
         # If the server is being spun up in a vpc, search only that vpc
@@ -509,7 +508,7 @@ named {name}""".format(path=d['path'], name=d['name']))
         profile_exists = False
 
         try:
-            profile = self.iam.get_instance_profile(self.role)
+            self.iam.get_instance_profile(self.role)
             profile_exists = True
         except Exception as e:
             if '404 Not Found' in str(e):
@@ -520,7 +519,7 @@ named {name}""".format(path=d['path'], name=d['name']))
 
         if not profile_exists:
             try:
-                instance_profile = self.iam.create_instance_profile(self.role)
+                self.iam.create_instance_profile(self.role)
                 self.log.info('Created IAM Profile {profile}'.format(
                               profile=self.role))
 
@@ -529,7 +528,7 @@ named {name}""".format(path=d['path'], name=d['name']))
                 raise e
 
         try:
-            role = self.iam.get_role(self.role)
+            self.iam.get_role(self.role)
             role_exists = True
         except Exception as e:
             if '404 Not Found' in str(e):
@@ -541,7 +540,7 @@ named {name}""".format(path=d['path'], name=d['name']))
         if not role_exists:
 
             try:
-                role = self.iam.create_role(self.role)
+                self.iam.create_role(self.role)
                 self.log.info('Created IAM Role {role}'.format(role=self.role))
                 self.iam.add_role_to_instance_profile(self.role, self.role)
                 self.log.info('Attached Role {role}'
