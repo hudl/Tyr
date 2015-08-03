@@ -87,12 +87,14 @@ class IISNode(Server):
 
     @property
     def user_data(self):
-        data = {"bucket": "hudl-config",
-                "key": "{0}-mv-web/init.config.json".format(
-                    self.environment[0]),
-                "mongos": self.mongos_service,
-                "mongoServers": self.mongo_servers
-                }
+        data = {
+            "bucket": "hudl-config",
+            "key": "{0}-mv-web/init.config.json".format(
+                self.environment[0]),
+            "mongos": self.mongos_service,
+            "mongoServers": self.mongo_servers
+        }
+
         ud = json.dumps(data)
         self.log.info("Setting user data to: {0}".format(ud))
         return ud
