@@ -22,6 +22,18 @@ class SolrMasterNode(Server):
                                              security_groups, block_devices,
                                              chef_path, subnet_id, dns_zones)
 
+    def configure(self):
+        super(SolrMasterNode, self).configure()
+
+        self.security_groups = [
+            'management',
+            'chef-nodes',
+            self.envcl,
+            '{env}-solr-management'.format(env=self.environment[0])
+        ]
+
+        self.resolve_security_groups()
+
     def bake(self):
         super(SolrMasterNode, self).bake()
 
