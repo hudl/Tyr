@@ -84,7 +84,6 @@ allow_get_nginx_config = """{
      ]
 }"""
 
-
 allow_get_solr_schema = """{
     "Version": "2012-10-17",
     "Statement": [
@@ -100,3 +99,41 @@ allow_get_solr_schema = """{
         }
     ]
 }"""
+
+allow_get_hudl_config = """{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "Stmt1434721994000",
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetBucketAcl",
+                "s3:GetBucketCORS",
+                "s3:GetBucketLocation",
+                "s3:GetBucketLogging",
+                "s3:GetBucketNotification",
+                "s3:GetBucketPolicy",
+                "s3:GetBucketRequestPayment",
+                "s3:GetBucketTagging",
+                "s3:GetBucketVersioning",
+                "s3:GetBucketWebsite",
+                "s3:GetLifecycleConfiguration",
+                "s3:GetObject",
+                "s3:GetObjectAcl",
+                "s3:GetObjectTorrent",
+                "s3:GetObjectVersion",
+                "s3:GetObjectVersionAcl",
+                "s3:GetObjectVersionTorrent",
+                "s3:ListAllMyBuckets",
+                "s3:ListBucket",
+                "s3:ListBucketMultipartUploads",
+                "s3:ListBucketVersions",
+                "s3:ListMultipartUploadParts"
+            ],
+            "Resource": [
+                "arn:aws:s3:::hudl-config/*"
+            ]
+        }
+    ]
+}
+"""
