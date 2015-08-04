@@ -9,6 +9,8 @@ import requests
 import boto.ec2
 import boto.route53
 import logging
+from tyr.utilities.stackdriver import (set_maintenance_mode,
+                                       unset_maintenance_mode)
 
 
 def timeit(method):
@@ -52,7 +54,21 @@ class ReplicaSet(object):
 
         log.debug('Using db.isMaster() to determine the primary')
         response = run_mongo_command(member, 'db.isMaster()')
-        primary = response['primary'].split(':')[0]
+
+        try:
+            primary = response['primary'].split(':')[0]
+        except TypeError as e:
+            log.critical(str(e))
+            log.critical('The response from MongoDB was not a JSON object.')
+            sys.exit(1)
+        except KeyError as e:
+            log.critical(str(e))
+            log.critical('The primary property was not defined.')
+            sys.exit(1)
+        except AttributeError as e:
+            log.critical(str(e))
+            log.critical('The primary property is not a string.')
+            sys.exit(1)
 
         self.primary = primary
 
@@ -325,134 +341,6 @@ def launch_server(environment, group, subnet_id, instance_type,
         log.critical('chef-client failed to finish running')
         sys.exit(1)
 
-
-@timeit
-def registered_in_stackdriver(stackdriver_username, stackdriver_api_key,
-                              instance_id):
-
-    log.debug('Checking if {instance_id} is listed in Stackdriver'.format(
-                                                    instance_id=instance_id))
-
-    headers = headers = {
-        'x-stackdriver-apikey': stackdriver_api_key,
-        'Content-Type': 'application/json'
-    }
-
-    log.debug('Using the headers {headers}'.format(headers=headers))
-
-    template = 'https://api.stackdriver.com/v0.2/instances/{id_}'
-
-    endpoint = template.format(id_=instance_id)
-
-    log.debug('Using the endpoint {endpoint}'.format(endpoint=endpoint))
-
-    r = requests.get(endpoint, headers=headers)
-
-    log.debug('Received status code {code}'.format(code=r.status_code))
-
-    listed = (r.status_code != 404)
-
-    if listed:
-        log.debug('The instance is listed in Stackdriver')
-    else:
-        log.debug('The instance is not listed in Stackdriver')
-
-    return listed
-
-
-@timeit
-def set_maintenance_mode(stackdriver_username, stackdriver_api_key,
-                         instance_id):
-
-    log.debug('Placing {instance_id} into maintenance mode'.format(
-                                                    instance_id=instance_id))
-
-    while not registered_in_stackdriver(stackdriver_username,
-                                        stackdriver_api_key, instance_id):
-
-        log.error('The instance is not listed in Stackdriver')
-        log.debug('Trying again in 10 seconds')
-        time.sleep(10)
-
-    headers = {
-        'x-stackdriver-apikey': stackdriver_api_key,
-        'Content-Type': 'application/json'
-    }
-
-    log.debug('Using the headers {headers}'.format(headers=headers))
-
-    template = 'https://api.stackdriver.com/v0.2/instances/{id_}/maintenance/'
-    endpoint = template.format(id_=instance_id)
-
-    log.debug('Using the endpoint {endpoint}'.format(endpoint=endpoint))
-
-    body = {
-        'username': stackdriver_username,
-        'reason': "Waiting for MongoDB node to finish syncing.",
-        'maintenance': True
-    }
-
-    log.debug('Using the body {body}'.format(body=body))
-
-    data = json.dumps(body)
-
-    r = requests.put(endpoint, data=data, headers=headers)
-
-    log.debug('Received status code {code}'.format(code=r.status_code))
-
-    if r.status_code != 200:
-        log.critical('Failed to put the node into maintenance mode. '
-                     'Received code {code}'.format(code=r.status_code))
-        sys.exit(1)
-
-    else:
-        log.debug('Placed the node into maintenance mode')
-
-
-@timeit
-def unset_maintenance_mode(stackdriver_username, stackdriver_api_key,
-                           instance_id):
-
-    log.debug('Removing {instance_id} from maintenance mode'.format(
-                                                    instance_id=instance_id))
-
-    headers = {
-        'x-stackdriver-apikey': stackdriver_api_key,
-        'Content-Type': 'application/json'
-    }
-
-    log.debug('Using the headers {headers}'.format(headers=headers))
-
-    template = 'https://api.stackdriver.com/v0.2/instances/{id_}/maintenance/'
-    endpoint = template.format(id_=instance_id)
-
-    log.debug('Using the endpoint {endpoint}'.format(endpoint=endpoint))
-
-    body = {
-        'username': stackdriver_username,
-        'reason': "MongoDB node finished syncing.",
-        'maintenance': False
-    }
-
-    log.debug('Using the body {body}'.format(body=body))
-
-    data = json.dumps(body)
-
-    r = requests.put(endpoint, data=data, headers=headers)
-
-    log.debug('Received status code {code}'.format(code=r.status_code))
-
-    if r.status_code != 200:
-
-        log.critical('Failed to remove the node from maintenance mode. '
-                     'Received code {code}'.format(code=r.status_code))
-        sys.exit(1)
-
-    else:
-
-        log.debug('Removed the node from maintenance mode.')
-
-
 @timeit
 def wait_for_sync(node):
 
@@ -493,9 +381,7 @@ def wait_for_sync(node):
 
 
 @timeit
-def stop_decommissioned_node(address, terminate=False,
-                             stackdriver_username=None,
-                             stackdriver_api_key=None):
+def stop_decommissioned_node(address, terminate=False):
 
     log.debug('Stopping or terminating the node at {address}'.format(
                                                         address=address))
@@ -506,8 +392,7 @@ def stop_decommissioned_node(address, terminate=False,
 
     log.debug('The instance ID is {id_}'.format(id_=instance_id))
 
-    set_maintenance_mode(stackdriver_username, stackdriver_api_key,
-                         instance_id)
+    set_maintenance_mode(instance_id)
 
     log.debug('Establishing a connection to AWS EC2 us-east-1')
     conn = boto.ec2.connect_to_region('us-east-1')
@@ -538,7 +423,6 @@ def stop_decommissioned_node(address, terminate=False,
             log.debug('Failed to stop {instance}'.format(
                                                         instance=instance_id))
 
-
 @timeit
 def replace_server(environment=None, group=None, subnet_id=None,
                    instance_type=None, availability_zone=None,
@@ -551,22 +435,6 @@ def replace_server(environment=None, group=None, subnet_id=None,
     if member is None:
 
         log.critical('No existing member defined.')
-        sys.exit(1)
-
-    stackdriver_api_key = os.environ.get('STACKDRIVER_API_KEY', False)
-
-    if not stackdriver_api_key:
-
-        log.critical('The environment variable STACKDRIVER_API_KEY '
-                     'is undefined')
-        sys.exit(1)
-
-    stackdriver_username = os.environ.get('STACKDRIVER_USERNAME', False)
-
-    if not stackdriver_username:
-
-        log.critical('The environment variable STACKDRIVER_USERNAME '
-                     'is undefined')
         sys.exit(1)
 
     replica_set = ReplicaSet(member)
@@ -675,9 +543,7 @@ def replace_server(environment=None, group=None, subnet_id=None,
 
         if replace:
             log.info('Terminating the previous arbiter')
-            stop_decommissioned_node(member, terminate=terminate,
-                                     stackdriver_username=stackdriver_username,
-                                     stackdriver_api_key=stackdriver_api_key)
+            stop_decommissioned_node(member, terminate=terminate)
 
         return
 
@@ -691,8 +557,7 @@ def replace_server(environment=None, group=None, subnet_id=None,
                          replica_set_template=replica_set_name)
 
     log.info('Placing the new node in maintenance mode')
-    set_maintenance_mode(stackdriver_username, stackdriver_api_key,
-                         node.instance.id)
+    set_maintenance_mode(node.instance.id)
 
     log.info('Adding the new node to the replica set')
 
@@ -717,8 +582,7 @@ def replace_server(environment=None, group=None, subnet_id=None,
     wait_for_sync(node)
 
     log.info('Removing the node from maintenance mode')
-    unset_maintenance_mode(stackdriver_username, stackdriver_api_key,
-                           node.instance.id)
+    unset_maintenance_mode(node.instance.id)
 
     if arbiter is not None:
         log.info('Adding the arbiter back into the replica set')
@@ -744,9 +608,7 @@ def replace_server(environment=None, group=None, subnet_id=None,
         replica_set.remove_member(member)
 
         log.info('Terminating the previous node')
-        stop_decommissioned_node(member, terminate=terminate,
-                                 stackdriver_username=stackdriver_username,
-                                 stackdriver_api_key=stackdriver_api_key)
+        stop_decommissioned_node(member, terminate=terminate)
 
         if node_type == 'data' and reroute:
             log.info('Redirecting previous DNS entry')
