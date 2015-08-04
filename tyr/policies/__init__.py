@@ -14,5 +14,6 @@ policies = {
     'allow-get-nginx-config': s3.allow_get_nginx_config,
     'allow-describe-elbs': elb.allow_describe_elbs,
     'allow-modify-nginx-elbs-stage': elb.allow_modify_nginx_elbs_stage,
-    'allow-modify-nginx-elbs-prod': elb.allow_modify_nginx_elbs_prod
+    'allow-modify-nginx-elbs-prod': elb.allow_modify_nginx_elbs_prod,
+    'allow-get-solr-schema': s3.allow_get_solr_schema
 }

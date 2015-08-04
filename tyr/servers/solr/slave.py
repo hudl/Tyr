@@ -6,7 +6,10 @@ class SolrSlaveNode(Server):
 
     SERVER_TYPE = 'solr'
     CHEF_RUNLIST = ['role[RoleSolr]']
-    IAM_ROLE_POLICIES = ['allow-volume-control']
+    IAM_ROLE_POLICIES = [
+        'allow-volume-control',
+        'allow-get-solr-schema'
+    ]
 
     def __init__(self, group=None, server_type=None, instance_type=None,
                  environment=None, ami=None, region=None, role=None,
@@ -16,7 +19,8 @@ class SolrSlaveNode(Server):
 
         self.master = master
 
-        if server_type is None: server_type = self.SERVER_TYPE
+        if server_type is None:
+            server_type = self.SERVER_TYPE
 
         super(SolrSlaveNode, self).__init__(group, server_type, instance_type,
                                             environment, ami, region, role,
