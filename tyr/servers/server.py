@@ -21,6 +21,8 @@ class Server(object):
     NAME_SEARCH_PREFIX = '{envcl}-{location}-'
     NAME_AUTO_INDEX = True
 
+    GLOBAL_IAM_ROLE_POLICIES = ["allow-get-chef-artifacts","allow-describe-tags","allow-describe-instances"]
+
     IAM_ROLE_POLICIES = []
 
     CHEF_RUNLIST = ['role[RoleBase]']
@@ -390,6 +392,7 @@ echo '{validation_key}' > /etc/chef/validation.pem
 echo 'chef_server_url "http://chef.app.hudl.com/"
 node_name "{name}"
 validation_client_name "chef-validator"' > /etc/chef/client.rb
+/usr/bin/aws s3 cp s3://hudl-chef-artifacts/databag/encrypted_data_bag_secret /etc/chef/encrypted_data_bag_secret
 curl -L https://www.opscode.com/chef/install.sh | bash;
 yum install -y gcc
 chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}"""
@@ -545,6 +548,8 @@ named {name}""".format(path=d['path'], name=d['name']))
         self.log.info('Existing policies: '
                       '{policies}'.format(policies=existing_policies))
 
+        self.IAM_ROLE_POLICIES.extend(self.GLOBAL_IAM_ROLE_POLICIES)
+        self.IAM_ROLE_POLICIES = set(self.IAM_ROLE_POLICIES)
         for policy_template in self.IAM_ROLE_POLICIES:
             policy = policy_template.format(environment=self.environment)
 

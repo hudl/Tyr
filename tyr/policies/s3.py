@@ -121,3 +121,30 @@ allow_get_hudl_config = """{
     ]
 }
 """
+
+allow_get_chef_artifacts = """{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "Stmt1408567829000",
+            "Effect": "Allow",
+            "Action": [
+                "s3:ListBucket"
+            ],
+            "Resource": [
+                "arn:aws:s3:::hudl-chef-artifacts/*"
+            ]
+        },
+        {
+            "Sid": "Stmt1408567479000",
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::hudl-chef-artifacts/*"
+            ]
+        }
+    ]
+}
+"""
