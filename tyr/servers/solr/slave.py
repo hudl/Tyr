@@ -32,6 +32,15 @@ class SolrSlaveNode(Server):
             self.log.critical('The solr master is not defined')
             sys.exit(1)
 
+        self.security_groups = [
+            'management',
+            'chef-nodes',
+            self.envcl,
+            '{env}-solr-management'.format(env=self.environment[0])
+        ]
+
+        self.resolve_security_groups()
+
     def bake(self):
 
         super(SolrSlaveNode, self).bake()
