@@ -60,7 +60,7 @@ class Server(object):
         except:
             pass
 
-        log = logging.getLogger('tyr.{c}'
+        log = logging.getLogger('Tyr.{c}'
                                 .format(c=self.__class__.__name__))
         log.setLevel(logging.DEBUG)
         self.log = log

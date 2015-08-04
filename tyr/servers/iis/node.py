@@ -12,6 +12,7 @@ class IISNode(Server):
 
     IAM_ROLE_POLICIES = [
         'allow-describe-instances',
+        'allow-create-tags',
         'allow-describe-tags',
         'allow-describe-elbs',
         'allow-set-cloudwatch-alarms',
@@ -76,10 +77,8 @@ class IISNode(Server):
 
         self.ports_to_authorize = [9000, 9001, 8095, 8096]
 
-        self.IAM_ROLE_POLICIES.append('allow-web-initialization-{0}'
-                                      .format(self.environment))
-        self.IAM_ROLE_POLICIES.append('allow-outpost-sns-{0}'
-                                      .format(self.environment))
+        self.IAM_ROLE_POLICIES.append('allow-web-initialization-{environment}')
+        self.IAM_ROLE_POLICIES.append('allow-outpost-sns-{environment}')
 
     def configure(self):
         super(IISNode, self).establish_logger()
