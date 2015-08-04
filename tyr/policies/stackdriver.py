@@ -1,8 +1,8 @@
-{ 
-    "_disk_gt_70pct_10m": {
-      "groups": ["all prod web", "p-mongo-all", "p-rabbit", "p-solr", "p-sql"],
-      "condition_type": "threshold",
-      "options": {
+conditions = {
+    "disk_gt_70pct_10m":  {
+        "groups": ["all prod web", "p-mongo-all", "p-rabbit", "p-solr", "p-sql"],
+        "condition_type": "threshold",
+        "options": {
             "comparison": "above",
             "metric_name": "agent:df:*:used:pct",
             "metric_type": "disk_usage",
@@ -13,7 +13,7 @@
     },
 
     "general_mem_gt_something": {
-      "groups": ["web", "p-mongo", "p-rabbit", "p-solr", "p-sql"],
+        "groups": ["web", "p-mongo", "p-rabbit", "p-solr", "p-sql"],
         "condition_type": "threshold",
         "options": {
             "comparison": "above",
@@ -22,17 +22,18 @@
         }
     },
 
-    "general_disk_gt_something": {
-      "groups": ["web", "p-mongo", "p-rabbit", "p-solr", "p-sql"],
-      "condition_type": "threshold",
-      "options": {
+    "general_disk_gt_something":  {
+        "groups": ["web", "p-mongo", "p-rabbit", "p-solr", "p-sql"],
+        "condition_type": "threshold",
+        "options": {
             "comparison": "above",
             "metric_type": "disk_usage",
             "resource_type": "Instance"
         }
     },
-    "general_cpu_gt_something": {
-      "groups": ["p-web", "p-mongo", "p-rabbit", "p-solr", "p-sql", "web"],
+
+    "general_cpu_gt_something":  {
+        "groups": ["p-web", "p-mongo", "p-rabbit", "p-solr", "p-sql", "web"],
         "condition_type": "threshold",
         "options": {
             "comparison": "above",
@@ -40,9 +41,9 @@
             "resource_type": "Instance"
         }
     },
-    
-    "general_cpu_gt_80pct_5m": {
-      "groups": ["p-queues-jobs"],
+
+    "general_cpu_gt_80pct_5m":  {
+        "groups": ["p-queues-jobs"],
         "condition_type": "threshold",
         "options": {
             "comparison": "above",
@@ -55,7 +56,7 @@
         }
     },
 
-    "web_cpu_gt_95pct_15m": {
+    "web_cpu_gt_95pct_15m":  {
         "groups": ["all prod web"],
         "condition_type": "threshold",
         "options": {
@@ -69,7 +70,17 @@
         }
     },
 
-    "web_cpu_gt_90pct_5m": {
+    "web_cloudwatch_cpu_gt_90pct_5m":  {
+        "groups": ["p-web", "p-mongo", "p-rabbit", "p-solr", "p-sql", "web"],
+        "condition_type": "threshold",
+        "options": {
+            "comparison": "above",
+            "metric_type": "cloudwatch_cpu",
+            "resource_type": "Instance"
+        }
+    },
+
+    "web_cpu_gt_90pct_5m":  {
         "condition_type": "threshold",
         "groups": ["web"],
         "options": {
@@ -83,7 +94,7 @@
         }
     },
 
-    "web_not_registered_with_eureka": {
+    "web_not_registered_with_eureka":  {
         "condition_type": "threshold",
         "groups": ["web"],
         "options": {
@@ -95,8 +106,8 @@
             "threshold_unit": "custom"
         }
     },
-    
-    "postfix_mem_gt_90pct_5m": {
+
+    "postfix_mem_gt_90pct_5m":  {
         "condition_type": "threshold",
         "groups": ["p-postfix"],
         "options": {
@@ -110,7 +121,7 @@
         }
     },
 
-    "rabbit_process_running": {
+    "rabbit_process_running":  {
         "groups": ["p-rabbit"],
         "condition_type": "process_health",
         "options": {
@@ -119,11 +130,12 @@
             "process": "/usr/sbin/rabbitmq-server",
             "resource_type": "Instance",
             "threshold": 1,
-            "user": null,
+            "user": None,
             "window": 300
         }
     },
-    "mongo_process_running": { 
+
+    "mongo_process_running":  {
         "groups": ["p-mongo", "p-mongo-all"],
         "condition_type": "process_health",
         "options": {
@@ -132,11 +144,12 @@
             "process": "/usr/bin/mongod",
             "resource_type": "Instance",
             "threshold": 1,
-            "user": null,
+            "user": None,
             "window": 300
         }
     },
-    "nginx_process_running": {
+
+    "nginx_process_running":  {
         "condition_type": "process_health",
         "groups": ["p-nginx"],
         "options": {
@@ -145,11 +158,12 @@
             "process": "nginx: master process",
             "resource_type": "Instance",
             "threshold": 1,
-            "user": null,
+            "user": None,
             "window": 300
         }
     },
-    "solr_process_running": {
+
+    "solr_process_running":  {
         "condition_type": "process_health",
         "groups": ["p-solr"],
         "options": {
@@ -158,14 +172,14 @@
             "process": "sudo java -Deureka.name=SOLR",
             "resource_type": "Instance",
             "threshold": 1,
-            "user": null,
+            "user": None,
             "window": 300
         }
     },
 
-    "rds_cpu_gt_80pct_5m": {
+    "rds_cpu_gt_80pct_5m":  {
         "condition_type": "threshold",
-        "instances":["p-quartz-vpc"],
+        "instances": ["p-quartz-vpc"],
         "options": {
             "applies_to": "single",
             "comparison": "above",
@@ -179,9 +193,9 @@
         }
     },
 
-    "rds_disk_gt_80pct_5m":{
+    "rds_disk_gt_80pct_5m": {
         "condition_type": "threshold",
-        "instances":["p-quartz-vpc"],
+        "instances": ["p-quartz-vpc"],
         "options": {
             "applies_to": "single",
             "comparison": "above",
@@ -194,5 +208,29 @@
             "window": 300
         }
     }
+}
 
+
+notifications = {
+
+    "heimdall":  {
+        "notification_type": "static_webhook",
+        "notify_on": "all",
+        "static_webhook": 65,
+        "status": "active"
+    },
+    "pagerduty": {
+        "notification_type": "pagerduty",
+        "notify_on": "all",
+        "resource": "/v0.2/settings/channels/pagerduty/183/",
+        "status": "active"
+    },
+    "general_1": {
+        "notification_type": "static_webhook",
+        "notification_value": 5
+    },
+    "general_2": {
+        "notification_type": "pagerduty",
+        "notification_value": 49
+    }
 }

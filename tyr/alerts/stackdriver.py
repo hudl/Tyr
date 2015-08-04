@@ -5,7 +5,8 @@ import json
 import logging
 import re
 import os
-
+from tyr.policies.stackdriver import conditions
+from tyr.policies.stackdriver import notifications
 
 API_ENDPOINT = 'https://api.stackdriver.com/'
 API_KEY = os.environ['STACKDRIVER_API_KEY']
@@ -34,7 +35,8 @@ class StackDriver:
 
     def __init__(self):
         self.headers = {"x-stackdriver-apikey": API_KEY}
-        self.read_config()
+        self.conditions = conditions
+        self.notifications = notifications
         self.policies = self.get_policy_list()
         self.groups = self.get_group_list()
 
@@ -42,18 +44,19 @@ class StackDriver:
         logging.shutdown()
         exit(code)
 
-    def read_config(self):
-        with open(os.path.abspath(os.path.dirname(__file__)) +
-                  '/../policies/stackdriver_conditions.json', 'r') as jsonfile:
-            self.conditions = json.load(jsonfile)
+    # def read_config(self):
+    #     with open(os.path.abspath(os.path.dirname(__file__)) +
+    #               '/../policies/stackdriver_conditions.json', 'r') as jsonfile:
+    #         self.conditions = json.load(jsonfile)
 
-        with open(os.path.abspath(os.path.dirname(__file__)) +
-                  '/../policies/stackdriver_notifications.json',
-                  'r') as jsonfile:
-            self.notifications = json.load(jsonfile)
+    #     with open(os.path.abspath(os.path.dirname(__file__)) +
+    #               '/../policies/stackdriver_notifications.json',
+    #               'r') as jsonfile:
+    #         self.notifications = json.load(jsonfile)
 
     def get_policy_list(self):
         r = requests.get(API_ENDPOINT + LIST_POLICY_URL, headers=self.headers)
+        r.raise_for_status()
         return r.json()
 
     def pretty_print_json(self, obj):
@@ -61,9 +64,11 @@ class StackDriver:
                          indent=4, separators=(',', ': ')))
 
     def get_group_list(self):
-        groups = requests.get(API_ENDPOINT + LIST_GROUPS_URL,
-                              headers=self.headers)
-        return groups.json()['data']
+        r = requests.get(API_ENDPOINT + LIST_GROUPS_URL,
+                         headers=self.headers)
+        r.raise_for_status()
+        groups = r.json()
+        return groups['data']
 
     def get_group_id_by_name(self, name):
         for group in self.groups:
@@ -72,9 +77,18 @@ class StackDriver:
                           .format(id=group['id'], group=name))
                 return group['id']
 
+    def get_group_name_by_id(self, id):
+        for group in self.groups:
+            if group['id'] == id:
+                log.debug('Retrieved group {name} for {id}'
+                          .format(id=group['id'], name=group['name']))
+                return group['name']
+
     def get_group_by_id(self, id):
-        group = requests.get(API_ENDPOINT + GET_GROUP_URL.format(group_id=id),
-                             headers=self.headers).json()
+        r = requests.get(API_ENDPOINT + GET_GROUP_URL.format(group_id=id),
+                         headers=self.headers)
+        r.raise_for_status()
+        group = r.json()['data']
         log.debug('Retrieved group {group} for {id}'
                   .format(id=group['id'], group=group['name']))
         return group
@@ -202,9 +216,9 @@ class StackDriver:
         import csv
         with open(filename, 'wb') as csvfile:
             writer = csv.writer(csvfile, dialect='excel')
-            writer.writerow(['group', 'policy_name', 'condition_type'
-                             'metric_name', 'metric_type', 'threshold',
-                             'window', 'process'])
+            writer.writerow(['group', 'parent_group', 'policy_name',
+                             'condition_type', 'metric_name', 'metric_type',
+                             'threshold', 'window', 'process'])
             keys = ['metric_name', 'metric_type',
                     'threshold', 'window', 'process']
             for group in self.groups:
@@ -212,6 +226,11 @@ class StackDriver:
                 for pol in pols:
                     opts_list = []
                     opts_list.append(group['name'])
+                    if group['parent_id']:
+                        opts_list.append(
+                            self.get_group_name_by_id(group['parent_id']))
+                    else:
+                        opts_list.append(' ')
                     opts_list.append(pol['name'])
                     opts_list.append(pol['condition_type'])
                     for key in keys:

@@ -1,6 +1,8 @@
 import ec2
 import s3
 import elb
+import stackdriver
+
 
 policies = {
     'allow-volume-control': ec2.allow_volume_control,
