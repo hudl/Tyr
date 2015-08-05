@@ -549,18 +549,26 @@ named {name}""".format(path=d['path'], name=d['name']))
         self.log.info('Existing policies: '
                       '{policies}'.format(policies=existing_policies))
 
-        for policy in self.IAM_ROLE_POLICIES:
+        for policy_template in self.IAM_ROLE_POLICIES:
+            policy = policy_template.format(environment=self.environment)
 
             self.log.info('Processing policy "{policy}"'.format(policy=policy))
 
             if policy not in existing_policies:
+
+                rolePolicy = policies[policy]
+
+                if rolePolicy is None:
+                    self.log.info("No policy defined for {policy}".format(
+                                  policy=policy))
+                    continue  # Go to the next policy
 
                 self.log.info('Policy "{policy}" does not exist'.format(
                                         policy=policy))
 
                 try:
                     self.iam.put_role_policy(self.role, policy,
-                                             policies[policy])
+                                             rolePolicy)
 
                     self.log.info('Added policy "{policy}"'.format(
                                         policy=policy))
