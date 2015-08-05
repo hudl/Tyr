@@ -8,11 +8,14 @@ import chef
 import time
 from boto.ec2.networkinterface import NetworkInterfaceSpecification
 import json
+import re
 from boto.ec2.networkinterface import NetworkInterfaceCollection
 import urllib
 from boto.vpc import VPCConnection
 from paramiko.client import AutoAddPolicy, SSHClient
 from tyr.policies import policies
+from tyr.security_groups import security_groups
+from tyr.security_groups.constants import constants as sg_constants
 
 
 class Server(object):
@@ -481,18 +484,114 @@ named {name}""".format(path=d['path'], name=d['name']))
 
             if not exists(group):
                 self.log.info('Security Group {group} does not exist'.format(
-                                group=group))
-                if self.subnet_id is None:
-                    self.ec2.create_security_group(group, group)
-                else:
-                    vpc_conn = VPCConnection()
-                    vpc_conn.create_security_group(
-                        group, group, vpc_id=self.vpc_id)
+                                group = group))
+                self.ec2.create_security_group(group, group,
+                                               vpc_id=self.vpc_id)
                 self.log.info('Created security group {group}'.format(
                                 group=group))
             else:
                 self.log.info('Security Group {group} already exists'.format(
                                 group=group))
+
+        for group in self.security_groups:
+            for key in security_groups.keys():
+                if not re.match(key, group): continue
+
+                self.log.info('Setting inbound rules for {group}'.format(
+                                                            group = group))
+
+                filters = {'group-name': group}
+                gs = self.ec2.get_all_security_groups(filters=filters)
+                g = [g for g in gs if g.vpc_id == self.vpc_id][0]
+
+                self.log.info('Using group {}'.format(g.id))
+
+                for rule in security_groups[key]['rules']:
+
+                    self.log.info('Adding rule {rule}'.format(rule=rule))
+
+                    params = {}
+
+                    try:
+                        params['ip_protocol'] = rule['ip_protocol']
+                    except KeyError:
+                        self.log.warning('No IP protocol defined. Using TCP.')
+                        params['ip_protocol'] = 'tcp'
+
+                    if isinstance(rule['port'], (int, long)):
+                        params['from_port'] = rule['port']
+                        params['to_port'] = rule['port']
+                    elif '-' in rule['port']:
+                        ports = [int(p) for p in rule['port'].split('-')]
+
+                        if ports[0] == ports[1]:
+                            params['from_port'] = ports[0]
+                            params['to_port'] = ports[0]
+                        else:
+                            params['from_port'] = min(ports)
+                            params['to_port'] = max(ports)
+                    else:
+                        params['from_port'] = int(rule['port'])
+                        params['to_port'] = int(rule['port'])
+
+                    cidr_ip_pattern = '^((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.)' \
+                    '{3}(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)/(3[0-2]|[1-2]?[0-9])$'
+
+                    ip_pattern = '^(\[0-9]{1,3})\.(\[0-9]{1,3})\.(\[0-9]{1,3}' \
+                    ')\.(\[0-9]{1,3})$'
+
+                    complete_rules = []
+
+                    if isinstance(rule['source'], str):
+                        rule['source'] = [rule['source']]
+
+                    for source in rule['source']:
+                        complete_params = params.copy()
+
+                        if isinstance(source, str):
+                            source = {
+                                        'value': source,
+                                        'rule': '.*'
+                                     }
+
+                        if not re.match(source['rule'], group): continue
+
+                        if source['value'][0] == '@':
+                            source['value'] = sg_constants[source['value'][1:]]
+
+                        if re.match(cidr_ip_pattern, source['value']):
+                            complete_params['cidr_ip'] = source['value']
+                        elif re.match(ip_pattern, source['value']):
+                            complete_params['cidr_ip'] = source['value']+'/32'
+                        else:
+                            name = source['value'].format(
+                                                        env=self.environment[0],
+                                                        group=self.group,
+                                                        type_=self.server_type)
+
+                            filters = {'group-name': name}
+                            groups = self.ec2.get_all_security_groups(
+                                                            filters=filters)
+
+                            groups = [t for t in groups if
+                                      t.vpc_id == self.vpc_id]
+
+                            complete_params['src_group'] = groups[0]
+
+                        complete_rules.append(complete_params)
+
+                    for complete_params in complete_rules:
+                        self.log.info('Adding inbound rule {rule}'.format(
+                                                        rule=complete_params))
+                        try:
+                            g.authorize(**complete_params)
+                            self.log.info('Added inbound rule')
+                        except Exception, e:
+                            self.log.warn('Failed to add inbound rule')
+                            if 'InvalidPermission.Duplicate' in str(e):
+                                self.log.info('Inbound rule already exists')
+                            else:
+                                raise e
 
     def resolve_iam_role(self):
 
