@@ -23,7 +23,8 @@ class Server(object):
 
     GLOBAL_IAM_ROLE_POLICIES = ['allow-get-chef-artifacts-chef-client',
                                 'allow-describe-tags',
-                                'allow-describe-instances']
+                                'allow-describe-instances'
+    ]
 
     IAM_ROLE_POLICIES = []
 
