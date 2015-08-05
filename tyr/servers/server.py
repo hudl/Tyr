@@ -21,7 +21,9 @@ class Server(object):
     NAME_SEARCH_PREFIX = '{envcl}-{location}-'
     NAME_AUTO_INDEX = True
 
-    GLOBAL_IAM_ROLE_POLICIES = ["allow-get-chef-artifacts","allow-describe-tags","allow-describe-instances"]
+    GLOBAL_IAM_ROLE_POLICIES = ['allow-get-chef-artifacts-chef-client',
+                                'allow-describe-tags',
+                                'allow-describe-instances']
 
     IAM_ROLE_POLICIES = []
 
@@ -392,7 +394,7 @@ echo '{validation_key}' > /etc/chef/validation.pem
 echo 'chef_server_url "http://chef.app.hudl.com/"
 node_name "{name}"
 validation_client_name "chef-validator"' > /etc/chef/client.rb
-/usr/bin/aws s3 cp s3://hudl-chef-artifacts/databag/encrypted_data_bag_secret /etc/chef/encrypted_data_bag_secret
+/usr/bin/aws s3 cp s3://hudl-chef-artifacts/chef-client/encrypted_data_bag_secret /etc/chef/encrypted_data_bag_secret
 curl -L https://www.opscode.com/chef/install.sh | bash;
 yum install -y gcc
 chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}"""

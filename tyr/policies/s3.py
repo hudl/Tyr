@@ -122,7 +122,7 @@ allow_get_hudl_config = """{
 }
 """
 
-allow_get_chef_artifacts = """{
+allow_get_chef_artifacts_chef_client = """{
     "Version": "2012-10-17",
     "Statement": [
         {
@@ -142,7 +142,7 @@ allow_get_chef_artifacts = """{
                 "s3:GetObject"
             ],
             "Resource": [
-                "arn:aws:s3:::hudl-chef-artifacts/*"
+                "arn:aws:s3:::hudl-chef-artifacts/chef-client/*"
             ]
         }
     ]

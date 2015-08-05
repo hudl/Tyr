@@ -20,7 +20,8 @@ policies = {
     'allow-modify-nginx-elbs-prod': elb.allow_modify_nginx_elbs_prod,
     'allow-describe-snapshots': ec2.allow_describe_snapshots,
     'allow-get-hudl-config': s3.allow_get_hudl_config,
-    'allow-get-chef-artifacts': s3.allow_get_chef_artifacts,
+    'allow-get-chef-artifacts-chef-client':
+    s3.allow_get_chef_artifacts_chef_client,
     'allow-update-route53-test': None,
     'allow-update-route53-prod': route53.allow_update_route53_prod,
     'allow-update-route53-stage': route53.allow_update_route53_stage
