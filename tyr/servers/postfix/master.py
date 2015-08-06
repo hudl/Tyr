@@ -40,8 +40,7 @@ class PostfixMaster(Server):
         super(PostfixMaster, self).configure()
 
         if self.mail_name:
-            elastic_ip = self.check_mail_server()
-            self.ELASTIC_IP = elastic_ip
+            self.ELASTIC_IP = self.check_mail_server()
             self.log.info('Found mail server!')
         else:
             self.log.critical('Must specify a mail server configured in '
