@@ -13,8 +13,7 @@ import urllib
 from boto.vpc import VPCConnection
 from paramiko.client import AutoAddPolicy, SSHClient
 from tyr.policies import policies
-from tyr.utilities.stackdriver import (set_maintenance_mode,
-                                       unset_maintenance_mode)
+from tyr.utilities.stackdriver import set_maintenance_mode
 
 
 class Server(object):
@@ -26,8 +25,6 @@ class Server(object):
     IAM_ROLE_POLICIES = []
 
     CHEF_RUNLIST = ['role[RoleBase]']
-    STACKDRIVER_API_KEY  = os.environ.get('STACKDRIVER_API_KEY', False)
-    STACKDRIVER_USERNAME = os.environ.get('STACKDRIVER_USERNAME', False)
 
     def __init__(self, group=None, server_type=None, instance_type=None,
                  environment=None, ami=None, region=None, role=None,

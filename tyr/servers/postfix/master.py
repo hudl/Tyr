@@ -160,7 +160,7 @@ class PostfixMaster(Server):
 
     def autorun(self):
         """
-        Asign the EIP after the instance is up and configured.
+        Assign the EIP after the instance is up and configured.
         """
 
         super(PostfixMaster, self).autorun()
