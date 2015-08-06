@@ -898,10 +898,10 @@ named {name}""".format(path=d['path'], name=d['name']))
 
         if instance_id in terminated:
             self.log.info('Successfully terminated {instance}'.format(
-                                                        instance=instance_id))
+                            instance=instance_id))
         else:
             self.log.info('Failed to terminate {instance}'.format(
-                                                    instance=instance_id))
+                            instance=instance_id))
 
     def bake(self):
 
