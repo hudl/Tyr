@@ -210,27 +210,53 @@ conditions = {
     }
 }
 
+notification_groups = {
 
-notifications = {
+    "hudl-assistedbreakdown": {
+        "heimdall_webhook": "hudl-assistedbreakdown",
+        "pagerduty":  "hudl-assistedbreakdown",
+        "email_team": "infrastructure"
+    },
 
-    "heimdall":  {
+    "test": {
+        "email_team": "infrastructure"
+    }
+}
+
+notification_types = {
+
+    "email_team": {
+        "notification_type": "team",
+        "notification_value": None,
+        "notification_options": {
+            "primary_notification": "email"
+        }
+    },
+
+    "heimdall_webhook": {
         "notification_type": "static_webhook",
         "notify_on": "all",
-        "static_webhook": 65,
+        "static_webhook": None,
         "status": "active"
     },
+
     "pagerduty": {
         "notification_type": "pagerduty",
-        "notify_on": "all",
-        "resource": "/v0.2/settings/channels/pagerduty/183/",
-        "status": "active"
+        "notification_value": None
+    }
+}
+
+notification_lookups = {
+
+    "heimdall_webhook": {
+        "hudl-assistedbreakdown": 5,
     },
-    "general_1": {
-        "notification_type": "static_webhook",
-        "notification_value": 5
+
+    "pagerduty": {
+        "hudl-assistedbreakdown": 49,
     },
-    "general_2": {
-        "notification_type": "pagerduty",
-        "notification_value": 49
+
+    "email_team": {
+        "infrastructure": 1
     }
 }

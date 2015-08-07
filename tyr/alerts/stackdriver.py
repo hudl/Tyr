@@ -5,11 +5,17 @@ import json
 import logging
 import re
 import os
+import collections
+from copy import deepcopy
 from tyr.policies.stackdriver import conditions
-from tyr.policies.stackdriver import notifications
+from tyr.policies.stackdriver import notification_types
+from tyr.policies.stackdriver import notification_groups
+from tyr.policies.stackdriver import notification_lookups
 
 API_ENDPOINT = 'https://api.stackdriver.com/'
 API_KEY = os.environ['STACKDRIVER_API_KEY']
+USERNAME = os.environ['STACKDRIVER_USERNAME']
+PASSWORD = os.environ['STACKDRIVER_PASSWORD']
 LOGIN_URL = 'https://app.stackdriver.com/account/login/'
 POST_ALERT_URL = "https://app.stackdriver.com/api/alerting/policy"
 
@@ -30,52 +36,123 @@ GET_POLICY_URL = "/v0.2/alerting/policies/{policy_id}/"
 GET_GROUP_URL = "/v0.2/groups/{group_id}/"
 LIST_GROUP_MEMBERS_URL = "/v0.2/groups/{group_id}/members/"
 
+# URLs not in the API
+CREATE_POLICY_URL = "https://app.stackdriver.com/api/alerting/policy"
+USER_LOGIN_URL = "https://app.stackdriver.com/account/login/"
+USER_LOGOUT_URL = "https://app.stackdriver.com/account/logout/"
+STATIC_WEBHOOKS_URL = "https://app.stackdriver.com/api/settings/static_webhook"
+TEAMS_URL = "https://app.stackdriver.com/api/settings/teams"
+SLACK_URL = "https://app.stackdriver.com/api/settings/slack"
+PAGERDUTY_SERVICES_URL = "https://app.stackdriver.com/api/settings/pagerduty_services"
+
 
 class StackDriver:
 
     def __init__(self):
         self.headers = {"x-stackdriver-apikey": API_KEY}
         self.conditions = conditions
-        self.notifications = notifications
+        self.notification_types = notification_types
+        self.notification_groups = notification_groups
+        self.notification_lookups = notification_lookups
         self.policies = self.get_policy_list()
         self.groups = self.get_group_list()
+        self.user_login()
+        self.teams = self.get_teams_list()
+        self.webhooks = self.get_static_webhooks_list()
 
     def exit_flush(self, code):
         logging.shutdown()
         exit(code)
 
-    # def read_config(self):
-    #     with open(os.path.abspath(os.path.dirname(__file__)) +
-    #               '/../policies/stackdriver_conditions.json', 'r') as jsonfile:
-    #         self.conditions = json.load(jsonfile)
-
-    #     with open(os.path.abspath(os.path.dirname(__file__)) +
-    #               '/../policies/stackdriver_notifications.json',
-    #               'r') as jsonfile:
-    #         self.notifications = json.load(jsonfile)
+    def merge_dict(self, a, b):
+        '''recursively merges dict's. not just simple a['key'] = b['key'], if
+        both a and b have a key who's value is a dict then dict_merge is called
+        on both values and the result stored in the returned dictionary.
+        See: https://www.xormedia.com/recursively-merge-dictionaries-in-python/
+        '''
+        if not isinstance(b, dict):
+            return b
+        result = deepcopy(a)
+        for k, v in b.iteritems():
+            if k in result and isinstance(result[k], dict):
+                    result[k] = dict_merge(result[k], v)
+            else:
+                result[k] = deepcopy(v)
+        return result
 
     def get_policy_list(self):
-        r = requests.get(API_ENDPOINT + LIST_POLICY_URL, headers=self.headers)
-        r.raise_for_status()
-        return r.json()
+        return self.get_paginated_list(LIST_POLICY_URL)
 
     def pretty_print_json(self, obj):
         print(json.dumps(obj, sort_keys=True,
                          indent=4, separators=(',', ': ')))
 
-    def get_group_list(self):
-        r = requests.get(API_ENDPOINT + LIST_GROUPS_URL,
-                         headers=self.headers)
+    def get_teams_list(self):
+        r = self.session.get(TEAMS_URL)
         r.raise_for_status()
-        groups = r.json()
+        # We get back some slightly mangled JSON here
+        return r.text.split('\n')[1]
+
+    def get_static_webhooks_list(self):
+        r = self.session.get(STATIC_WEBHOOKS_URL)
+        # We get back some slightly mangled JSON here
+        r.raise_for_status()
+        return r.text.split('\n')[1]
+
+    def get_group_list(self):
+        groups = self.get_paginated_list(LIST_GROUPS_URL)
         return groups['data']
 
+    def get_paginated_list(self, list_url):
+        r = requests.get(API_ENDPOINT + list_url,
+                         headers=self.headers)
+        r.raise_for_status()
+        full_list = r.json()
+        part_list = r.json()
+
+        while True:
+            if 'next' in part_list['meta']:
+                r = requests.get(API_ENDPOINT + part_list['meta']['next'],
+                                 headers=self.headers)
+                r.raise_for_status()
+                part_list = r.json()
+                if len(part_list['data']) > 0:
+                    full_list['data'].extend(part_list['data'])
+            else:
+                break
+        return full_list
+
     def get_group_id_by_name(self, name):
-        for group in self.groups:
-            if group['name'] == name:
-                log.debug('Retrieved group {id} for {group}'
-                          .format(id=group['id'], group=name))
-                return group['id']
+        if '/' in name:
+            # Group is a subgroup
+            parent = name.split('/')[0]
+            child = name.split('/')[1]
+        else:
+            parent = None
+        if parent:
+            parent_id = None
+            child_id = None
+            for group in self.groups:
+                if group['name'] == parent:
+                    parent_id = group['id']
+            for group in self.groups:
+                if group['name'] == child and group['parent_id'] == parent_id:
+                    child_id = group['id']
+                    log.debug('Retrieved child group {c} for {g} & parent {p}'
+                              .format(p=parent_id, c=child_id, g=name))
+                    return child_id
+            raise Exception('Unable to get parent/child group for name {g}!'
+                            .format(g=name))
+
+        else:
+            # Group is not a subgroup, so we should ignore them
+            for group in self.groups:
+                if group['name'] == name and not group['parent_id']:
+                    log.debug('Retrieved group {id} for {group}'
+                              .format(id=group['id'], group=name))
+                    return group['id']
+
+        raise Exception("Group {g} was not found!".format(g=name))
 
     def get_group_name_by_id(self, id):
         for group in self.groups:
@@ -241,36 +318,108 @@ class StackDriver:
                                 opts_list.append(' ')
                     writer.writerow(opts_list)
 
+    def user_login(self):
+        '''
+        Log into the stackdriver app as a normal user
+        '''
+        # Pick up a cookie and csrf session token
+        self.session = requests.Session()
+        r = self.session.get(USER_LOGIN_URL)
+        r.raise_for_status()
+        self.csrftoken = r.cookies['csrftoken']
+        print r.cookies
+
+        # Now actually login
+        data = {
+            "csrfmiddlewaretoken": self.csrftoken,
+            "username": USERNAME,
+            "password": PASSWORD,
+            "next": None
+        }
+
+        headers = {
+            "Referer": USER_LOGIN_URL,
+            "Host": "app.stackdriver.com",
+            "Origin": "https://app.stackdriver.com",
+        }
+        l = self.session.post(USER_LOGIN_URL, data=data,
+                              cookies=self.session.cookies, headers=headers)
+        l.raise_for_status()
+        # Test another request is working
+        t = self.session.get(STATIC_WEBHOOKS_URL, headers=headers)
+        t.raise_for_status()
+
+    def user_logout(self):
+        '''
+        Logout of the frontend app
+        '''
+        headers = {'Referer': 'https://app.stackdriver.com/'}
+        r = self.session.get(USER_LOGOUT_URL, headers=headers)
+        r.raise_for_status()
+        self.csrftoken = None
+        return r
+
     # TODO: This is not yet complete
     def create_policy_for_group(self,
+                                name,
                                 conditions,
                                 group,
                                 condition_type='or',
-                                notification_type='general_'):
+                                notification_group='test'):
         '''
         Create a new stackdriver alert policy from a template and apply to
         a specified group name
         '''
-        name = 'test'
         conditions_template = []
+        notifications = []
         for c in conditions:
             copy = c.copy()
             copy['options']['applies_to'] = 'group'
             copy['options']['group_id'] = self.get_group_id_by_name(group)
+            if copy['groups']:
+                copy.pop('groups')
+            copy['name'] = ('Tyr_applied_condition {typ} {c} {thres} for {g}'
+                            .format(typ=copy['options']['metric_type'],
+                                    c=copy['options']['comparison'],
+                                    thres=copy['options']['threshold'],
+                                    g=group))
             conditions_template.append(copy)
-        notifications = [v for k, v in self.notifications.items()
-                         if k.startswith(notification_type)]
+
+        for k, grp in self.notification_groups.items():
+            if notification_group in k:
+                for typ, lookup in grp.items():
+                    type_template = self.notification_types[typ].copy()
+                    type_template['notification_value'] = \
+                        self.notification_lookups[typ][lookup]
+                    notifications.append(type_template)
+
+        headers = {
+            "Referer": "https://app.stackdriver.com/policy-advanced/create",
+            "Host": "app.stackdriver.com",
+            "Origin": "https://app.stackdriver.com",
+            "X-CSRFToken": self.csrftoken,
+            "X-Requested-With": "XMLHttpRequest",
+            "Accept": "application/json, text/plain, */*",
+            "Accept-Encoding": "gzip, deflate"
+        }
+
         pol_template = {
             "name": name,
             "condition": {
                 "condition_type": condition_type,
                 "options": {},
-                "children": conditions
+                "children": conditions_template
             },
             "notification_methods": notifications,
             "document": {
-                "body": "Created by Tyr from policy template xxx"
+                "body": "Created by Tyr from policy template {name}"
+                .format(name=name)
             }
         }
+        self.pretty_print_json(pol_template)
 
-        #URL to submit to https://app.stackdriver.com/api/alerting/policy
+        r = self.session.post(CREATE_POLICY_URL,
+                              json=pol_template,
+                              headers=headers)
+        #r.raise_for_status()
+        return r
