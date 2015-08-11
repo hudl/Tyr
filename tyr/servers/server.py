@@ -553,7 +553,7 @@ named {name}""".format(path=d['path'], name=d['name']))
                       '{policies}'.format(policies=existing_policies))
 
         self.IAM_ROLE_POLICIES.extend(self.GLOBAL_IAM_ROLE_POLICIES)
-        self.IAM_ROLE_POLICIES = set(self.IAM_ROLE_POLICIES)
+        self.IAM_ROLE_POLICIES = list(set(self.IAM_ROLE_POLICIES))
         for policy_template in self.IAM_ROLE_POLICIES:
             policy = policy_template.format(environment=self.environment)
 
