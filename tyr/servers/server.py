@@ -3,7 +3,7 @@ import boto.ec2
 import boto.route53
 import boto.ec2.networkinterface
 import logging
-import os.path
+import os
 import chef
 import time
 from boto.ec2.networkinterface import NetworkInterfaceSpecification
@@ -13,6 +13,7 @@ import urllib
 from boto.vpc import VPCConnection
 from paramiko.client import AutoAddPolicy, SSHClient
 from tyr.policies import policies
+from tyr.utilities.stackdriver import set_maintenance_mode
 
 
 class Server(object):
@@ -880,6 +881,32 @@ named {name}""".format(path=d['path'], name=d['name']))
                 pass
 
             return state
+
+    def terminate(self):
+        """
+        Terminate a node from AWS
+        """
+
+        address = self.instance.private_ip_address
+        instance_id = self.instance.id
+
+        self.log.info('The instance ID is {id_}'.format(id_=instance_id))
+
+        set_maintenance_mode(instance_id)
+
+        self.log.info('Terminating node at {address}'.format(address=address))
+        response = self.ec2.terminate_instances(instance_ids=[instance_id])
+
+        self.log.info('Received the response {response}'.format(response=response))
+
+        terminated = [instance.id for instance in response]
+
+        if instance_id in terminated:
+            self.log.info('Successfully terminated {instance}'.format(
+                            instance=instance_id))
+        else:
+            self.log.info('Failed to terminate {instance}'.format(
+                            instance=instance_id))
 
     def bake(self):
 
