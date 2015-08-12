@@ -1,7 +1,7 @@
 conditions = {
     # These are template polcicies which form the conditions part
     # of the JSON documented submitted to stackdriver.
-    # Sicne this does not use a supported API, they may need
+    # Since this does not use a supported API, they may need
     # tweaking if/when extra fields are added or changed in
     # their webapp.
     #

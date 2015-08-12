@@ -1,45 +1,13 @@
 #!/usr/bin/python
-
-#
-# Some examples:
-#
-# To add all current web alert policies to a new multiverse group:
-# s.create_policy_for_group("test policy chrisg",
-#                           s.conditions['web'], "p-myservice/web")
-#
-# To add a custom condtion list:
-#
-# conditions = [{
-#     "condition_type": "threshold",
-#     "name": "Tyr_applied_condition disk_usage above 0.7 for p-queues",
-#     "existing": True,
-#     "options": {
-#       "resource_type": "instance",
-#       "applies_to": "group",
-#       "group_id": 1282,
-#       "metric_name": "disk_usage",
-#       "useWildcards": False,
-#       "comparison": "above",
-#       "window": 600,
-#       "customMetricMatches": [],
-#       "metric_type": "disk_usage",
-#       "condition_trigger": "any",
-#       "metric_key": "instance.disk_usage.usage_percent",
-#       "threshold_unit": "percent",
-#       "suggested_thresholds": {},
-#       "threshold": 0.7
-#     }
-# }]
-# r = s.create_policy_for_group("test policy chrisg", conditions, "p-queues")
-#
-#
 # -*- coding: utf8 -*-
+#
+# Test and apply stackdriver alert policies to groups of servers
+# See README.md for further info
+#
 import requests
 import json
 import logging
-import re
 import os
-import collections
 from copy import deepcopy
 from tyr.policies.stackdriver import conditions
 from tyr.policies.stackdriver import notification_types
@@ -49,8 +17,6 @@ API_ENDPOINT = 'https://api.stackdriver.com/'
 API_KEY = os.environ['STACKDRIVER_API_KEY']
 USERNAME = os.environ['STACKDRIVER_USERNAME']
 PASSWORD = os.environ['STACKDRIVER_PASSWORD']
-LOGIN_URL = 'https://app.stackdriver.com/account/login/'
-POST_ALERT_URL = "https://app.stackdriver.com/api/alerting/policy"
 
 log = logging.getLogger('tyr.alerts.StackDriver')
 if not log.handlers:
@@ -103,22 +69,6 @@ class StackDriver:
     def exit_flush(self, code):
         logging.shutdown()
         exit(code)
-
-    def merge_dict(self, a, b):
-        '''recursively merges dict's. not just simple a['key'] = b['key'], if
-        both a and b have a key who's value is a dict then dict_merge is called
-        on both values and the result stored in the returned dictionary.
-        See: https://www.xormedia.com/recursively-merge-dictionaries-in-python/
-        '''
-        if not isinstance(b, dict):
-            return b
-        result = deepcopy(a)
-        for k, v in b.iteritems():
-            if k in result and isinstance(result[k], dict):
-                    result[k] = dict_merge(result[k], v)
-            else:
-                result[k] = deepcopy(v)
-        return result
 
     def get_policy_list(self):
         return self.get_paginated_list(LIST_POLICY_URL)
@@ -233,21 +183,24 @@ class StackDriver:
         return pol_list
 
     def test_condition_applied_to_group_id(self, policy, group,
-                                           ignore_window=True):
+                                           ignore_options=['window']):
         '''
         Test a policy condition is applied to a given group name
         If ignore_window is specified, the condition will be matched
-        if everything but the time window match
+        if everything but the time window match.  You can override
+        the ignore_options argument to add other options to be
+        ignored, such as threshold.
         '''
-        if ignore_window:
-            ignore = ['window']
         pols = self.get_policies_applied_to_group_id(group['id'])
         log.debug('{n} policies applied to group id: {g}'
                   .format(n=len(pols), g=group['id']))
         for pol in pols:
             try:
-                if self.condition_subset_in_superset(policy, pol,
-                                                     ignore_options=ignore):
+                if self.condition_subset_in_superset(
+                        policy,
+                        pol,
+                        ignore_options=ignore_options
+                ):
                     return True
                     break
             except KeyError:
@@ -328,11 +281,14 @@ class StackDriver:
                             .format(g=specified_group))
         return pols
 
-    def test_specific_conditions(self, specified_group):
+    def test_specific_conditions(self, specified_group,
+                                 ignore_options=['window']):
         '''
         Test whether a policy condition is applied everywhere it should be
         for a given search group.  Will accept subgroups via a */subgroup
         identifier.  Uses the stackdriver policies list
+        Can override ignore_options if you want to consider time window
+        or override additional options like threshold.
         '''
         r = self.test_for_subgroup(specified_group)
         search_group = r['search_group']
@@ -359,10 +315,13 @@ class StackDriver:
         for group in group_list:
             for pol in pols:
                 name = pol['name']
-                if self.test_condition_applied_to_group_id(pol,
-                                                           group):
-                    log.info("Policy {n} present in group {g}"
-                             .format(n=name, g=group['id']))
+                if self.test_condition_applied_to_group_id(
+                        pol,
+                        group,
+                        ignore_options=ignore_options
+                        ):
+                            log.info("Policy {n} present in group {g}"
+                                     .format(n=name, g=group['id']))
                 else:
                     log.info("Policy {n} NOT present in group {g}"
                              .format(n=name, g=group['id']))
@@ -373,12 +332,16 @@ class StackDriver:
                                         group["parent_id"])})
         return missing
 
-    def apply_missing_conditions(self, condition_group, notification_group):
+    def apply_missing_conditions(self, condition_group, notification_group,
+                                 ignore_options=['window']):
         '''
         Automatically apply any missing conditions from a configured condition
         group and add apporpriate notifications
+        Can override ignore_options if you want to consider time windows
+        or ignore additional options like threshold.
         '''
-        missing = self.test_specific_conditions(condition_group)
+        missing = self.test_specific_conditions(condition_group,
+                                                ignore_options=ignore_options)
         for m in missing:
             self.create_policy_for_group(m['name'],
                                          [m['condition']],
