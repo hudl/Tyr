@@ -3,6 +3,7 @@ import os
 import json
 import time
 import logging
+import sys
 
 log = logging.getLogger('Tyr.Utilities.Stackdriver')
 if not log.handlers:
