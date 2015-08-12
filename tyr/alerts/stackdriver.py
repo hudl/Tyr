@@ -1,4 +1,38 @@
 #!/usr/bin/python
+
+#
+# Some examples:
+#
+# To add all current web alert policies to a new multiverse group:
+# s.create_policy_for_group("test policy chrisg",
+#                           s.conditions['web'], "p-myservice/web")
+#
+# To add a custom condtion list:
+#
+# conditions = [{
+#     "condition_type": "threshold",
+#     "name": "Tyr_applied_condition disk_usage above 0.7 for p-queues",
+#     "existing": True,
+#     "options": {
+#       "resource_type": "instance",
+#       "applies_to": "group",
+#       "group_id": 1282,
+#       "metric_name": "disk_usage",
+#       "useWildcards": False,
+#       "comparison": "above",
+#       "window": 600,
+#       "customMetricMatches": [],
+#       "metric_type": "disk_usage",
+#       "condition_trigger": "any",
+#       "metric_key": "instance.disk_usage.usage_percent",
+#       "threshold_unit": "percent",
+#       "suggested_thresholds": {},
+#       "threshold": 0.7
+#     }
+# }]
+# r = s.create_policy_for_group("test policy chrisg", conditions, "p-queues")
+#
+#
 # -*- coding: utf8 -*-
 import requests
 import json
@@ -10,7 +44,6 @@ from copy import deepcopy
 from tyr.policies.stackdriver import conditions
 from tyr.policies.stackdriver import notification_types
 from tyr.policies.stackdriver import notification_groups
-from tyr.policies.stackdriver import notification_lookups
 
 API_ENDPOINT = 'https://api.stackdriver.com/'
 API_KEY = os.environ['STACKDRIVER_API_KEY']
@@ -42,8 +75,9 @@ USER_LOGIN_URL = "https://app.stackdriver.com/account/login/"
 USER_LOGOUT_URL = "https://app.stackdriver.com/account/logout/"
 STATIC_WEBHOOKS_URL = "https://app.stackdriver.com/api/settings/static_webhook"
 TEAMS_URL = "https://app.stackdriver.com/api/settings/teams"
-SLACK_URL = "https://app.stackdriver.com/api/settings/slack"
-PAGERDUTY_SERVICES_URL = "https://app.stackdriver.com/api/settings/pagerduty_services"
+SLACK_HOOKS_URL = "https://app.stackdriver.com/api/settings/slack"
+EMAIL_HOOKS_URL = "https://app.stackdriver.com/api/settings/email"
+PAGERDUTY_HOOKS_URL = "https://app.stackdriver.com/api/settings/pagerduty_services"
 
 
 class StackDriver:
@@ -53,12 +87,18 @@ class StackDriver:
         self.conditions = conditions
         self.notification_types = notification_types
         self.notification_groups = notification_groups
-        self.notification_lookups = notification_lookups
+        self.user_login()
+        self.update_cache()
+
+    def update_cache(self):
+        '''
+        Update cached data from stackdriver
+        '''
         self.policies = self.get_policy_list()
         self.groups = self.get_group_list()
-        self.user_login()
         self.teams = self.get_teams_list()
         self.webhooks = self.get_static_webhooks_list()
+        self.pagerduty = self.get_pagerduty_hooks_list()
 
     def exit_flush(self, code):
         logging.shutdown()
@@ -91,13 +131,19 @@ class StackDriver:
         r = self.session.get(TEAMS_URL)
         r.raise_for_status()
         # We get back some slightly mangled JSON here
-        return r.text.split('\n')[1]
+        return json.loads(r.text.split('\n')[1])
 
     def get_static_webhooks_list(self):
         r = self.session.get(STATIC_WEBHOOKS_URL)
         # We get back some slightly mangled JSON here
         r.raise_for_status()
-        return r.text.split('\n')[1]
+        return json.loads(r.text.split('\n')[1])
+
+    def get_pagerduty_hooks_list(self):
+        r = self.session.get(PAGERDUTY_HOOKS_URL)
+        # We get back some slightly mangled JSON here
+        r.raise_for_status()
+        return json.loads(r.text.split('\n')[1])
 
     def get_group_list(self):
         groups = self.get_paginated_list(LIST_GROUPS_URL)
@@ -170,11 +216,10 @@ class StackDriver:
                   .format(id=group['id'], group=group['name']))
         return group
 
-    def get_policies_applied_to_group(self, group):
+    def get_policies_applied_to_group_id(self, group_id):
         '''
-        Get a list of policies applied to a group name
+        Get a list of policies applied to a group id
         '''
-        group_id = self.get_group_id_by_name(group)
         pol_list = []
         for c in self.policies['data']:
             if c['condition']:
@@ -187,18 +232,26 @@ class StackDriver:
                         pass
         return pol_list
 
-    def test_condition_applied_to_group_name(self, policy, group):
+    def test_condition_applied_to_group_id(self, policy, group,
+                                           ignore_window=True):
         '''
         Test a policy condition is applied to a given group name
+        If ignore_window is specified, the condition will be matched
+        if everything but the time window match
         '''
-        pols = self.get_policies_applied_to_group(group)
+        if ignore_window:
+            ignore = ['window']
+        pols = self.get_policies_applied_to_group_id(group['id'])
+        log.debug('{n} policies applied to group id: {g}'
+                  .format(n=len(pols), g=group['id']))
         for pol in pols:
             try:
-                if self.condition_subset_in_superset(policy, pol):
+                if self.condition_subset_in_superset(policy, pol,
+                                                     ignore_options=ignore):
                     return True
                     break
             except KeyError:
-                pass
+                raise
         return False
 
     # t
@@ -210,8 +263,8 @@ class StackDriver:
         matches = []
         groups = self.groups
         for group in groups:
-            if self.test_condition_applied_to_group_name(policy,
-                                                         group['name']):
+            if self.test_condition_applied_to_group_id(policy,
+                                                       group['id']):
                 matches.append(group)
                 break
         for g in groups:
@@ -226,66 +279,219 @@ class StackDriver:
         matches = []
         groups = self.groups
         for group in groups:
-            if self.test_condition_applied_to_group_name(policy,
-                                                         group['name']):
+            if self.test_condition_applied_to_group_id(policy,
+                                                       group['id']):
                 matches.append(group)
                 break
         return matches
 
-    def test_general_conditions(self):
+    def test_for_subgroup(self, specified_group):
         '''
-        Test whether a policy condition is applied everywhere it should be for
-        general_ named conditions
+        Test for a subgroup in the group string
         '''
-        for name, pol in self.conditions.iteritems():
-            if 'groups' in pol:
-                groups = pol['groups']
-                if name.startswith("general_"):
-                    for group in groups:
-                        if self.test_condition_applied_to_group_name(pol,
-                                                                     group):
-                            print("Policy {n} present in group {g}"
-                                  .format(n=name, g=group))
-                        else:
-                            print("Policy {n} NOT present in group {g}"
-                                  .format(n=name, g=group))
+        parent_group_id = None
+        parent_group_name = None
+        if '/' in specified_group:
+            if len(specified_group.split('/')) > 2:
+                raise Exception("This method does not support"
+                                "multiple-levels of subgroups.")
+            else:
+                is_subgroup = True
+                search_group = specified_group.split('/')[1]
+                parent_group_name = specified_group.split('/')[0]
+                if '*' not in parent_group_name:
+                    parent_group_id = self.get_group_id_by_name(
+                        parent_group_name)
+        else:
+            is_subgroup = False
+            search_group = specified_group
+        return {"is_subgroup": is_subgroup,
+                "search_group": search_group,
+                "parent_group_id": parent_group_id,
+                "parent_group_name": parent_group_name}
 
-    def test_specific_conditions(self, classifier):
+    def get_defined_group_policies(self, specified_group):
+        '''
+        Test we have policies defined for this group name
+        '''
+        r = self.test_for_subgroup(specified_group)
+        search_group = r['search_group']
+        is_subgroup = r['is_subgroup']
+
+        if search_group in self.conditions.keys():
+            pols = self.conditions[search_group]
+        elif (('*/' + search_group) in self.conditions.keys()
+                and is_subgroup):
+                    pols = self.conditions['*/' + search_group]
+        else:
+            raise Exception("No policies are defined for group: {g}"
+                            .format(g=specified_group))
+        return pols
+
+    def test_specific_conditions(self, specified_group):
         '''
         Test whether a policy condition is applied everywhere it should be
-        for x_ named conditions
+        for a given search group.  Will accept subgroups via a */subgroup
+        identifier.  Uses the stackdriver policies list
         '''
-        for name, pol in self.conditions.iteritems():
-            if 'groups' in pol:
-                groups = pol['groups']
-                if name.startswith(classifier):
-                    for group in groups:
-                        if self.test_condition_applied_to_group_name(pol,
-                                                                     group):
-                            print("Policy {n} present in group {g}"
-                                  .format(n=name, g=group))
-                        else:
-                            print("Policy {n} NOT present in group {g}"
-                                  .format(n=name, g=group))
+        r = self.test_for_subgroup(specified_group)
+        search_group = r['search_group']
+        parent_group_id = r['parent_group_id']
+        parent_group_name = r['parent_group_name']
+        is_subgroup = r['is_subgroup']
+        pols = self.get_defined_group_policies(specified_group)
 
-    def condition_subset_in_superset(self, subset, superset):
+        group_list = []
+        missing = []
+        if is_subgroup:
+            # We know it's a subgroup, so allow a matching parent group
+            # or a * wildcard
+            for group in self.groups:
+                if group['name'] == search_group and (
+                        group['parent_id'] == parent_group_id
+                        or parent_group_name == '*'):
+                            group_list.append(group)
+        else:
+            # It's a parent group so exclude any subgroups
+            for group in self.groups:
+                if group['name'] == search_group and (not group['parent_id']):
+                        group_list.append(group)
+        for group in group_list:
+            for pol in pols:
+                name = pol['name']
+                if self.test_condition_applied_to_group_id(pol,
+                                                           group):
+                    log.info("Policy {n} present in group {g}"
+                             .format(n=name, g=group['id']))
+                else:
+                    log.info("Policy {n} NOT present in group {g}"
+                             .format(n=name, g=group['id']))
+                    missing.append({"name": name, "condition": pol,
+                                    "group_id": group['id'],
+                                    "parent_group_name":
+                                    self.get_group_name_by_id(
+                                        group["parent_id"])})
+        return missing
+
+    def apply_missing_conditions(self, condition_group, notification_group):
+        '''
+        Automatically apply any missing conditions from a configured condition
+        group and add apporpriate notifications
+        '''
+        missing = self.test_specific_conditions(condition_group)
+        for m in missing:
+            self.create_policy_for_group(m['name'],
+                                         [m['condition']],
+                                         m['group_id'],
+                                         condition_type='or',
+                                         notification_group=notification_group,
+                                         update_cache=False)
+        self.update_cache()
+
+    def delete_policies_for_group(self, group_name):
+        '''
+        Deletes the policies attached to a given group/subgroup name
+        '''
+        pass
+
+    def condition_subset_in_superset(self, subset_input, superset_input,
+                                     ignore_options=[]):
+        '''
+        Test for a subset of a condition by only including particular fields
+        add ignore_options to exclude additional fields (e.g. window)
+        '''
+        metric_name_equivilents = [
+            ("windows_cpu", "cpu"),
+            ("windows_cpu", "winagent:cpu"),
+            ("windows_memory", "memory"),
+            ("windows_disk_usage", "disk_usage"),
+            ("windows_disk_usage", "winagent:disk"),
+            ("windows_disk_usage", "winagent:disk:*"),
+            ("memory", "agent:memory::memory:used:pct"),
+            ("disk_usage", "agent:df:*:df_complex:used:pct"),
+            ("cpu", "agent:aggregation:cpu-average:cpu:idle:pct")
+        ]
+        remove_options = ['group_id', 'suggested_thresholds', 'useWildcards',
+                          'customMetricMatches', 'condition_trigger',
+                          'sub_resource', 'useUsername']
+        if ignore_options:
+            remove_options.extend(ignore_options)
+
+        # Remove some newer fields to make comparison more accurate
+        subset = deepcopy(subset_input)
+        superset = deepcopy(superset_input)
         log.debug(subset)
-        log.debug(superset)
+        subset.pop('name')
+        for field in remove_options:
+            try:
+                subset['options'].pop(field)
+            except KeyError:
+                pass
+
+        # Remove metric_name, metric_type and metric_key
+        # if they don't exist in superset
+        check_ops = ['metric_name', 'metric_type',
+                     'metric_key', 'threshold_unit']
+        for opt in check_ops:
+            if (opt not in superset['options']
+               and opt in subset['options']):
+                    log.debug('Removing {opt} as it is not in superset'
+                              .format(opt=opt))
+                    subset['options'].pop(opt)
+
+        # Get some metric name to compare with equivilents
+        if 'metric_name' in subset["options"]:
+            name_tuple = (subset["options"]["metric_name"],
+                          superset["options"]["metric_name"])
+            if name_tuple in metric_name_equivilents:
+                log.debug('Removing metric name '
+                          'as they are equivilent.')
+                subset['options'].pop('metric_name')
+
+        if 'metric_type' in subset["options"]:
+            type_tuple = (subset['options']["metric_type"],
+                          superset['options']['metric_type'])
+            if type_tuple in metric_name_equivilents:
+                log.debug('Removing metric type '
+                          'as they are equivilent.')
+                subset['options'].pop('metric_type')
+
         match = True
         if not subset['condition_type'] == superset['condition_type']:
             log.debug("{o} not equal to {p}"
                       .format(o=subset['condition_type'],
                               p=superset['condition_type']))
             match = False
-        for key, o in subset['options'].iteritems():
-            log.debug("Testing key: " + key)
-            if o != superset['options'][key]:
-                match = False
-                log.debug("{o} not equal to {p}"
-                          .format(o=o, p=superset['options'][key]))
-            else:
-                log.debug("{o} IS equal to {p}"
-                          .format(o=o, p=superset['options'][key]))
+
+        if match:
+            for key, o in subset['options'].iteritems():
+                p = None
+                q = None
+                log.debug("Testing key: " + key)
+                try:
+                    if isinstance(o, basestring):
+                        p = o.lower()
+                        if p == '':
+                            p = None
+                        if key in superset['options']:
+                            if isinstance(superset['options'][key], basestring):
+                                q = superset['options'][key].lower()
+                        else:
+                            q = None
+                    else:
+                        p = o
+                        q = superset['options'][key]
+                    if p != q:
+                        match = False
+                        log.debug("{p} not equal to {q}"
+                                  .format(p=p, q=q))
+                        break
+                    else:
+                        log.debug("{p} IS equal to {q}"
+                                  .format(p=p, q=q))
+                except KeyError:
+                    match = False
+                    break
         log.debug(match)
         return match
 
@@ -299,7 +505,15 @@ class StackDriver:
             keys = ['metric_name', 'metric_type',
                     'threshold', 'window', 'process']
             for group in self.groups:
-                pols = self.get_policies_applied_to_group(group['name'])
+                pols = self.get_policies_applied_to_group_id(group['id'])
+                if not pols:
+                    if group['parent_id']:
+                        parent_id = self.get_group_name_by_id(
+                            group['parent_id'])
+                    else:
+                        parent_id = ' '
+                    writer.writerow([group['name'], parent_id
+                                    , ' ', ' ', ' ', ' ', ' ', ' ', ' '])
                 for pol in pols:
                     opts_list = []
                     opts_list.append(group['name'])
@@ -327,7 +541,7 @@ class StackDriver:
         r = self.session.get(USER_LOGIN_URL)
         r.raise_for_status()
         self.csrftoken = r.cookies['csrftoken']
-        print r.cookies
+        log.debug(r.cookies)
 
         # Now actually login
         data = {
@@ -345,6 +559,7 @@ class StackDriver:
         l = self.session.post(USER_LOGIN_URL, data=data,
                               cookies=self.session.cookies, headers=headers)
         l.raise_for_status()
+        self.csrftoken = self.session.cookies['csrftoken']
         # Test another request is working
         t = self.session.get(STATIC_WEBHOOKS_URL, headers=headers)
         t.raise_for_status()
@@ -359,13 +574,13 @@ class StackDriver:
         self.csrftoken = None
         return r
 
-    # TODO: This is not yet complete
     def create_policy_for_group(self,
                                 name,
                                 conditions,
-                                group,
+                                group_id,
                                 condition_type='or',
-                                notification_group='test'):
+                                notification_group='test',
+                                update_cache=True):
         '''
         Create a new stackdriver alert policy from a template and apply to
         a specified group name
@@ -373,24 +588,43 @@ class StackDriver:
         conditions_template = []
         notifications = []
         for c in conditions:
-            copy = c.copy()
+            copy = deepcopy(c)
             copy['options']['applies_to'] = 'group'
-            copy['options']['group_id'] = self.get_group_id_by_name(group)
-            if copy['groups']:
+            copy['options']['group_id'] = group_id
+            if 'groups' in copy:
                 copy.pop('groups')
+            if copy['condition_type'] == "process_health":
+                type_desc = "process_health"
+            else:
+                type_desc = copy['options']['metric_type']
             copy['name'] = ('Tyr_applied_condition {typ} {c} {thres} for {g}'
-                            .format(typ=copy['options']['metric_type'],
+                            .format(typ=type_desc,
                                     c=copy['options']['comparison'],
                                     thres=copy['options']['threshold'],
-                                    g=group))
+                                    g=group_id))
             conditions_template.append(copy)
 
         for k, grp in self.notification_groups.items():
             if notification_group in k:
                 for typ, lookup in grp.items():
-                    type_template = self.notification_types[typ].copy()
-                    type_template['notification_value'] = \
-                        self.notification_lookups[typ][lookup]
+                    if typ == "heimdall_webhook":
+                        field = self.webhooks
+                        key = "webhook_name"
+                    elif typ == "team_email":
+                        field = self.teams
+                        key = "team_name"
+                    elif typ == "pagerduty":
+                        field = self.pagerduty
+                        key = "service_name"
+                    else:
+                        raise Exception("Notification type {t} is not"
+                                        "supported!".format(t=typ))
+                    type_template = deepcopy(self.notification_types[typ])
+                    for hook in field:
+                            if hook[key] == lookup:
+                                result = hook
+                                break
+                    type_template['notification_value'] = result['id']
                     notifications.append(type_template)
 
         headers = {
@@ -416,10 +650,15 @@ class StackDriver:
                 .format(name=name)
             }
         }
-        self.pretty_print_json(pol_template)
+        log.debug(self.pretty_print_json(pol_template))
 
         r = self.session.post(CREATE_POLICY_URL,
                               json=pol_template,
                               headers=headers)
-        #r.raise_for_status()
+        r.raise_for_status()
+        log.info("Created policy {p} for group {g}"
+                 .format(p=pol_template['name'],
+                         g=self.get_group_name_by_id(group_id)))
+        if update_cache:
+            self.update_cache()
         return r
