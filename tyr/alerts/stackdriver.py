@@ -372,7 +372,8 @@ class StackDriver:
             ("windows_disk_usage", "winagent:disk:*"),
             ("memory", "agent:memory::memory:used:pct"),
             ("disk_usage", "agent:df:*:df_complex:used:pct"),
-            ("cpu", "agent:aggregation:cpu-average:cpu:idle:pct")
+            ("cpu", "agent:aggregation:cpu-average:cpu:idle:pct"),
+            ("windows_memory", "winagent:mem")
         ]
         remove_options = ['group_id', 'suggested_thresholds', 'useWildcards',
                           'customMetricMatches', 'condition_trigger',
