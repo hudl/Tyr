@@ -26,8 +26,11 @@ policies = {
     'allow-set-cloudwatch-alarms': ec2.allow_set_cloudwatch_alarms,
     'allow-remove-cloudwatch-alarms': ec2.allow_remove_cloudwatch_alarms,
     'allow-deploy-web-updates': ec2.allow_deploy_web_updates,
+    'allow-get-solr-schema': s3.allow_get_solr_schema,
     'allow-describe-snapshots': ec2.allow_describe_snapshots,
     'allow-get-hudl-config': s3.allow_get_hudl_config,
+    'allow-get-chef-artifacts-chef-client':
+    s3.allow_get_chef_artifacts_chef_client,
     'allow-update-route53-test': None,
     'allow-update-route53-prod': route53.allow_update_route53_prod,
     'allow-update-route53-stage': route53.allow_update_route53_stage

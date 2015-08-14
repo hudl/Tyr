@@ -6,7 +6,7 @@ import boto.ec2
 import boto.route53
 import boto.ec2.networkinterface
 import logging
-import os.path
+import os
 import chef
 import time
 from boto.ec2.networkinterface import NetworkInterfaceSpecification
@@ -16,6 +16,7 @@ import urllib
 from boto.vpc import VPCConnection
 from paramiko.client import AutoAddPolicy, SSHClient
 from tyr.policies import policies
+from tyr.utilities.stackdriver import set_maintenance_mode
 
 
 class Server(object):
@@ -23,6 +24,11 @@ class Server(object):
     NAME_TEMPLATE = '{envcl}-{location}-{index}'
     NAME_SEARCH_PREFIX = '{envcl}-{location}-'
     NAME_AUTO_INDEX = True
+
+    GLOBAL_IAM_ROLE_POLICIES = ['allow-get-chef-artifacts-chef-client',
+                                'allow-describe-tags',
+                                'allow-describe-instances'
+    ]
 
     IAM_ROLE_POLICIES = []
 
@@ -404,6 +410,7 @@ echo '{validation_key}' > /etc/chef/validation.pem
 echo 'chef_server_url "http://chef.app.hudl.com/"
 node_name "{name}"
 validation_client_name "chef-validator"' > /etc/chef/client.rb
+/usr/bin/aws s3 cp s3://hudl-chef-artifacts/chef-client/encrypted_data_bag_secret /etc/chef/encrypted_data_bag_secret
 curl -L https://www.opscode.com/chef/install.sh | bash;
 yum install -y gcc
 chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}"""
@@ -559,6 +566,8 @@ named {name}""".format(path=d['path'], name=d['name']))
         self.log.info('Existing policies: '
                       '{policies}'.format(policies=existing_policies))
 
+        self.IAM_ROLE_POLICIES.extend(self.GLOBAL_IAM_ROLE_POLICIES)
+        self.IAM_ROLE_POLICIES = list(set(self.IAM_ROLE_POLICIES))
         for policy_template in self.IAM_ROLE_POLICIES:
             policy = policy_template.format(environment=self.environment)
 
@@ -907,6 +916,32 @@ named {name}""".format(path=d['path'], name=d['name']))
                 pass
 
             return state
+
+    def terminate(self):
+        """
+        Terminate a node from AWS
+        """
+
+        address = self.instance.private_ip_address
+        instance_id = self.instance.id
+
+        self.log.info('The instance ID is {id_}'.format(id_=instance_id))
+
+        set_maintenance_mode(instance_id)
+
+        self.log.info('Terminating node at {address}'.format(address=address))
+        response = self.ec2.terminate_instances(instance_ids=[instance_id])
+
+        self.log.info('Received the response {response}'.format(response=response))
+
+        terminated = [instance.id for instance in response]
+
+        if instance_id in terminated:
+            self.log.info('Successfully terminated {instance}'.format(
+                            instance=instance_id))
+        else:
+            self.log.info('Failed to terminate {instance}'.format(
+                            instance=instance_id))
 
     def bake(self):
         if self.CHEF_RUNLIST:
