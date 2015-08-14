@@ -49,23 +49,23 @@ class IISNode(Server):
 
         self.security_groups = [
             "management",
-            "{0}-mv-web".format(env_prefix),
-            "{0}-{1}-web".format(env_prefix, self.group),
-            "{0}-hudl-{1}".format(env_prefix, self.group),
-            "{0}-web".format(env_prefix),
+            "{env}-mv-web".format(env=env_prefix),
+            "{env}-{grp}-web".format(env=env_prefix, grp=self.group),
+            "{env}-hudl-{grp}".format(env=env_prefix, grp=self.group),
+            "{env}-web".format(env=env_prefix),
         ]
 
         self.classic_link_vpc_security_groups = [
-            "{0}-management".format(env_prefix),
-            "{0}-mv-web".format(env_prefix),
-            "{0}-{1}-web".format(env_prefix, self.group),
-            "{0}-hudl-{1}".format(env_prefix, self.group),
+            "{env}-management".format(env=env_prefix),
+            "{env}-mv-web".format(env=env_prefix),
+            "{env}-{grp}-web".format(env=env_prefix, grp=self.group),
+            "{env}-hudl-{grp}".format(env=env_prefix, grp=self.group),
         ]
 
         self.ingress_groups_to_add = [
-            "{0}-web".format(env_prefix),
-            "{0}-nginx".format(env_prefix),
-            "{0}-queueproc-jobs".format(env_prefix)
+            "{env}-web".format(env=env_prefix),
+            "{env}-nginx".format(env=env_prefix),
+            "{env}-queueproc-jobs".format(env=env_prefix)
         ]
 
         if self.mongos_service:
@@ -88,12 +88,12 @@ class IISNode(Server):
     def user_data(self):
         data = {
             "bucket": "hudl-config",
-            "key": "{0}-mv-web/init.config.json".format(
-                self.environment[0]),
+            "key": "{env}-mv-web/init.config.json".format(
+                env=self.environment[0]),
             "mongos": self.mongos_service,
             "mongoServers": self.mongo_servers
         }
 
         ud = json.dumps(data)
-        self.log.info("Setting user data to: {0}".format(ud))
+        self.log.info("Setting user data to: {ud}".format(ud=ud))
         return ud
