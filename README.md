@@ -58,6 +58,13 @@ RabbitMQServer(group="test", environment='stage', instance_type="m3.large",
  availability_zone="c").autorun()
 ```
 
+### IIS Web Cluster
+```
+from tyr.clusters.iis import IISCluster
+i = IISCluster(group='features', environment='stage', ami='ami-xxxxx', instance_type="m3.large", subnet_ids=['subnet-xxxxx'], desired_capacity=2, min_size=2, max_size=3)
+i.autorun()
+```
+
 
 Yep, that's it. Magical, right?
 
