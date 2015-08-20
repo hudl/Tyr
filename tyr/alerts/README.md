@@ -32,7 +32,7 @@ len(c) # How many are missing?
 ```
 Exclude a threshold value from the comparison (window is excluded by default)
 ```
-c = s.test_specific_conditions("p-push/mongo", ignore_options=['threshold','window'])
+c = s.test_specific_conditions("p-highlights/web", ignore_options=['threshold','window'])
 ```
 
 Generate a CSV for loading into a spreadsheet
