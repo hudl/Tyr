@@ -22,7 +22,7 @@ s.get_policies_applied_to_group_id(s.get_group_id_by_name('p-teams/web'))
 ```
 Get a list of policies which should be applied for a group name according to configuration and pretty print them
 ```
-s.pretty_print_json(s.get_defined_group_policies('p-teams/web'))
+s.pretty(s.get_defined_group_policies('p-teams/web'))
 ```
 
 Test a group against it's configuration profile in ../policies/stackdriver.py
@@ -39,6 +39,37 @@ Generate a CSV for loading into a spreadsheet
 ```
 s.create_csv_of_all_groups(filename='/Users/chris.gilbert/output.csv')
 ```
+
+
+# Adding new alert policies
+
+To create new alerts, you should have a policy list, which is attached to a group name.
+
+These are located in tyr/policies/stackdriver.py
+
+There are several python dictionaries there - the one you need to add to is called `conditions`.
+
+- conditions:
+  - group
+    - condition []
+
+These are the stackdriver conditions which should be applied to a group - e.g. disk usage > 0.75.  Each of them is a python dictionary representing the JSON object submitted to stackdriver to create a new policy for that condition.  In order to get new conditions to add, the easiest way is either to copy and paste an existing one, and change it as necessary, or to record the actual JSON payload submitted in Chrome.
+
+To do this:
+
+1. Go to a group in stackdriver, and click `Policies` then `Add New Policy`.
+2. Start creating the policy through the interface, by adding conditions.  There's no need to add notifications.  Give it a name to make it easy to find afterwards.
+3. Add your conditions to apply to groups (not a single instance)
+4. Before you click Save Policy, open Chrome developer tools with `Ctrl(or Cmd)+Alt+I`
+5. Choose the `Network` tab
+5. Tick `preserve log`, make sure the record button is turned on (red) and then click the `Save Policy` button in the stackdriver interface
+6. After a few seconds, turn the record button off, and find the request named `policy` right at the top.  You will only see this if you remembered to click 'preserve log'.
+7. Choose the policy entry, and then on the `headers` tab, scroll to the bottom.
+8. Click to view the RAW request payload.
+9. The items below the children[] are those that need to be added to your stackdriver.py set.
+10. Add conditions as necessary, and delete the group_id fields from them.
+
+- 
 
 
 # Creating Missing Alerts

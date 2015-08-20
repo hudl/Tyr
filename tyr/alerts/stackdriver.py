@@ -73,7 +73,7 @@ class StackDriver:
     def get_policy_list(self):
         return self.get_paginated_list(LIST_POLICY_URL)
 
-    def pretty_print_json(self, obj):
+    def pretty(self, obj):
         print(json.dumps(obj, sort_keys=True,
                          indent=4, separators=(',', ': ')))
 
@@ -315,16 +315,23 @@ class StackDriver:
         for group in group_list:
             for pol in pols:
                 name = pol['name']
+                if not group['parent_id']:
+                    gn = group['name']
+                else:
+                    gn = ("{p}/{c}".format(
+                          p=self.get_group_name_by_id(group['parent_id']),
+                          c=group['name']))
                 if self.test_condition_applied_to_group_id(
                         pol,
                         group,
                         ignore_options=ignore_options
                         ):
-                            log.info("Policy {n} present in group {g}"
-                                     .format(n=name, g=group['id']))
+                            log.info("OK: Policy {n} present in group {gn} ({g})"
+                                     .format(n=name, gn=gn,
+                                             g=group['id']))
                 else:
-                    log.info("Policy {n} NOT present in group {g}"
-                             .format(n=name, g=group['id']))
+                    log.info("WARN: Policy {n} NOT present in group {gn} ({g})"
+                             .format(n=name, gn=gn, g=group['id']))
                     missing.append({"name": name, "condition": pol,
                                     "group_id": group['id'],
                                     "parent_group_name":
@@ -343,7 +350,8 @@ class StackDriver:
         missing = self.test_specific_conditions(condition_group,
                                                 ignore_options=ignore_options)
         for m in missing:
-            self.create_policy_for_group(m['name'],
+            self.create_policy_for_group(m['parent_group_name'] + '-' +
+                                         self.get_group_name_by_id(m['group_id']),
                                          [m['condition']],
                                          m['group_id'],
                                          condition_type='or',
@@ -366,14 +374,25 @@ class StackDriver:
         metric_name_equivilents = [
             ("windows_cpu", "cpu"),
             ("windows_cpu", "winagent:cpu"),
+            ("windows_cpu", "agent:aggregation:cpu-average:cpu:idle:pct"),
             ("windows_memory", "memory"),
+            ("windows_memory", "agent:memory::memory:used:pct"),
             ("windows_disk_usage", "disk_usage"),
             ("windows_disk_usage", "winagent:disk"),
             ("windows_disk_usage", "winagent:disk:*"),
             ("memory", "agent:memory::memory:used:pct"),
             ("disk_usage", "agent:df:*:df_complex:used:pct"),
+            ("disk_usage", "agent:df:*:used:pct"),
             ("cpu", "agent:aggregation:cpu-average:cpu:idle:pct"),
-            ("windows_memory", "winagent:mem")
+            ("windows_memory", "winagent:mem"),
+            ("rabbitmq_consumers", "agent:rabbitmq:*:gauge:consumers:value"),
+            ("rabbitmq_messages", "agent:rabbitmq:*:gauge:messages:value"),
+            ("mongodb_total_ops_command",
+             "agent:mongodb::total_operations:command:value"),
+            ("mongodb_current_connections",
+             "agent:mongodb::current_connections::value"),
+            ("mongodb_lock_held",
+             "agent:mongodb::total_time_in_ms:global_lock_held:value")
         ]
         remove_options = ['group_id', 'suggested_thresholds', 'useWildcards',
                           'customMetricMatches', 'condition_trigger',
@@ -561,12 +580,14 @@ class StackDriver:
                 type_desc = "process_health"
             else:
                 type_desc = copy['options']['metric_type']
-            copy['name'] = ('Tyr_applied_condition {typ} {c} {thres} for {g}'
+            copy['name'] = ('{gn} Tyr: {typ}'
                             .format(typ=type_desc,
-                                    c=copy['options']['comparison'],
-                                    thres=copy['options']['threshold'],
-                                    g=group_id))
+                                    gn=name))
             conditions_template.append(copy)
+        if len(conditions) == 1:
+            policy_name = copy['name']
+        else:
+            policy_name = "{g} Tyr: multiple conditions".format(g=name)
 
         for k, grp in self.notification_groups.items():
             if notification_group in k:
@@ -585,9 +606,13 @@ class StackDriver:
                                         "supported!".format(t=typ))
                     type_template = deepcopy(self.notification_types[typ])
                     for hook in field:
+                            result = None
                             if hook[key] == lookup:
                                 result = hook
                                 break
+                    if not result:
+                        raise Exception(("Config was not found for {typ}/{h}")
+                                        .format(typ=typ, h=lookup))
                     type_template['notification_value'] = result['id']
                     notifications.append(type_template)
 
@@ -602,7 +627,7 @@ class StackDriver:
         }
 
         pol_template = {
-            "name": name,
+            "name": policy_name,
             "condition": {
                 "condition_type": condition_type,
                 "options": {},
@@ -614,7 +639,7 @@ class StackDriver:
                 .format(name=name)
             }
         }
-        log.debug(self.pretty_print_json(pol_template))
+        log.debug(self.pretty(pol_template))
 
         r = self.session.post(CREATE_POLICY_URL,
                               json=pol_template,

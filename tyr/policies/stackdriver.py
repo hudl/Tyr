@@ -97,22 +97,535 @@ conditions = {
         }
     ],
 
-    "*/mongo": [
+    "*/web-consumer": [
         {
+            "condition_type": "threshold",
+            "name": "Tyr_applied_condition windows_disk_usage above 75",
             "options": {
                 "resource_type": "instance",
                 "applies_to": "group",
-                "threshold": 1,
-                "comparison": "below",
-                "useUsername": False,
-                "user": "",
+                "metric_name": "windows_disk_usage",
+                "useWildcards": False,
+                "comparison": "above",
                 "window": 300,
+                "customMetricMatches": [],
+                "metric_type": "windows_disk_usage",
                 "condition_trigger": "any",
-                "process": "mongod"
+                "metric_key": "instance.cpu.usage_percent",
+                "threshold_unit": "percent",
+                "suggested_thresholds": {
+                    "upper": 55,
+                    "lower": 50
+                },
+                "threshold": 75,
+                "sub_resource": "*"
             },
-            "condition_type": "process_health",
-            "name": "Tyr_applied_condition for mongod process running"
         },
+        {
+            "condition_type": "threshold",
+            "name": "Tyr_applied_condition windows_cpu_usage above 0.9",
+            "options": {
+                "resource_type": "instance",
+                "applies_to": "group",
+                "metric_name": "windows_cpu",
+                "useWildcards": False,
+                "comparison": "above",
+                "window": 300,
+                "customMetricMatches": [],
+                "metric_type": "windows_cpu",
+                "condition_trigger": "any",
+                "metric_key": "instance.cpu.usage_percent",
+                "threshold_unit": "percent",
+                "suggested_thresholds": {
+                    "upper": 6,
+                    "lower": 0.9500000000000001
+                },
+                "threshold": 90
+            }
+        },
+        {
+            "condition_type": "threshold",
+            "name": "Tyr_applied_condition windows_memory above 0.75",
+            "options": {
+                "resource_type": "instance",
+                "applies_to": "group",
+                "group_id": 17722,
+                "metric_name": "windows_memory",
+                "useWildcards": False,
+                "comparison": "above",
+                "window": 300,
+                "customMetricMatches": [],
+                "metric_type": "windows_memory",
+                "condition_trigger": "any",
+                "metric_key": "instance.cpu.usage_percent",
+                "threshold_unit": "percent",
+                "suggested_thresholds": {
+                    "upper": 45,
+                    "lower": 35
+                },
+                "threshold": 75
+            },
+        },
+        {
+            "name": "Tyr_applied_condition not registered in eureka",
+            "condition_type": "threshold",
+            "options": {
+                "threshold_unit": "custom",
+                "comparison": "below",
+                "condition_trigger": "any",
+                "metric_name": "custom:Registered with Eureka",
+                "suggested_thresholds": {},
+                "window": 300,
+                "applies_to": "group",
+                "customMetricMatches": [],
+                "metric_type": "custom:Registered with Eureka",
+                "metric_key": "instance.cpu.usage_percent",
+                "useWildcards": False,
+                "threshold": 1,
+                "resource_type": "instance"
+            }
+        }
+    ],
+
+    "*/web-producer": [
+        {
+            "condition_type": "threshold",
+            "name": "Tyr_applied_condition windows_disk_usage above 75",
+            "options": {
+                "resource_type": "instance",
+                "applies_to": "group",
+                "metric_name": "windows_disk_usage",
+                "useWildcards": False,
+                "comparison": "above",
+                "window": 300,
+                "customMetricMatches": [],
+                "metric_type": "windows_disk_usage",
+                "condition_trigger": "any",
+                "metric_key": "instance.cpu.usage_percent",
+                "threshold_unit": "percent",
+                "suggested_thresholds": {
+                    "upper": 55,
+                    "lower": 50
+                },
+                "threshold": 75,
+                "sub_resource": "*"
+            },
+        },
+        {
+            "condition_type": "threshold",
+            "name": "Tyr_applied_condition windows_cpu_usage above 0.9",
+            "options": {
+                "resource_type": "instance",
+                "applies_to": "group",
+                "metric_name": "windows_cpu",
+                "useWildcards": False,
+                "comparison": "above",
+                "window": 300,
+                "customMetricMatches": [],
+                "metric_type": "windows_cpu",
+                "condition_trigger": "any",
+                "metric_key": "instance.cpu.usage_percent",
+                "threshold_unit": "percent",
+                "suggested_thresholds": {
+                    "upper": 6,
+                    "lower": 0.9500000000000001
+                },
+                "threshold": 90
+            }
+        },
+        {
+            "condition_type": "threshold",
+            "name": "Tyr_applied_condition windows_memory above 0.75",
+            "options": {
+                "resource_type": "instance",
+                "applies_to": "group",
+                "group_id": 17722,
+                "metric_name": "windows_memory",
+                "useWildcards": False,
+                "comparison": "above",
+                "window": 300,
+                "customMetricMatches": [],
+                "metric_type": "windows_memory",
+                "condition_trigger": "any",
+                "metric_key": "instance.cpu.usage_percent",
+                "threshold_unit": "percent",
+                "suggested_thresholds": {
+                    "upper": 45,
+                    "lower": 35
+                },
+                "threshold": 75
+            },
+        },
+        {
+            "name": "Tyr_applied_condition not registered in eureka",
+            "condition_type": "threshold",
+            "options": {
+                "threshold_unit": "custom",
+                "comparison": "below",
+                "condition_trigger": "any",
+                "metric_name": "custom:Registered with Eureka",
+                "suggested_thresholds": {},
+                "window": 300,
+                "applies_to": "group",
+                "customMetricMatches": [],
+                "metric_type": "custom:Registered with Eureka",
+                "metric_key": "instance.cpu.usage_percent",
+                "useWildcards": False,
+                "threshold": 1,
+                "resource_type": "instance"
+            }
+        }
+    ],
+
+
+    "p-jobs": [
+        {
+            "condition_type": "threshold",
+            "name": "Tyr_applied_condition windows_disk_usage above 75",
+            "options": {
+                "resource_type": "instance",
+                "applies_to": "group",
+                "metric_name": "windows_disk_usage",
+                "useWildcards": False,
+                "comparison": "above",
+                "window": 300,
+                "customMetricMatches": [],
+                "metric_type": "windows_disk_usage",
+                "condition_trigger": "any",
+                "metric_key": "instance.cpu.usage_percent",
+                "threshold_unit": "percent",
+                "suggested_thresholds": {
+                    "upper": 55,
+                    "lower": 50
+                },
+                "threshold": 75,
+                "sub_resource": "*"
+            },
+        },
+        {
+            "condition_type": "threshold",
+            "name": "Tyr_applied_condition windows_cpu_usage above 0.9",
+            "options": {
+                "resource_type": "instance",
+                "applies_to": "group",
+                "metric_name": "windows_cpu",
+                "useWildcards": False,
+                "comparison": "above",
+                "window": 300,
+                "customMetricMatches": [],
+                "metric_type": "windows_cpu",
+                "condition_trigger": "any",
+                "metric_key": "instance.cpu.usage_percent",
+                "threshold_unit": "percent",
+                "suggested_thresholds": {
+                    "upper": 6,
+                    "lower": 0.9500000000000001
+                },
+                "threshold": 90
+            }
+        },
+        {
+            "condition_type": "threshold",
+            "name": "Tyr_applied_condition windows_memory above 0.75",
+            "options": {
+                "resource_type": "instance",
+                "applies_to": "group",
+                "group_id": 17722,
+                "metric_name": "windows_memory",
+                "useWildcards": False,
+                "comparison": "above",
+                "window": 300,
+                "customMetricMatches": [],
+                "metric_type": "windows_memory",
+                "condition_trigger": "any",
+                "metric_key": "instance.cpu.usage_percent",
+                "threshold_unit": "percent",
+                "suggested_thresholds": {
+                    "upper": 45,
+                    "lower": 35
+                },
+                "threshold": 75
+            },
+        },
+        {
+            "name": "Tyr_applied_condition not registered in eureka",
+            "condition_type": "threshold",
+            "options": {
+                "threshold_unit": "custom",
+                "comparison": "below",
+                "condition_trigger": "any",
+                "metric_name": "custom:Registered with Eureka",
+                "suggested_thresholds": {},
+                "window": 300,
+                "applies_to": "group",
+                "customMetricMatches": [],
+                "metric_type": "custom:Registered with Eureka",
+                "metric_key": "instance.cpu.usage_percent",
+                "useWildcards": False,
+                "threshold": 1,
+                "resource_type": "instance"
+            }
+        }
+    ],
+
+    "*/mongo": [
+        # Commented out due to issues with process health detection
+        # on stackdriver agent
+        # {
+        #     "options": {
+        #         "resource_type": "instance",
+        #         "applies_to": "group",
+        #         "threshold": 1,
+        #         "comparison": "below",
+        #         "useUsername": False,
+        #         "user": "",
+        #         "window": 300,
+        #         "condition_trigger": "any",
+        #         "process": "mongod"
+        #     },
+        #     "condition_type": "process_health",
+        #     "name": "Tyr_applied_condition for mongod process running"
+        # },
+        {
+            "condition_type": "threshold",
+            "name": "Tyr_applied_condition disk_usage above 0.75",
+            "existing": True,
+            "options": {
+                "resource_type": "instance",
+                "applies_to": "group",
+                "group_id": 1282,
+                "metric_name": "disk_usage",
+                "useWildcards": False,
+                "comparison": "above",
+                "window": 600,
+                "customMetricMatches": [],
+                "metric_type": "disk_usage",
+                "condition_trigger": "any",
+                "metric_key": "instance.disk_usage.usage_percent",
+                "threshold_unit": "percent",
+                "suggested_thresholds": {},
+                "threshold": 0.75
+            }
+        },
+        {
+            "condition_type": "threshold",
+            "name": "Tyr_applied_condition cpu_usage above 0.8",
+            "options": {
+                "resource_type": "instance",
+                "applies_to": "group",
+                "metric_name": "cpu",
+                "useWildcards": False,
+                "comparison": "above",
+                "window": 300,
+                "customMetricMatches": [],
+                "metric_type": "cpu",
+                "condition_trigger": "any",
+                "metric_key": "instance.cpu.usage_percent",
+                "threshold_unit": "percent",
+                "suggested_thresholds": {
+                    "upper": 0.25,
+                    "lower": 0.35000000000000003
+                },
+                "threshold": 0.8
+            }
+        },
+        {
+            "condition_type": "threshold",
+            "name": "Tyr_applied_condition memory_usage above 0.8",
+            "options": {
+                "resource_type": "instance",
+                "applies_to": "group",
+                "metric_name": "memory",
+                "useWildcards": False,
+                "comparison": "above",
+                "window": 300,
+                "customMetricMatches": [],
+                "metric_type": "memory",
+                "condition_trigger": "any",
+                "metric_key": "instance.cpu.usage_percent",
+                "threshold_unit": "percent",
+                "suggested_thresholds": {
+                    "upper": 15,
+                    "lower": 10
+                },
+                "threshold": 0.8
+            }
+        },
+        {
+            "condition_type": "threshold",
+            "name": "Tyr_applied_condition mongodb_current_connections > 1000",
+            "options": {
+                "resource_type": "instance",
+                "applies_to": "group",
+                "metric_name": "mongodb_current_connections",
+                "useWildcards": False,
+                "comparison": "above",
+                "window": 300,
+                "customMetricMatches": [],
+                "metric_type": "mongodb_current_connections",
+                "condition_trigger": "any",
+                "metric_key": "instance.cpu.usage_percent",
+                "threshold_unit": "count",
+                "suggested_thresholds": {
+                    "upper": 150,
+                    "lower": 40
+                },
+                "threshold": 1000
+            },
+        },
+        {
+            "condition_type": "threshold",
+            "name": "Tyr_applied_condition mongodb_lock_held > 10ms",
+            "options": {
+                "resource_type": "instance",
+                "applies_to": "group",
+                "metric_name": "mongodb_lock_held",
+                "useWildcards": False,
+                "comparison": "above",
+                "window": 300,
+                "customMetricMatches": [],
+                "metric_type": "mongodb_lock_held",
+                "condition_trigger": "any",
+                "metric_key": "instance.cpu.usage_percent",
+                "threshold_unit": "ms",
+                "suggested_thresholds": {
+                    "upper": 0.35000000000000003,
+                    "lower": 0
+                },
+                "threshold": 10
+            }
+        },
+        {
+            "condition_type": "threshold",
+            "name": "Tyr_applied_condition mongodb_total_ops_command > 500/s",
+            "options": {
+                "resource_type": "instance",
+                "applies_to": "group",
+                "metric_name": "mongodb_total_ops_command",
+                "useWildcards": False,
+                "comparison": "above",
+                "window": 300,
+                "customMetricMatches": [],
+                "metric_type": "mongodb_total_ops_command",
+                "condition_trigger": "any",
+                "metric_key": "instance.cpu.usage_percent",
+                "threshold_unit": "count/s",
+                "suggested_thresholds": {
+                    "upper": 4,
+                    "lower": 1
+                },
+                "threshold": 500
+            }
+        }
+    ],
+
+    "*/rabbit": [
+        {
+            "condition_type": "threshold",
+            "name": "Tyr_applied_condition disk_usage above 0.70",
+            "existing": True,
+            "options": {
+                "resource_type": "instance",
+                "applies_to": "group",
+                "group_id": 1282,
+                "metric_name": "disk_usage",
+                "useWildcards": False,
+                "comparison": "above",
+                "window": 600,
+                "customMetricMatches": [],
+                "metric_type": "disk_usage",
+                "condition_trigger": "any",
+                "metric_key": "instance.disk_usage.usage_percent",
+                "threshold_unit": "percent",
+                "suggested_thresholds": {},
+                "threshold": 0.70
+            }
+        },
+        {
+            "condition_type": "threshold",
+            "name": "Tyr_applied_condition cpu_usage above 0.8",
+            "options": {
+                "resource_type": "instance",
+                "applies_to": "group",
+                "metric_name": "cpu",
+                "useWildcards": False,
+                "comparison": "above",
+                "window": 300,
+                "customMetricMatches": [],
+                "metric_type": "cpu",
+                "condition_trigger": "any",
+                "metric_key": "instance.cpu.usage_percent",
+                "threshold_unit": "percent",
+                "suggested_thresholds": {
+                    "upper": 0.25,
+                    "lower": 0.35000000000000003
+                },
+                "threshold": 0.8
+            }
+        },
+        {
+            "condition_type": "threshold",
+            "name": "Tyr_applied_condition memory_usage above 0.8",
+            "options": {
+                "resource_type": "instance",
+                "applies_to": "group",
+                "metric_name": "memory",
+                "useWildcards": False,
+                "comparison": "above",
+                "window": 300,
+                "customMetricMatches": [],
+                "metric_type": "memory",
+                "condition_trigger": "any",
+                "metric_key": "instance.cpu.usage_percent",
+                "threshold_unit": "percent",
+                "suggested_thresholds": {
+                    "upper": 15,
+                    "lower": 10
+                },
+                "threshold": 0.8
+            }
+        },
+        {
+            "condition_type": "threshold",
+            "name": "Tyr_applied_condition rabbit consumers below 1 over 15m",
+            "options": {
+                "resource_type": "instance",
+                "applies_to": "group",
+                "metric_name": "rabbitmq_consumers",
+                "useWildcards": False,
+                "comparison": "below",
+                "window": 900,
+                "customMetricMatches": [],
+                "metric_type": "rabbitmq_consumers",
+                "condition_trigger": "any",
+                "metric_key": "instance.cpu.usage_percent",
+                "threshold_unit": "count",
+                "suggested_thresholds": {},
+                "threshold": 1
+            }
+        },
+        {
+            "condition_type": "threshold",
+            "name": "Tyr_applied_condition rabbit messages > 20000 for 1m",
+            "options": {
+                "resource_type": "instance",
+                "applies_to": "group",
+                "metric_name": "rabbitmq_messages",
+                "useWildcards": False,
+                "comparison": "above",
+                "window": 60,
+                "customMetricMatches": [],
+                "metric_type": "rabbitmq_messages",
+                "condition_trigger": "any",
+                "metric_key": "instance.cpu.usage_percent",
+                "threshold_unit": "count",
+                "suggested_thresholds": {},
+                "threshold": 20000
+            }
+        }
+    ],
+
+    "p-solr": [
         {
             "condition_type": "threshold",
             "name": "Tyr_applied_condition disk_usage above 0.75",
@@ -178,8 +691,145 @@ conditions = {
                 "threshold": 0.8
             }
         }
+    ],
+
+    "*/elasticsearch": [
+        {
+            "condition_type": "threshold",
+            "name": "Tyr_applied_condition disk_usage above 0.75",
+            "existing": True,
+            "options": {
+                "resource_type": "instance",
+                "applies_to": "group",
+                "group_id": 1282,
+                "metric_name": "disk_usage",
+                "useWildcards": False,
+                "comparison": "above",
+                "window": 600,
+                "customMetricMatches": [],
+                "metric_type": "disk_usage",
+                "condition_trigger": "any",
+                "metric_key": "instance.disk_usage.usage_percent",
+                "threshold_unit": "percent",
+                "suggested_thresholds": {},
+                "threshold": 0.75
+            }
+        },
+        {
+            "condition_type": "threshold",
+            "name": "Tyr_applied_condition cpu_usage above 0.8",
+            "options": {
+                "resource_type": "instance",
+                "applies_to": "group",
+                "metric_name": "cpu",
+                "useWildcards": False,
+                "comparison": "above",
+                "window": 300,
+                "customMetricMatches": [],
+                "metric_type": "cpu",
+                "condition_trigger": "any",
+                "metric_key": "instance.cpu.usage_percent",
+                "threshold_unit": "percent",
+                "suggested_thresholds": {
+                    "upper": 0.25,
+                    "lower": 0.35000000000000003
+                },
+                "threshold": 0.8
+            }
+        },
+        {
+            "condition_type": "threshold",
+            "name": "Tyr_applied_condition memory_usage above 0.99",
+            "options": {
+                "resource_type": "instance",
+                "applies_to": "group",
+                "metric_name": "memory",
+                "useWildcards": False,
+                "comparison": "above",
+                "window": 300,
+                "customMetricMatches": [],
+                "metric_type": "memory",
+                "condition_trigger": "any",
+                "metric_key": "instance.cpu.usage_percent",
+                "threshold_unit": "percent",
+                "suggested_thresholds": {
+                    "upper": 15,
+                    "lower": 10
+                },
+                "threshold": 0.99
+            }
+        }
+    ],
+
+    "p-nginx": [
+        {
+            "condition_type": "threshold",
+            "name": "Tyr_applied_condition disk_usage above 0.75",
+            "existing": True,
+            "options": {
+                "resource_type": "instance",
+                "applies_to": "group",
+                "group_id": 1282,
+                "metric_name": "disk_usage",
+                "useWildcards": False,
+                "comparison": "above",
+                "window": 600,
+                "customMetricMatches": [],
+                "metric_type": "disk_usage",
+                "condition_trigger": "any",
+                "metric_key": "instance.disk_usage.usage_percent",
+                "threshold_unit": "percent",
+                "suggested_thresholds": {},
+                "threshold": 0.75
+            }
+        },
+        {
+            "condition_type": "threshold",
+            "name": "Tyr_applied_condition cpu_usage above 0.8",
+            "options": {
+                "resource_type": "instance",
+                "applies_to": "group",
+                "metric_name": "cpu",
+                "useWildcards": False,
+                "comparison": "above",
+                "window": 300,
+                "customMetricMatches": [],
+                "metric_type": "cpu",
+                "condition_trigger": "any",
+                "metric_key": "instance.cpu.usage_percent",
+                "threshold_unit": "percent",
+                "suggested_thresholds": {
+                    "upper": 0.25,
+                    "lower": 0.35000000000000003
+                },
+                "threshold": 0.8
+            }
+        },
+        {
+            "condition_type": "threshold",
+            "name": "Tyr_applied_condition memory_usage above 0.8",
+            "options": {
+                "resource_type": "instance",
+                "applies_to": "group",
+                "metric_name": "memory",
+                "useWildcards": False,
+                "comparison": "above",
+                "window": 300,
+                "customMetricMatches": [],
+                "metric_type": "memory",
+                "condition_trigger": "any",
+                "metric_key": "instance.cpu.usage_percent",
+                "threshold_unit": "percent",
+                "suggested_thresholds": {
+                    "upper": 15,
+                    "lower": 10
+                },
+                "threshold": 0.8
+            }
+        },
     ]
 }
+
 
 notification_groups = {
 
@@ -192,17 +842,6 @@ notification_groups = {
         "pagerduty":  "",
         "team_email": ""
     },
-
-    "hudl-assistedbreakdown": {
-        "heimdall_webhook": "hudl-assistedbreakdown",
-        "pagerduty":  "hudl-assistedbreakdown",
-        "team_email": "Infrastructure Squad"
-    },
-
-    "test": {
-        "team_email": "Infrastructure Squad"
-    },
-
 
     "test": {
         "heimdall_webhook": "Heimdall Test Webhook",
@@ -279,7 +918,7 @@ notification_groups = {
     },
     "hudl-computervision": {
         "heimdall_webhook": "Heimdall hudl-computervision Webhook",
-        "pagerduty": "StackDriver Monolith"
+        "pagerduty": "Stackdriver Monolith"
     },
     "hudl-features": {
         "heimdall_webhook": "Heimdall hudl-features Webhook",
@@ -323,7 +962,7 @@ notification_groups = {
     },
     "community": {
         "heimdall_webhook": "Heimdall - Community",
-        "pagerduty": "StackDriver Community"
+        "pagerduty": "Stackdriver Community"
     },
     "teamsports": {
         "heimdall_webhook": "Heimdall - TeamSports",
@@ -331,11 +970,11 @@ notification_groups = {
     },
     "foundation": {
         "heimdall_webhook": "Heimdall - Foundation",
-        "pagerduty": "StackDriver Foundation"
+        "pagerduty": "Stackdriver Monolith"
     },
     "individual_sports": {
         "heimdall_webhook": "Heimdall - Individual Sports",
-        "pagerduty": "?"
+        "pagerduty": "Stackdriver Monolith"
     },
     "hudl-staticdata": {
         "heimdall_webhook": "Heimdall hudl-staticdata Webhook",
