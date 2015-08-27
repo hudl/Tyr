@@ -77,8 +77,8 @@ class MongoDataNode(MongoReplicaSetMember):
                 {
                     'user': 'mongod',
                     'group': 'mongod',
-                    'size': 10,
-                    'iops': 0,
+                    'size': 25,
+                    'iops': 250,
                     'device': '/dev/xvdg',
                     'mount': '/volr/journal'
                 },
