@@ -739,6 +739,10 @@ named {name}""".format(path=d['path'], name=d['name']))
                 'network_interfaces': interfaces
             })
 
+        if self.environment == "prod":
+            parameters.update({
+                'ebs_optimized': True})
+
         reservation = self.ec2.run_instances(**parameters)
 
         self.log.info('Successfully launched EC2 instance')
