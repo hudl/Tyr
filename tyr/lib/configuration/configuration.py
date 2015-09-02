@@ -9,7 +9,8 @@ class Configuration(object):
     _kwargs = {}
     _config = {}
 
-    def __init__(self, path, context, **kwargs):
+    def __init__(self, context, path, **kwargs):
+
         self.path = path
         self._kwargs = kwargs
         self._context = context

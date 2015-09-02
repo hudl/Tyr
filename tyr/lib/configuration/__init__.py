@@ -4,7 +4,7 @@
 from tyr.lib.configuration.configuration import Configuration
 
 
-def get_conf(path, context, **kwargs):
+def get_conf(context, path=None, **kwargs):
     """
     Convenience method for retrieving a configuration.
 
@@ -13,4 +13,4 @@ def get_conf(path, context, **kwargs):
     :type context: tyr.lib.context.context.Context
     :param context: The context currently being used
     """
-    return Configuration(path, context, **kwargs)
+    return Configuration(context, path, **kwargs)
