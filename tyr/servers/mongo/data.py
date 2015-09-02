@@ -77,18 +77,26 @@ class MongoDataNode(MongoReplicaSetMember):
                 {
                     'user': 'mongod',
                     'group': 'mongod',
-                    'size': 10,
-                    'iops': 0,
+                    'size': self.data_volume_size,
+                    'iops': self.data_volume_iops,
+                    'device': '/dev/xvdf',
+                    'mount': '/volr'
+                },
+                {
+                    'user': 'mongod',
+                    'group': 'mongod',
+                    'size': 25,
+                    'iops': 250,
                     'device': '/dev/xvdg',
                     'mount': '/volr/journal'
                 },
                 {
                     'user': 'mongod',
                     'group': 'mongod',
-                    'size': self.data_volume_size,
-                    'iops': self.data_volume_iops,
-                    'device': '/dev/xvdf',
-                    'mount': '/volr'
+                    'size': 50,
+                    'iops': 250,
+                    'device': '/dev/xvdh',
+                    'mount': '/mongologs',
                 }
             ])
 
