@@ -24,7 +24,7 @@ class IISCluster():
                  health_check_grace_period=300,
                  launch_configuration=None):
 
-        self.log = logging.getLogger('tyr.clusters.IISCluster')
+        self.log = logging.getLogger('Tyr.Clusters.IISCluster')
         self.group = group
         self.server_type = server_type
         self.instance_type = instance_type
@@ -59,15 +59,15 @@ class IISCluster():
 
         self.log.info('Provisioning IISCluster')
         if not self.launch_configuration:
-            self.launch_configuration = "{0}-{1}-web".format(
-                self.environment[0], self.group)
+            self.launch_configuration = "{env}-{grp}-web".format(
+                env=self.environment[0], grp=self.group)
         if not self.autoscaling_group:
             if self.subnet_ids:
-                templ = "{0}-{1}-web-asg-vpc"
+                templ = "{env}-{grp}-web-asg-vpc"
             else:
-                templ = "{0}-{1}-web-asg"
+                templ = "{env}-{grp}-web-asg"
             self.autoscaling_group = templ.format(
-                self.environment[0], self.group)
+                env=self.environment[0], grp=self.group)
 
         # Template to use with an autoscaling group
         node = IISNode(group=self.group,
@@ -98,7 +98,7 @@ class IISCluster():
         auto.autorun()
 
     def baked(self):
-        return all([node.baked() for node in self.nodes])
+        return False
 
     def autorun(self):
         self.provision()

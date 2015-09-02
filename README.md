@@ -42,6 +42,30 @@ node = MongoDataNode(group='monolith')
 node.autorun()
 ```
 
+## Examples:
+
+### Base Server
+``` python
+from tyr.servers.server import Server
+Server(group="test", environment='stage', server_type="cms", instance_type
+="m3.medium", availability_zone="c").autorun()
+```
+
+### RabbitMQ
+``` python
+from tyr.servers.rabbit import RabbitMQServer
+RabbitMQServer(group="test", environment='stage', instance_type="m3.large",
+ availability_zone="c").autorun()
+```
+
+### IIS Web Cluster
+```
+from tyr.clusters.iis import IISCluster
+i = IISCluster(group='features', environment='stage', ami='ami-xxxxx', instance_type="m3.large", subnet_ids=['subnet-xxxxx'], desired_capacity=2, min_size=2, max_size=3)
+i.autorun()
+```
+
+
 Yep, that's it. Magical, right?
 
 ## Contributing

@@ -1,9 +1,12 @@
-from exceptions import *
+from exceptions import (InvalidKeyPair, InvalidAvailabilityZone,
+                        NoSubnetReturned, RegionDoesNotExist,
+                        InvalidCluster, InvalidAMI, NoSecurityGroupsReturned,
+                        MultipleSecurityGroupsReturned)
 import boto.ec2
 import boto.route53
 import boto.ec2.networkinterface
 import logging
-import os.path
+import os
 import chef
 import time
 from boto.ec2.networkinterface import NetworkInterfaceSpecification
@@ -13,6 +16,7 @@ import urllib
 from boto.vpc import VPCConnection
 from paramiko.client import AutoAddPolicy, SSHClient
 from tyr.policies import policies
+from tyr.utilities.stackdriver import set_maintenance_mode
 
 
 class Server(object):
@@ -20,6 +24,11 @@ class Server(object):
     NAME_TEMPLATE = '{envcl}-{location}-{index}'
     NAME_SEARCH_PREFIX = '{envcl}-{location}-'
     NAME_AUTO_INDEX = True
+
+    GLOBAL_IAM_ROLE_POLICIES = ['allow-get-chef-artifacts-chef-client',
+                                'allow-describe-tags',
+                                'allow-describe-instances'
+    ]
 
     IAM_ROLE_POLICIES = []
 
@@ -60,7 +69,7 @@ class Server(object):
         except:
             pass
 
-        log = logging.getLogger('tyr.{c}'
+        log = logging.getLogger('Tyr.{c}'
                                 .format(c=self.__class__.__name__))
         log.setLevel(logging.DEBUG)
         self.log = log
@@ -88,14 +97,14 @@ class Server(object):
             raise InvalidCluster('A group must be specified.')
 
         self.log.info('Using group "{group}"'.format(
-                        group=self.group))
+                      group=self.group))
 
         if self.server_type is None:
             self.log.warn('No type provided')
             raise InvalidCluster('A type must be specified.')
 
         self.log.info('Using type "{server_type}"'.format(
-                        server_type=self.server_type))
+                      server_type=self.server_type))
 
         if self.environment is None:
             self.log.warn('No environment provided')
@@ -209,11 +218,13 @@ class Server(object):
         if self.block_devices is None:
             self.log.warn('No block devices provided')
 
-            self.block_devices = [{
-                                    'type': 'ephemeral',
-                                    'name': 'ephemeral0',
-                                    'path': 'xvdc'
-                                  }]
+            self.block_devices = [
+                {
+                    'type': 'ephemeral',
+                    'name': 'ephemeral0',
+                    'path': 'xvdc'
+                }
+            ]
 
         self.log.info('Using EC2 block devices {devices}'.format(
                       devices=self.block_devices))
@@ -275,15 +286,15 @@ class Server(object):
     def location(self):
 
         region_map = {
-                'ap-northeast-1': 'apne1',
-                'ap-southeast-1': 'apse1',
-                'ap-southeast-2': 'apse2',
-                'eu-central-1': 'euc1',
-                'eu-west-1': 'euw1',
-                'sa-east-1': 'sae1',
-                'us-east-1': 'use1',
-                'us-west-1': 'usw1',
-                'us-west-2': 'usw2',
+            'ap-northeast-1': 'apne1',
+            'ap-southeast-1': 'apse1',
+            'ap-southeast-2': 'apse2',
+            'eu-central-1': 'euc1',
+            'eu-west-1': 'euw1',
+            'sa-east-1': 'sae1',
+            'us-east-1': 'use1',
+            'us-west-1': 'usw1',
+            'us-west-2': 'usw2',
         }
 
         return '{region}{zone}'.format(region=region_map[self.region],
@@ -393,10 +404,13 @@ sed -i '/requiretty/d' /etc/sudoers
 hostname {hostname}
 mkdir /etc/chef
 touch /etc/chef/client.rb
+mkdir -p /etc/chef/ohai/hints
+touch /etc/chef/ohai/hints/ec2.json
 echo '{validation_key}' > /etc/chef/validation.pem
 echo 'chef_server_url "http://chef.app.hudl.com/"
 node_name "{name}"
 validation_client_name "chef-validator"' > /etc/chef/client.rb
+/usr/bin/aws s3 cp s3://hudl-chef-artifacts/chef-client/encrypted_data_bag_secret /etc/chef/encrypted_data_bag_secret
 curl -L https://www.opscode.com/chef/install.sh | bash;
 yum install -y gcc
 chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}"""
@@ -471,7 +485,6 @@ named {name}""".format(path=d['path'], name=d['name']))
             raise Exception("More than 1 subnet returned")
 
     def resolve_security_groups(self):
-        filters = {}
         self.log.info("Resolving security groups")
 
         # If the server is being spun up in a vpc, search only that vpc
@@ -502,7 +515,7 @@ named {name}""".format(path=d['path'], name=d['name']))
         profile_exists = False
 
         try:
-            profile = self.iam.get_instance_profile(self.role)
+            self.iam.get_instance_profile(self.role)
             profile_exists = True
         except Exception as e:
             if '404 Not Found' in str(e):
@@ -513,7 +526,7 @@ named {name}""".format(path=d['path'], name=d['name']))
 
         if not profile_exists:
             try:
-                instance_profile = self.iam.create_instance_profile(self.role)
+                self.iam.create_instance_profile(self.role)
                 self.log.info('Created IAM Profile {profile}'.format(
                               profile=self.role))
 
@@ -522,7 +535,7 @@ named {name}""".format(path=d['path'], name=d['name']))
                 raise e
 
         try:
-            role = self.iam.get_role(self.role)
+            self.iam.get_role(self.role)
             role_exists = True
         except Exception as e:
             if '404 Not Found' in str(e):
@@ -534,7 +547,7 @@ named {name}""".format(path=d['path'], name=d['name']))
         if not role_exists:
 
             try:
-                role = self.iam.create_role(self.role)
+                self.iam.create_role(self.role)
                 self.log.info('Created IAM Role {role}'.format(role=self.role))
                 self.iam.add_role_to_instance_profile(self.role, self.role)
                 self.log.info('Attached Role {role}'
@@ -553,18 +566,28 @@ named {name}""".format(path=d['path'], name=d['name']))
         self.log.info('Existing policies: '
                       '{policies}'.format(policies=existing_policies))
 
-        for policy in self.IAM_ROLE_POLICIES:
+        self.IAM_ROLE_POLICIES.extend(self.GLOBAL_IAM_ROLE_POLICIES)
+        self.IAM_ROLE_POLICIES = list(set(self.IAM_ROLE_POLICIES))
+        for policy_template in self.IAM_ROLE_POLICIES:
+            policy = policy_template.format(environment=self.environment)
 
             self.log.info('Processing policy "{policy}"'.format(policy=policy))
 
             if policy not in existing_policies:
+
+                rolePolicy = policies[policy]
+
+                if rolePolicy is None:
+                    self.log.info("No policy defined for {policy}".format(
+                                  policy=policy))
+                    continue  # Go to the next policy
 
                 self.log.info('Policy "{policy}" does not exist'.format(
                               policy=policy))
 
                 try:
                     self.iam.put_role_policy(self.role, policy,
-                                             policies[policy])
+                                             rolePolicy)
 
                     self.log.info('Added policy "{policy}"'.format(
                                   policy=policy))
@@ -640,8 +663,8 @@ named {name}""".format(path=d['path'], name=d['name']))
             log_message = 'Subnet {subnet_id} is in ' \
                           'availability zone {availability_zone}'
             self.log.info(log_message.format(
-                            subnet_id=subnet_id,
-                            availability_zone=availability_zone))
+                          subnet_id=subnet_id,
+                          availability_zone=availability_zone))
             return availability_zone
 
     def establish_iam_connection(self):
@@ -669,7 +692,7 @@ named {name}""".format(path=d['path'], name=d['name']))
 
                 security_groups = [group for group in
                                    self.ec2.get_all_security_groups(
-                                   filters=filters)
+                                       filters=filters)
                                    if self.vpc_id == group.vpc_id]
 
                 if len(security_groups) == 1:
@@ -692,12 +715,13 @@ named {name}""".format(path=d['path'], name=d['name']))
                 ids=self.security_group_ids))
 
         parameters = {
-                'image_id': self.ami,
-                'instance_profile_name': self.role,
-                'key_name': self.keypair,
-                'instance_type': self.instance_type,
-                'block_device_map': self.blockdevicemapping,
-                'user_data': self.user_data}
+            'image_id': self.ami,
+            'instance_profile_name': self.role,
+            'key_name': self.keypair,
+            'instance_type': self.instance_type,
+            'block_device_map': self.blockdevicemapping,
+            'user_data': self.user_data
+        }
 
         if self.subnet_id is None:
             parameters.update({
@@ -809,8 +833,8 @@ named {name}""".format(path=d['path'], name=d['name']))
             grp_id = self.get_security_group_ids([ing], vpc_id=self.vpc_id)
             grp_obj = self.ec2.get_all_security_groups(group_ids=grp_id[0])[0]
             for port in self.ports_to_authorize:
-                self.log.info("Adding port {0} from {1} to {2}."
-                    .format(port, ing, main_group[0]))
+                self.log.info("Adding port {0} from {1} to {2}.".format(
+                    port, ing, main_group[0]))
                 try:
                     main_group[0].authorize(ip_protocol='tcp',
                                             from_port=port,
@@ -869,10 +893,10 @@ named {name}""".format(path=d['path'], name=d['name']))
         with self.connection as conn:
 
             state = {
-                        'in': None,
-                        'out': None,
-                        'err': None
-                    }
+                'in': None,
+                'out': None,
+                'err': None
+            }
 
             stdin, stdout, stderr = conn.exec_command(command)
 
@@ -892,6 +916,32 @@ named {name}""".format(path=d['path'], name=d['name']))
                 pass
 
             return state
+
+    def terminate(self):
+        """
+        Terminate a node from AWS
+        """
+
+        address = self.instance.private_ip_address
+        instance_id = self.instance.id
+
+        self.log.info('The instance ID is {id_}'.format(id_=instance_id))
+
+        set_maintenance_mode(instance_id)
+
+        self.log.info('Terminating node at {address}'.format(address=address))
+        response = self.ec2.terminate_instances(instance_ids=[instance_id])
+
+        self.log.info('Received the response {response}'.format(response=response))
+
+        terminated = [instance.id for instance in response]
+
+        if instance_id in terminated:
+            self.log.info('Successfully terminated {instance}'.format(
+                            instance=instance_id))
+        else:
+            self.log.info('Failed to terminate {instance}'.format(
+                            instance=instance_id))
 
     def bake(self):
         if self.CHEF_RUNLIST:
