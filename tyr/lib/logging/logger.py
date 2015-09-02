@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import datetime
+import inspect
 
 
 class Logger(object):
@@ -21,7 +22,8 @@ class Logger(object):
         self._values = values
         self._handlers = handlers
 
-        self._values['path'] = path
+        if path is not None:
+            self._values['path'] = path
 
     def bind(self, key, value):
         """
@@ -91,6 +93,15 @@ class Logger(object):
 
         params['timestamp'] = datetime.datetime.utcnow()
         params['level'] = level
+
+        if 'path' not in params:
+            path = inspect.stack()[2][1]
+            path = path[:-3]
+            path = path[path.find('tyr'):]
+            path = path.replace('/', '.')
+            path += '.{function}'.format(function=inspect.stack()[2][3])
+
+            params['path'] = path
 
         for handler in self._handlers:
             handler(params)
