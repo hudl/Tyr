@@ -16,11 +16,8 @@ def subnet_id_is_valid(subnet_id, context):
     :type context: tyr.lib.context.context
     :param context: The current context
     """
-    _path = 'tyr.lib.util.aws.vpc.subnet_id_is_valid'
-
     logger = context.logger
-    logger.bind('path', _path)
-    conf = tyr.lib.configuration.get_conf(_path, context)
+    conf = tyr.lib.configuration.get_conf(context)
 
     logger.debug(event='Determining if AWS VPC Subnet ID is valid',
                  values={'queried-vpc-subnet-id': subnet_id})
@@ -60,11 +57,8 @@ def get_subnet_with_id(subnet_id, context):
     :type context: tyr.lib.context.context
     :param context: The current context
     """
-    _path = 'tyr.lib.util.aws.vpc.get_subnet_with_id'
-
     logger = context.logger
-    logger.bind('path', _path)
-    conf = tyr.lib.configuration.get_conf(_path, context)
+    conf = tyr.lib.configuration.get_conf(context)
 
     logger.debug(event='Retrieving VPC Subnet with ID',
                  values={'queried-vpc-subnet-id': subnet_id})
@@ -97,10 +91,7 @@ def availability_zone_for_subnet_id(subnet_id, context):
     :type context: tyr.lib.context.context
     :param context: The current context
     """
-    _path = 'tyr.lib.util.aws.vpc.availability_zone_for_subnet_id'
-
     logger = context.logger
-    logger.bind('path', _path)
 
     logger.debug(event='Retrieving availability zone for VPC Subnet',
                  values={'queried-vpc-subnet-id': subnet_id})
@@ -109,7 +100,6 @@ def availability_zone_for_subnet_id(subnet_id, context):
 
     subnet = get_subnet_with_id(subnet_id, context)
 
-    logger.bind('path', _path)
     logger.debug(event='Retrieved VPC subnet with ID',
                  values={'subnet': subnet})
 

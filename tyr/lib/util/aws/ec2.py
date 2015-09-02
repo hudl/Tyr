@@ -16,11 +16,8 @@ def region_is_valid(region, context):
     :type environment: string
     :param environment: The current environment
     """
-    _path = 'tyr.lib.util.aws.ec2.region_is_valid'
-
     logger = context.logger
-    logger.bind('path', _path)
-    conf = tyr.lib.configuration.get_conf(_path, context)
+    conf = tyr.lib.configuration.get_conf(context)
 
     logger.debug(event='Determing if AWS EC2 region is valid',
                  values={'queried-aws-region': region})
@@ -54,11 +51,8 @@ def ami_id_is_valid(ami_id, context):
     :type context: tyr.lib.context.context.Context
     :param context: The current context
     """
-    _path = 'tyr.lib.util.aws.ec2.ami_id_is_valid'
-
     logger = context.logger
-    logger.bind('path', _path)
-    conf = tyr.lib.configuration.get_conf(_path, context)
+    conf = tyr.lib.configuration.get_conf(context)
 
     logger.debug(event='Determing if AWS EC2 AMI ID is valid',
                  values={'queried-ami-id': ami_id})
@@ -97,11 +91,8 @@ def key_pair_name_is_valid(key_pair_name, context):
     :type context: tyr.lib.context.context.Context
     :param context: The current context
     """
-    _path = 'tyr.lib.util.aws.ec2.key_pair_name_is_valid'
-
     logger = context.logger
-    logger.bind('path', _path)
-    conf = tyr.lib.configuration.get_conf(_path, context)
+    conf = tyr.lib.configuration.get_conf(context)
 
     logger.debug(event='Determing if Key Pair Name is valid',
                  values={'queried-key-pair-name': key_pair_name})
@@ -140,11 +131,8 @@ def availability_zone_is_valid(availability_zone, context):
     :type context: tyr.lib.context.context.Context
     :param context: The current context
     """
-    _path = 'tyr.lib.util.aws.ec2.availability_zone_is_valid'
-
     logger = context.logger
-    logger.bind('path', _path)
-    conf = tyr.lib.configuration.get_conf(_path, context)
+    conf = tyr.lib.configuration.get_conf(context)
 
     logger.debug(event='Determing if AWS EC2 availability zone is valid',
                  values={'queried-availability-zone': availability_zone})
