@@ -522,6 +522,10 @@ def replace_server(environment=None, group=None, subnet_id=None,
 
     log.info('Using the replica set name {name}'.format(name=replica_set_name))
 
+    if node_type == 'arbiter' or node_type == 'data_warehousing':
+        log.warn('The specs for log and journal volumes on non-data nodes will'
+                 ' not be honoured')
+
     if node_type == 'arbiter':
 
         log.info('The node being added is an arbiter')
