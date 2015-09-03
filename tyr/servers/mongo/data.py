@@ -17,7 +17,9 @@ class MongoDataNode(MongoReplicaSetMember):
                  security_groups=None, block_devices=None,
                  chef_path=None, subnet_id=None, dns_zones=None,
                  replica_set=None, data_volume_size=None,
-                 data_volume_iops=None, mongodb_version=None):
+                 data_volume_iops=None, journal_volume_size=None,
+                 journal_volume_iops=None, log_volume_size=None,
+                 log_volume_iops=None, mongodb_version=None):
 
         super(MongoDataNode, self).__init__(group, server_type, instance_type,
                                             environment, ami, region, role,
@@ -28,6 +30,10 @@ class MongoDataNode(MongoReplicaSetMember):
 
         self.data_volume_size = data_volume_size
         self.data_volume_iops = data_volume_iops
+        self.journal_volume_size = journal_volume_size
+        self.journal_volume_iops = journal_volume_iops
+        self.log_volume_size = log_volume_size
+        self.log_volume_iops = log_volume_iops
 
     def configure(self):
 
@@ -85,16 +91,16 @@ class MongoDataNode(MongoReplicaSetMember):
                 {
                     'user': 'mongod',
                     'group': 'mongod',
-                    'size': 25,
-                    'iops': 250,
+                    'size': self.journal_volume_size,
+                    'iops': self.journal_volume_iops,
                     'device': '/dev/xvdg',
                     'mount': '/volr/journal'
                 },
                 {
                     'user': 'mongod',
                     'group': 'mongod',
-                    'size': 50,
-                    'iops': 250,
+                    'size': self.log_volume_size,
+                    'iops': self.log_volume_iops,
                     'device': '/dev/xvdh',
                     'mount': '/mongologs',
                 }
