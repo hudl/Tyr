@@ -35,6 +35,92 @@ class MongoDataNode(MongoReplicaSetMember):
         self.log_volume_size = log_volume_size
         self.log_volume_iops = log_volume_iops
 
+
+    def validate_ebs_volume(self, volume_type):
+        if volume_type == 'data':
+            eval_volume_size = self.data_volume_size
+            eval_volume_iops = self.data_volume_iops
+        elif volume_type == 'journal':
+            eval_volume_size = self.journal_volume_size
+            eval_volume_iops = self.journal_volume_iops
+        elif volume_type == 'log':
+            eval_volume_size = self.log_volume_size
+            eval_volume_iops = self.log_volume_iops
+        else:
+            msg = 'Unable to validate drive type: {volume_type}'.format(
+                volume_type=volume_type)
+            self.log.critical(msg)
+            sys.exit(1)
+
+        if eval_volume_size is None:
+            self.log.warn('No {volume_type} volume size provided'.format(
+            volume_type=volume_type))
+            eval_volume_size = set_default_volume_size(volume_type)
+        elif self.eval_volume_size < 1:
+            self.log.critical('The {volume_type} volume size is less than 1'.
+                              format(volume_type=volume_type))
+            sys.exit(1)
+
+        self.log.info('Using {volume_type} volume size "{size}"'.format(
+                                            volume_type=volume_type,
+                                            size=eval_volume_size))
+
+        if eval_volume_iops is None:
+            self.log.warn('No {volume_type} volume iops provided'.format(
+            volume_type=volume_type))
+            eval_volume_iops = set_default_volume_iops(volume_type)
+
+        self.log.info('Using {volume_type} volume iops "{iops}"'.format(
+                                            volume_type=volume_type,
+                                            iops=eval_volume_iops))
+
+        iops_size_ratio = eval_volume_iops/eval_volume_size
+
+        self.log.info('The IOPS to Size ratio is "{ratio}"'.format(
+                                            ratio=iops_size_ratio))
+
+        if iops_size_ratio > 30:
+            self.log.critical('The IOPS to Size ratio is greater than 30')
+            sys.exit(1)
+
+
+    def set_default_volume_size(self, volume_type):
+        if volume_type == 'data':
+            self.data_volume_size = 400
+            size = 400
+        elif volume_type == 'journal':
+            self.journal_volume_size = 50
+            size = 50
+        elif volume_type == 'log':
+            self.log_volume_size = 10
+            size = 10
+
+        return size
+
+
+    def set_default_volume_iops(self, volume_type):
+        if volume_type == 'data':
+            if self.environment == 'prod':
+                self.data_volume_iops = 3000
+            else:
+                self.data_volume_iops = 0
+            size = self.data_volume_iops
+        elif volume_type == 'journal':
+            if self.environment == 'prod':
+                self.journal_volume_iops = 500
+            else:
+                self.journal_volume_iops = 0
+            size = self.journal_volume_iops
+        elif volume_type == 'log':
+            if self.environment == 'prod':
+                self.log_volume_iops = 200
+            else:
+                self.log_volume_iops = 0
+            size = self.log_volume_iops
+
+        return size
+
+
     def configure(self):
 
         super(MongoDataNode, self).configure()
@@ -44,34 +130,10 @@ class MongoDataNode(MongoReplicaSetMember):
                                           '-s3-stage-updater')
             self.resolve_iam_role()
 
-        if self.data_volume_size is None:
-            self.log.warn('No data volume size provided')
-            self.data_volume_size = 400
-        elif self.data_volume_size < 1:
-            self.log.critical('The data volume size is less than 1')
-            sys.exit(1)
+        self.validate_ebs_volume('data')
+        self.validate_ebs_volume('journal')
+        self.validate_ebs_volume('log')
 
-        self.log.info('Using data volume size "{size}"'.format(
-                                            size=self.data_volume_size))
-
-        if self.data_volume_iops is None:
-            self.log.warn('No data volume iops provided')
-            if self.environment == 'prod':
-                self.data_volume_iops = 3000
-            else:
-                self.data_volume_iops = 0
-
-        self.log.info('Using data volume iops "{iops}"'.format(
-                                            iops=self.data_volume_iops))
-
-        iops_size_ratio = self.data_volume_iops/self.data_volume_size
-
-        self.log.info('The IOPS to Size ratio is "{ratio}"'.format(
-                                            ratio=iops_size_ratio))
-
-        if iops_size_ratio > 30:
-            self.log.critical('The IOPS to Size ratio is greater than 30')
-            sys.exit(1)
 
     def bake(self):
 
