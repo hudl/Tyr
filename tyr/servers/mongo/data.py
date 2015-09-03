@@ -36,50 +36,50 @@ class MongoDataNode(MongoReplicaSetMember):
         self.log_volume_iops = log_volume_iops
 
     def validate_ebs_volume(self, volume_type):
-        eval_volume_size = 0
-        eval_volume_iops = 0
+        volume_size = 0
+        volume_iops = 0
 
         if volume_type == 'data':
-            eval_volume_size = self.data_volume_size
-            eval_volume_iops = self.data_volume_iops
+            volume_size = self.data_volume_size
+            volume_iops = self.data_volume_iops
         elif volume_type == 'journal':
-            eval_volume_size = self.journal_volume_size
-            eval_volume_iops = self.journal_volume_iops
+            volume_size = self.journal_volume_size
+            volume_iops = self.journal_volume_iops
         elif volume_type == 'log':
-            eval_volume_size = self.log_volume_size
-            eval_volume_iops = self.log_volume_iops
+            volume_size = self.log_volume_size
+            volume_iops = self.log_volume_iops
         else:
             msg = 'Unable to validate drive type: {volume_type}'.format(
                 volume_type=volume_type)
             self.log.critical(msg)
             sys.exit(1)
 
-        if eval_volume_size is None:
+        if volume_size is None:
             msg = 'No {volume_type} volume size provided'.format(
                 volume_type=volume_type)
             self.log.warn(msg)
-            eval_volume_size = self.set_default_volume_size(volume_type)
-        elif eval_volume_size < 1:
+            volume_size = self.set_default_volume_size(volume_type)
+        elif volume_size < 1:
             self.log.critical('The {volume_type} volume size is less than 1'.
                               format(volume_type=volume_type))
             sys.exit(1)
 
         msg = 'Using {volume_type} volume size "{size}"'.format(
-            volume_type=volume_type, size=eval_volume_size)
+            volume_type=volume_type, size=volume_size)
         self.log.info(msg)
 
-        if eval_volume_iops is None:
+        if volume_iops is None:
             msg = 'No {volume_type} volume iops provided'.format(
                 volume_type=volume_type)
             self.log.warn(msg)
 
-            eval_volume_iops = self.set_default_volume_iops(volume_type)
+            volume_iops = self.set_default_volume_iops(volume_type)
 
         msg = 'Using {volume_type} volume iops "{iops}"'.format(
-            volume_type=volume_type, iops=eval_volume_iops)
+            volume_type=volume_type, iops=volume_iops)
         self.log.info(msg)
 
-        iops_size_ratio = eval_volume_iops/eval_volume_size
+        iops_size_ratio = volume_iops/volume_size
 
         self.log.info('The IOPS to Size ratio is "{ratio}"'.format(
             ratio=iops_size_ratio))
@@ -107,21 +107,21 @@ class MongoDataNode(MongoReplicaSetMember):
                 self.data_volume_iops = 3000
             else:
                 self.data_volume_iops = 0
-            size = self.data_volume_iops
+            default_volume_iops = self.data_volume_iops
         elif volume_type == 'journal':
             if self.environment == 'prod':
                 self.journal_volume_iops = 500
             else:
                 self.journal_volume_iops = 0
-            size = self.journal_volume_iops
+            default_volume_iops = self.journal_volume_iops
         elif volume_type == 'log':
             if self.environment == 'prod':
                 self.log_volume_iops = 200
             else:
                 self.log_volume_iops = 0
-            size = self.log_volume_iops
+            default_volume_iops = self.log_volume_iops
 
-        return size
+        return default_volume_iops
 
     def configure(self):
 
