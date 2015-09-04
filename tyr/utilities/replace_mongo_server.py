@@ -610,6 +610,8 @@ def replace_server(environment=None, group=None, subnet_id=None,
             print '\a'
             _ = raw_input('Press enter to continue')
 
+        replica_set.determine_primary(member)
+
         if replica_set.primary == member:
 
             log.warn('The previous node is the primary')
