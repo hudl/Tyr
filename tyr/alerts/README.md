@@ -3,7 +3,7 @@
 Here a few examples on how to use the stackdriver alerts module.
 
 
-# Connecting
+# Connecting - you will need a read/write API key for some of the functionality
 
 ```
 export STACKDRIVER_API_KEY=xxx
@@ -12,6 +12,30 @@ export STACKDRIVER_PASSWORD=xxx
 python
 from tyr.alerts.stackdriver import StackDriver
 s = StackDriver() # This connects and caches a lot of the configuration
+```
+
+
+# Applying Alerts When Creating New Servers
+
+At the moment alert creation is off by default.  There are two ways to do this:
+
+Example spinup with alerts:
+```
+from tyr.servers.rabbit import RabbitMQServer
+server = RabbitMQServer(group="test", environment='stage', instance_type="m3.large",
+ availability_zone="c")
+server.create_alerts = True
+server.autorun()
+```
+
+Or:
+
+```
+from tyr.servers.rabbit import RabbitMQServer
+server = RabbitMQServer(group="test", environment='stage', instance_type="m3.large",
+ availability_zone="c")
+ server.autorun()
+ server.apply_alerts()
 ```
 
 
