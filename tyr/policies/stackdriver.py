@@ -984,6 +984,10 @@ notification_groups = {
         "pagerduty": "Stackdriver Team Sports",
         "team_email": "Infrastructure Squad"
     },
+    "hudl-messaging": {
+        "heimdall_webhook": "Heimdall hudl-messaging Webhook",
+        "pagerduty": "Stackdriver Monolith"
+    },
 
 }
 

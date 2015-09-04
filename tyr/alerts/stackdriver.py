@@ -18,21 +18,22 @@ API_KEY = os.environ['STACKDRIVER_API_KEY']
 USERNAME = os.environ['STACKDRIVER_USERNAME']
 PASSWORD = os.environ['STACKDRIVER_PASSWORD']
 
-log = logging.getLogger('tyr.alerts.StackDriver')
-if not log.handlers:
-    log.setLevel(logging.INFO)
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.INFO)
-    formatter = logging.Formatter(
-        '%(asctime)s [%(name)s] %(levelname)s: %(message)s',
-        datefmt='%H:%M:%S')
-    ch.setFormatter(formatter)
-    log.addHandler(ch)
+# log = logging.getLogger('tyr.alerts.StackDriver')
+# if not log.handlers:
+#     log.setLevel(logging.INFO)
+#     ch = logging.StreamHandler()
+#     ch.setLevel(logging.INFO)
+#     formatter = logging.Formatter(
+#         '%(asctime)s [%(name)s] %(levelname)s: %(message)s',
+#         datefmt='%H:%M:%S')
+#     ch.setFormatter(formatter)
+#     log.addHandler(ch)
 
 LIST_POLICY_URL = "/v0.2/alerting/policies/"
 LIST_GROUPS_URL = "/v0.2/groups/"
 GET_POLICY_URL = "/v0.2/alerting/policies/{policy_id}/"
 GET_GROUP_URL = "/v0.2/groups/{group_id}/"
+CREATE_GROUP_URL = "/v0.2/groups/"
 LIST_GROUP_MEMBERS_URL = "/v0.2/groups/{group_id}/members/"
 
 # URLs not in the API
@@ -49,6 +50,8 @@ PAGERDUTY_HOOKS_URL = "https://app.stackdriver.com/api/settings/pagerduty_servic
 class StackDriver:
 
     def __init__(self):
+        self.log = logging.getLogger('tyr.alerts.StackDriver')
+        self.log.setLevel(logging.DEBUG)
         self.headers = {"x-stackdriver-apikey": API_KEY}
         self.conditions = conditions
         self.notification_types = notification_types
@@ -99,6 +102,27 @@ class StackDriver:
         groups = self.get_paginated_list(LIST_GROUPS_URL)
         return groups['data']
 
+    def create_group(self, name, parent_id=None, conditions=[], conjunction="AND", is_cluster=False):
+        data = {
+            "name": name,
+            "parent_id": None,
+            "cluster": is_cluster,
+            "conjunction": conjunction,
+            "conditions": conditions
+        }
+
+        if parent_id:
+            data['parent_id'] = parent_id
+
+        log.debug(data)
+
+        r = requests.post(API_ENDPOINT + CREATE_GROUP_URL,
+                         headers=self.headers, json=data)
+        r.raise_for_status()
+        self.update_cache()
+        return r.json()['data']['id']
+
+
     def get_paginated_list(self, list_url):
         r = requests.get(API_ENDPOINT + list_url,
                          headers=self.headers)
@@ -118,42 +142,72 @@ class StackDriver:
                 break
         return full_list
 
-    def get_group_id_by_name(self, name):
+    def get_group_id_by_name(self, name=None, create_if_missing=False, contains_name=None):
+        """
+        :param name:
+        :param create_if_missing:
+        :param contains_name:
+        :return id:
+        Returns group id from a name specifier.  Subgroups can use a / seperator.
+        Can also create a group if it does not exist.
+        """
+        if not name:
+            raise Exception("Must specify group name!")
+        if create_if_missing and not contains_name:
+            raise Exception("Must specify a membership regex to be able to create a group.")
+
+        parent_id = None
+        child_id = None
         if '/' in name:
             # Group is a subgroup
             parent = name.split('/')[0]
             child = name.split('/')[1]
+            has_parent = True
         else:
-            parent = None
-        if parent:
-            parent_id = None
-            child_id = None
+            has_parent = False
+
+        if has_parent:
+            # We are searching for a child group
             for group in self.groups:
-                if group['name'] == parent:
+                # Find the top level parent group
+                if group['name'] == parent and not group['parent_id']:
                     parent_id = group['id']
             for group in self.groups:
-                if group['name'] == child and group['parent_id'] == parent_id:
+                if group['name'] == child and group['parent_id'] == parent_id and parent_id:
                     child_id = group['id']
-                    log.debug('Retrieved child group {c} for {g} & parent {p}'
+                    self.log.debug('Retrieved child group {c} for {g} & parent {p}'
                               .format(p=parent_id, c=child_id, g=name))
                     return child_id
-            raise Exception('Unable to get parent/child group for name {g}!'
-                            .format(g=name))
-
         else:
-            # Group is not a subgroup, so we should ignore them
+            # A top level group was specified
             for group in self.groups:
+                # If group is not a subgroup, we should ignore them
                 if group['name'] == name and not group['parent_id']:
-                    log.debug('Retrieved group {id} for {group}'
+                    parent_id = group['id']
+                    self.log.debug('Retrieved group {id} for parent {group}'
                               .format(id=group['id'], group=name))
-                    return group['id']
+                    return parent_id
 
-        raise Exception("Group {g} was not found!".format(g=name))
+        # If we get here, the group has not been found
+        if create_if_missing and not parent_id:
+            use_conditions = [{"comparison": "contains", "type": "name", "value": contains_name}]
+            if not has_parent:
+                parent_id = self.create_group(name=name, parent_id=None, conditions=use_conditions)
+                return parent_id
+            else:
+                parent_id = self.create_group(name=parent, parent_id=None, conditions=use_conditions)
+
+        if create_if_missing and not child_id:
+            use_conditions = [{"comparison": "contains", "type": "name", "value": contains_name}]
+            child_id = self.create_group(name=child, parent_id=parent_id, conditions=use_conditions)
+            return child_id
+
+        raise Exception("Group {g} was not found! (specify create_if_missing to create)".format(g=name))
 
     def get_group_name_by_id(self, id):
         for group in self.groups:
             if group['id'] == id:
-                log.debug('Retrieved group {name} for {id}'
+                self.log.debug('Retrieved group {name} for {id}'
                           .format(id=group['id'], name=group['name']))
                 return group['name']
 
@@ -162,7 +216,7 @@ class StackDriver:
                          headers=self.headers)
         r.raise_for_status()
         group = r.json()['data']
-        log.debug('Retrieved group {group} for {id}'
+        self.log.debug('Retrieved group {group} for {id}'
                   .format(id=group['id'], group=group['name']))
         return group
 
@@ -192,7 +246,7 @@ class StackDriver:
         ignored, such as threshold.
         '''
         pols = self.get_policies_applied_to_group_id(group['id'])
-        log.debug('{n} policies applied to group id: {g}'
+        self.log.debug('{n} policies applied to group id: {g}'
                   .format(n=len(pols), g=group['id']))
         for pol in pols:
             try:
@@ -326,11 +380,11 @@ class StackDriver:
                         group,
                         ignore_options=ignore_options
                         ):
-                            log.info("OK: Policy {n} present in group {gn} ({g})"
+                            self.log.info("OK: Policy {n} present in group {gn} ({g})"
                                      .format(n=name, gn=gn,
                                              g=group['id']))
                 else:
-                    log.info("WARN: Policy {n} NOT present in group {gn} ({g})"
+                    self.log.info("WARN: Policy {n} NOT present in group {gn} ({g})"
                              .format(n=name, gn=gn, g=group['id']))
                     missing.append({"name": name, "condition": pol,
                                     "group_id": group['id'],
@@ -403,7 +457,7 @@ class StackDriver:
         # Remove some newer fields to make comparison more accurate
         subset = deepcopy(subset_input)
         superset = deepcopy(superset_input)
-        log.debug(subset)
+        self.log.debug(subset)
         subset.pop('name')
         for field in remove_options:
             try:
@@ -418,7 +472,7 @@ class StackDriver:
         for opt in check_ops:
             if (opt not in superset['options']
                and opt in subset['options']):
-                    log.debug('Removing {opt} as it is not in superset'
+                    self.log.debug('Removing {opt} as it is not in superset'
                               .format(opt=opt))
                     subset['options'].pop(opt)
 
@@ -427,7 +481,7 @@ class StackDriver:
             name_tuple = (subset["options"]["metric_name"],
                           superset["options"]["metric_name"])
             if name_tuple in metric_name_equivilents:
-                log.debug('Removing metric name '
+                self.log.debug('Removing metric name '
                           'as they are equivilent.')
                 subset['options'].pop('metric_name')
 
@@ -435,13 +489,13 @@ class StackDriver:
             type_tuple = (subset['options']["metric_type"],
                           superset['options']['metric_type'])
             if type_tuple in metric_name_equivilents:
-                log.debug('Removing metric type '
+                self.log.debug('Removing metric type '
                           'as they are equivilent.')
                 subset['options'].pop('metric_type')
 
         match = True
         if not subset['condition_type'] == superset['condition_type']:
-            log.debug("{o} not equal to {p}"
+            self.log.debug("{o} not equal to {p}"
                       .format(o=subset['condition_type'],
                               p=superset['condition_type']))
             match = False
@@ -450,7 +504,7 @@ class StackDriver:
             for key, o in subset['options'].iteritems():
                 p = None
                 q = None
-                log.debug("Testing key: " + key)
+                self.log.debug("Testing key: " + key)
                 try:
                     if isinstance(o, basestring):
                         p = o.lower()
@@ -466,16 +520,16 @@ class StackDriver:
                         q = superset['options'][key]
                     if p != q:
                         match = False
-                        log.debug("{p} not equal to {q}"
+                        self.log.debug("{p} not equal to {q}"
                                   .format(p=p, q=q))
                         break
                     else:
-                        log.debug("{p} IS equal to {q}"
+                        self.log.debug("{p} IS equal to {q}"
                                   .format(p=p, q=q))
                 except KeyError:
                     match = False
                     break
-        log.debug(match)
+        self.log.debug(match)
         return match
 
     def create_csv_of_all_groups(self, filename):
@@ -524,7 +578,7 @@ class StackDriver:
         r = self.session.get(USER_LOGIN_URL)
         r.raise_for_status()
         self.csrftoken = r.cookies['csrftoken']
-        log.debug(r.cookies)
+        self.log.debug(r.cookies)
 
         # Now actually login
         data = {
@@ -639,13 +693,13 @@ class StackDriver:
                 .format(name=name)
             }
         }
-        log.debug(self.pretty(pol_template))
+        self.log.debug(self.pretty(pol_template))
 
         r = self.session.post(CREATE_POLICY_URL,
                               json=pol_template,
                               headers=headers)
         r.raise_for_status()
-        log.info("Created policy {p} for group {g}"
+        self.log.info("Created policy {p} for group {g}"
                  .format(p=pol_template['name'],
                          g=self.get_group_name_by_id(group_id)))
         if update_cache:
