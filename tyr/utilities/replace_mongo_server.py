@@ -290,8 +290,9 @@ def run_mongo_command(address, command):
 @timeit
 def launch_server(environment, group, subnet_id, instance_type,
                   availability_zone, replica_set, data_volume_size,
-                  data_volume_iops, mongodb_package_version, node_type,
-                  replica_set_template):
+                  data_volume_iops, journal_volume_size, journal_volume_iops,
+                  log_volume_size, log_volume_iops, mongodb_package_version,
+                  node_type, replica_set_template):
 
     log.debug('Preparing to launch a new node')
 
@@ -305,6 +306,10 @@ def launch_server(environment, group, subnet_id, instance_type,
                              replica_set=replica_set,
                              data_volume_size=data_volume_size,
                              data_volume_iops=data_volume_iops,
+                             journal_volume_size=journal_volume_size,
+                             journal_volume_iops=journal_volume_iops,
+                             log_volume_size=log_volume_size,
+                             log_volume_iops=log_volume_iops,
                              mongodb_version=mongodb_package_version)
 
     elif node_type == 'datawarehousing':
@@ -429,7 +434,9 @@ def stop_decommissioned_node(address, terminate=False):
 def replace_server(environment=None, group=None, subnet_id=None,
                    instance_type=None, availability_zone=None,
                    replica_set_index=None, data_volume_size=None,
-                   data_volume_iops=None, mongodb_package_version=None,
+                   data_volume_iops=None, journal_volume_size=None,
+                   journal_volume_iops=None, log_volume_size=None,
+                   log_volume_iops=None, mongodb_package_version=None,
                    member=None, replace=False, node_type='data',
                    reroute=False, replica_set_template=None, terminate=False,
                    prompt_before_replace=True):
@@ -517,6 +524,10 @@ def replace_server(environment=None, group=None, subnet_id=None,
 
     log.info('Using the replica set name {name}'.format(name=replica_set_name))
 
+    if node_type == 'arbiter' or node_type == 'data_warehousing':
+        log.warn('The specs for log and journal volumes on non-data nodes will'
+                 ' not be honoured')
+
     if node_type == 'arbiter':
 
         log.info('The node being added is an arbiter')
@@ -555,6 +566,8 @@ def replace_server(environment=None, group=None, subnet_id=None,
     node = launch_server(environment, group, subnet_id, instance_type,
                          availability_zone, replica_set_index,
                          data_volume_size, data_volume_iops,
+                         journal_volume_size, journal_volume_iops,
+                         log_volume_size, log_volume_iops,
                          mongodb_package_version, node_type,
                          replica_set_template=replica_set_name)
 
@@ -598,6 +611,8 @@ def replace_server(environment=None, group=None, subnet_id=None,
 
             print '\a'
             _ = raw_input('Press enter to continue')
+
+        replica_set.determine_primary(member)
 
         if replica_set.primary == member:
 

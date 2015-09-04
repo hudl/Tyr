@@ -67,7 +67,8 @@ def set_maintenance_mode(instance_id):
     log.debug('Placing {instance_id} into maintenance mode'.format(
                                                     instance_id=instance_id))
 
-    while not registered_in_stackdriver(log, instance_id):
+    while not registered_in_stackdriver(instance_id):
+
 
         log.error('The instance is not listed in Stackdriver')
         log.debug('Trying again in 10 seconds')

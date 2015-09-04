@@ -64,6 +64,7 @@ class Server(object):
         self.ports_to_authorize = ports_to_authorize
         self.classic_link = classic_link
         self.add_route53_dns = add_route53_dns
+        self.ebs_optimized = False
         self.create_alerts = False
 
     def establish_logger(self):
@@ -728,7 +729,8 @@ named {name}""".format(path=d['path'], name=d['name']))
             'key_name': self.keypair,
             'instance_type': self.instance_type,
             'block_device_map': self.blockdevicemapping,
-            'user_data': self.user_data
+            'user_data': self.user_data,
+            'ebs_optimized': self.ebs_optimized
         }
 
         if self.subnet_id is None:
