@@ -603,6 +603,8 @@ def replace_server(environment=None, group=None, subnet_id=None,
 
     if replace:
 
+        replica_set.determine_primary(member)
+
         log.info('Preparing to remove the previous node')
 
         if prompt_before_replace:
