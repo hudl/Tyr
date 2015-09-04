@@ -15,18 +15,18 @@ if not log.handlers:
     ch.setFormatter(formatter)
     log.addHandler(ch)
 
-STACKDRIVER_USERNAME = os.environ.get('STACKDRIVER_USERNAME',False)
+STACKDRIVER_USERNAME = os.environ.get('STACKDRIVER_USERNAME', False)
 
 if not STACKDRIVER_USERNAME:
     log.critical('The environment variable STACKDRIVER_USERNAME '
-                    'is undefined')
+                 'is undefined')
     sys.exit(1)
 
-STACKDRIVER_API_KEY  = os.environ.get('STACKDRIVER_API_KEY',False)
+STACKDRIVER_API_KEY = os.environ.get('STACKDRIVER_API_KEY', False)
 
 if not STACKDRIVER_API_KEY:
     log.critical('The environment variable STACKDRIVER_API_KEY '
-                    'is undefined')
+                 'is undefined')
     sys.exit(1)
 
 
@@ -61,12 +61,13 @@ def registered_in_stackdriver(instance_id):
 
     return listed
 
+
 def set_maintenance_mode(instance_id):
 
     log.debug('Placing {instance_id} into maintenance mode'.format(
                                                     instance_id=instance_id))
 
-    while not registered_in_stackdriver(log,instance_id):
+    while not registered_in_stackdriver(log, instance_id):
 
         log.error('The instance is not listed in Stackdriver')
         log.debug('Trying again in 10 seconds')
@@ -105,6 +106,7 @@ def set_maintenance_mode(instance_id):
 
     else:
         log.debug('Placed the node into maintenance mode')
+
 
 def unset_maintenance_mode(instance_id):
 
