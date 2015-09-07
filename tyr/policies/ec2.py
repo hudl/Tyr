@@ -211,7 +211,7 @@ allow_outpost_sns_prod = """{
         "sns:Subscribe"
       ],
       "Resource": [
-        "arn:aws:sns:us-east-1:761584570493:prod-outpost",
+        "arn:aws:sns:us-east-1:761584570493:p-outpost",
         "arn:aws:sns:us-east-1:761584570493:alyx3"
       ]
     },
@@ -242,7 +242,7 @@ allow_outpost_sns_stage = """{
         "sns:Subscribe"
       ],
       "Resource": [
-        "arn:aws:sns:us-east-1:761584570493:stage-outpost",
+        "arn:aws:sns:us-east-1:761584570493:s-outpost",
         "arn:aws:sns:us-east-1:761584570493:alyx3"
       ]
     },
