@@ -58,6 +58,13 @@ RabbitMQServer(group="test", environment='stage', instance_type="m3.large",
  availability_zone="c").autorun()
 ```
 
+### Couchbase
+``` python
+from tyr.servers.cache import CacheServer
+CacheServer(group='monolith', instance_type='r3.large', environment='prod',
+subnet_id='subnet-bfe16094', couchbase_username='Administrator', couchbase_password='<censored>', bucket_name='hudl').autorun()
+```
+
 ### IIS Web Cluster
 ```
 from tyr.clusters.iis import IISCluster
