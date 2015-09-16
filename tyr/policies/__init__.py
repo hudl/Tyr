@@ -19,6 +19,7 @@ policies = {
     'allow-modify-nginx-elbs-test': None,
     'allow-modify-nginx-elbs-stage': elb.allow_modify_nginx_elbs_stage,
     'allow-modify-nginx-elbs-prod': elb.allow_modify_nginx_elbs_prod,
+    'allow-outpost-sns-test': ec2.allow_outpost_sns_test,
     'allow-outpost-sns-stage': ec2.allow_outpost_sns_stage,
     'allow-outpost-sns-prod': ec2.allow_outpost_sns_prod,
     'allow-web-initialization-prod': ec2.allow_web_initialization_prod,
