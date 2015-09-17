@@ -210,7 +210,6 @@ allow_outpost_sns_test = """{
         "sns:Subscribe"
       ],
       "Resource": [
-        "arn:aws:sns:us-east-1:761584570493:test-outpost",
         "arn:aws:sns:us-east-1:761584570493:alyx3",
         "arn:aws:sns:us-east-1:761584570493:t-config-changes",
         "arn:aws:sns:us-east-1:761584570493:t-outpost"
@@ -243,7 +242,6 @@ allow_outpost_sns_prod = """{
         "sns:Subscribe"
       ],
       "Resource": [
-        "arn:aws:sns:us-east-1:761584570493:prod-outpost",
         "arn:aws:sns:us-east-1:761584570493:alyx3",
         "arn:aws:sns:us-east-1:761584570493:p-config-changes",
         "arn:aws:sns:us-east-1:761584570493:p-outpost"
@@ -276,7 +274,6 @@ allow_outpost_sns_stage = """{
         "sns:Subscribe"
       ],
       "Resource": [
-        "arn:aws:sns:us-east-1:761584570493:stage-outpost",
         "arn:aws:sns:us-east-1:761584570493:alyx3",
         "arn:aws:sns:us-east-1:761584570493:stage-config-changes",
         "arn:aws:sns:us-east-1:761584570493:s-outpost"
