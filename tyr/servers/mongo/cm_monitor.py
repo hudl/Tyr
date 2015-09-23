@@ -20,3 +20,15 @@ class MongoCmMonitor(Server):
                                              keypair, availability_zone,
                                              security_groups, block_devices,
                                              chef_path, subnet_id, dns_zones)
+
+    def configure(self):
+        super(MongoCmMonitor, self).configure()
+
+        self.security_groups = [
+            'management',
+            'chef-nodes',
+            'big-spark-slaves',
+            'p-mms',
+        ]
+
+        self.resolve_security_groups()
