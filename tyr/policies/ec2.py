@@ -197,6 +197,47 @@ allow_web_initialization_stage = """{
   ]
 }"""
 
+allow_outpost_sns_test = """{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "Stmt1390578067000",
+      "Effect": "Allow",
+      "Action": [
+        "sns:ListSubscriptions",
+        "sns:ListSubscriptionsByTopic",
+        "sns:Publish",
+        "sns:Subscribe"
+      ],
+      "Resource": [
+        "arn:aws:sns:us-east-1:761584570493:alyx3",
+        "arn:aws:sns:us-east-1:761584570493:t-config-changes",
+        "arn:aws:sns:us-east-1:761584570493:t-outpost"
+      ]
+    },
+    {
+      "Sid": "Stmt1390578067001",
+      "Effect": "Allow",
+      "Action": [
+        "sns:ConfirmSubscription",
+        "sns:Unsubscribe"
+      ],
+      "Resource": [
+        "arn:aws:sns:us-east-1:761584570493:*"
+      ]
+    },
+    {
+      "Sid": "Stmt1442579118000",
+      "Effect": "Allow",
+      "Action": [
+          "autoscaling:CompleteLifecycleAction"
+      ],
+      "Resource": [
+          "*"
+      ]
+    }
+  ]
+}"""
 
 allow_outpost_sns_prod = """{
   "Version": "2012-10-17",
@@ -211,8 +252,9 @@ allow_outpost_sns_prod = """{
         "sns:Subscribe"
       ],
       "Resource": [
-        "arn:aws:sns:us-east-1:761584570493:p-outpost",
-        "arn:aws:sns:us-east-1:761584570493:alyx3"
+        "arn:aws:sns:us-east-1:761584570493:alyx3",
+        "arn:aws:sns:us-east-1:761584570493:p-config-changes",
+        "arn:aws:sns:us-east-1:761584570493:p-outpost"
       ]
     },
     {
@@ -224,40 +266,61 @@ allow_outpost_sns_prod = """{
       ],
       "Resource": [
         "arn:aws:sns:us-east-1:761584570493:*"
+      ]
+    },
+    {
+      "Sid": "Stmt1442579118000",
+      "Effect": "Allow",
+      "Action": [
+          "autoscaling:CompleteLifecycleAction"
+      ],
+      "Resource": [
+          "*"
       ]
     }
   ]
 }"""
 
 allow_outpost_sns_stage = """{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "Stmt1390578067000",
-      "Effect": "Allow",
-      "Action": [
-        "sns:ListSubscriptions",
-        "sns:ListSubscriptionsByTopic",
-        "sns:Publish",
-        "sns:Subscribe"
-      ],
-      "Resource": [
-        "arn:aws:sns:us-east-1:761584570493:s-outpost",
-        "arn:aws:sns:us-east-1:761584570493:alyx3"
-      ]
-    },
-    {
-      "Sid": "Stmt1390578067001",
-      "Effect": "Allow",
-      "Action": [
-        "sns:ConfirmSubscription",
-        "sns:Unsubscribe"
-      ],
-      "Resource": [
-        "arn:aws:sns:us-east-1:761584570493:*"
-      ]
-    }
-  ]
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "Stmt1390578067000",
+            "Effect": "Allow",
+            "Action": [
+                "sns:ListSubscriptions",
+                "sns:ListSubscriptionsByTopic",
+                "sns:Publish",
+                "sns:Subscribe"
+            ],
+            "Resource": [
+                "arn:aws:sns:us-east-1:761584570493:alyx3",
+                "arn:aws:sns:us-east-1:761584570493:stage-config-changes",
+                "arn:aws:sns:us-east-1:761584570493:s-outpost"
+            ]
+        },
+        {
+            "Sid": "Stmt1390578067001",
+            "Effect": "Allow",
+            "Action": [
+                "sns:ConfirmSubscription",
+                "sns:Unsubscribe"
+            ],
+            "Resource": [
+                "arn:aws:sns:us-east-1:761584570493:*"
+            ]
+        },
+        {
+            "Sid": "Stmt1442579118000",
+            "Effect": "Allow",
+            "Action": [
+                "autoscaling:CompleteLifecycleAction"
+            ],
+            "Resource": [
+                "*"
+            ]
+        }
+    ]
 }"""
 
 
