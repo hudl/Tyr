@@ -227,13 +227,19 @@ class StackDriver:
         pol_list = []
         for c in self.policies['data']:
             if c['condition']:
-                for e in c['condition']['children']:
-                    try:
-                        if 'group' in e['options']['applies_to']:
-                            if e['options']['group_id'] == group_id:
-                                pol_list.append(e)
-                    except KeyError:
-                        pass
+                if c['condition']['children']:
+                    for e in c['condition']['children']:
+                        try:
+                            if e:
+                                if e['options']:
+                                    if 'group' in e['options']['applies_to']:
+                                        if e['options']['group_id'] == group_id:
+                                            pol_list.append(e)
+                        except KeyError:
+                            pass
+                        except TypeError:
+                            print(e)
+                            print(c['condition']['children'])
         return pol_list
 
     def test_condition_applied_to_group_id(self, policy, group,
@@ -426,12 +432,7 @@ class StackDriver:
         add ignore_options to exclude additional fields (e.g. window)
         '''
         metric_name_equivilents = [
-            ("windows_cpu", "cpu"),
             ("windows_cpu", "winagent:cpu"),
-            ("windows_cpu", "agent:aggregation:cpu-average:cpu:idle:pct"),
-            ("windows_memory", "memory"),
-            ("windows_memory", "agent:memory::memory:used:pct"),
-            ("windows_disk_usage", "disk_usage"),
             ("windows_disk_usage", "winagent:disk"),
             ("windows_disk_usage", "winagent:disk:*"),
             ("memory", "agent:memory::memory:used:pct"),
