@@ -988,6 +988,10 @@ notification_groups = {
         "heimdall_webhook": "Heimdall hudl-messaging Webhook",
         "pagerduty": "Stackdriver Monolith"
     },
+    "hudl-technique": {
+        "heimdall_webhook": "Heimdall hudl-technique Webhook",
+        "pagerduty": "Stackdriver Monolith"
+    },
 
 }
 
