@@ -403,6 +403,8 @@ class Server(object):
         template = """#!/bin/bash
 sed -i '/requiretty/d' /etc/sudoers
 hostname {hostname}
+sed -i 's/^releasever=latest/# releasever=latest/' /etc/yum.conf
+yum clean all
 mkdir /etc/chef
 touch /etc/chef/client.rb
 mkdir -p /etc/chef/ohai/hints
