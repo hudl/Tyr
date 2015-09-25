@@ -36,16 +36,24 @@ class MongoConfigNode(MongoNode):
                     'group': 'mongod',
                     'size': 5,
                     'iops': 0,
-                    'device': '/dev/xvdg',
-                    'mount': '/volr/journal'
+                    'device': '/dev/xvdf',
+                    'mount': '/volr'
                 },
                 {
                     'user': 'mongod',
                     'group': 'mongod',
                     'size': 5,
                     'iops': 0,
-                    'device': '/dev/xvdf',
-                    'mount': '/volr'
+                    'device': '/dev/xvdg',
+                    'mount': '/volr/journal'
+                },
+                {
+                    'user': 'mongod',
+                    'group': 'mongod',
+                    'size': 20,
+                    'iops': 0,
+                    'device': '/dev/xvdh',
+                    'mount': '/mongologs',
                 }
             ])
 
