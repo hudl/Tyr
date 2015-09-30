@@ -24,12 +24,20 @@ class ScriptsServer(Server):
         if server_type is None:
             server_type = self.SERVER_TYPE
 
-        super(ScriptsServer, self).__init__(group, server_type, instance_type,
-                                            environment, ami, region, role,
-                                            keypair, availability_zone,
-                                            security_groups, block_devices,
-                                            chef_path, subnet_id, dns_zones)
+        if instance_type is None:
+            instance_type = 't2.micro'
+
+        super(ScriptsServer, self).__init__(group=group, server_type=server_type, 
+                                            instance_type=instance_type,
+                                            environment=environment,
+                                            ami=ami, region=region,
+                                            role=role, keypair=keypair,
+                                            availability_zone=availability_zone,
+                                            security_groups=security_groups,
+                                            block_devices=block_devices,
+                                            chef_path=chef_path,
+                                            subnet_id=subnet_id,
+                                            dns_zones=dns_zones)
 
     def configure(self):
-        self.instance_type = 't2.micro'
         super(ScriptsServer, self).configure()
