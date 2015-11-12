@@ -72,6 +72,11 @@ i = IISCluster(group='features', environment='stage', ami='ami-xxxxx', instance_
 i.autorun()
 ```
 
+### Nginx server
+```
+from tyr.servers.nginx import NginxServer
+NginxServer(group="monolith", instance_type="m3.medium", environment="stage", availability_zone="c").autorun()
+```
 
 Yep, that's it. Magical, right?
 
