@@ -9,7 +9,7 @@ To do this, it interacts with [Amazon Web Servers](https://aws.amazon.com) and
 
 ## Installation
 
-```
+``` bash
 $ git clone git@github.com:hudl/Tyr.git
 $ cd Tyr
 $ python setup.py install
@@ -66,14 +66,14 @@ subnet_id='subnet-bfe16094', couchbase_username='Administrator', couchbase_passw
 ```
 
 ### IIS Web Cluster
-```
+``` python
 from tyr.clusters.iis import IISCluster
 i = IISCluster(group='features', environment='stage', ami='ami-xxxxx', instance_type="m3.large", subnet_ids=['subnet-xxxxx'], desired_capacity=2, min_size=2, max_size=3)
 i.autorun()
 ```
 
 ### Nginx server
-```
+``` python
 from tyr.servers.nginx import NginxServer
 NginxServer(group="monolith", instance_type="m3.medium", environment="stage", availability_zone="c").autorun()
 ```
