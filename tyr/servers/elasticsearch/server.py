@@ -25,7 +25,8 @@ class ElasticsearchServer(Server):
         super(ElasticsearchServer, self).__init__(group, server_type,
                                                   instance_type, environment,
                                                   ami, region, role, keypair,
-                                                  availability_zone, chef_path,
+                                                  availability_zone,
                                                   security_groups,
                                                   block_devices,
+                                                  chef_path,
                                                   subnet_id, dns_zones)
