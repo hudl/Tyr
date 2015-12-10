@@ -7,11 +7,11 @@ class SolrSlaveNode(SolrNode):
                  environment=None, ami=None, region=None, role=None,
                  keypair=None, availability_zone=None, security_groups=None,
                  block_devices=None, chef_path=None, subnet_id=None,
-                 dns_zones=None):
+                 dns_zones=None, master_host=None):
 
         super(SolrSlaveNode, self).__init__(group, server_type, instance_type,
                                             environment, ami, region, role,
                                             keypair, availability_zone,
                                             security_groups, block_devices,
                                             chef_path, subnet_id, dns_zones,
-                                            False, True)
+                                            False, True, master_host)
