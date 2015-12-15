@@ -10,7 +10,6 @@ class AutoScaler(object):
     '''
     def __init__(self, launch_configuration,
                  autoscaling_group,
-                 instance_type,
                  node_obj,
                  desired_capacity=1,
                  max_size=1,
@@ -24,7 +23,6 @@ class AutoScaler(object):
 
         self.launch_configuration = launch_configuration
         self.autoscaling_group = autoscaling_group
-        self.instance_type = instance_type
         self.desired_capacity = desired_capacity
 
         # You can set a list of availability zones explicitly, else it will
@@ -79,7 +77,7 @@ class AutoScaler(object):
                                      get_security_group_ids(
                                          self.node_obj.security_groups),
                                      user_data=self.node_obj.user_data,
-                                     instance_type=self.instance_type,
+                                     instance_type=self.node_obj.instance_type,
                                      instance_profile_name=self.node_obj.role)
             self.conn.create_launch_configuration(lc)
             self.launch_configuration = lc

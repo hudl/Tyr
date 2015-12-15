@@ -86,7 +86,6 @@ class IISCluster():
         self.log.info('Creating autoscaler')
         auto = AutoScaler(launch_configuration=self.launch_configuration,
                           autoscaling_group=self.autoscaling_group,
-                          instance_type=self.instance_type,
                           desired_capacity=self.desired_capacity,
                           max_size=self.max_size,
                           min_size=self.min_size,
