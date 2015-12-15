@@ -24,7 +24,7 @@ def build_mv_service(
     stage_availability_zones=['us-east-1c', 'us-east-1d'],
     # Web Server Properties
     prod_web_instance_type='t2.large',
-    stage_web_instance_type='m4.large',
+    stage_web_instance_type='m3.medium',
     prod_web_ami='ami-9c0f7ef6',
     stage_web_ami='ami-9c0f7ef6',
     prod_desired_capacity=3,
