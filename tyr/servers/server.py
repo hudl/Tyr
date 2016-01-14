@@ -400,43 +400,84 @@ class Server(object):
     @property
     def user_data(self):
 
-        template = """Content-Type: multipart/mixed; boundary="===============0035287898381899620=="
-MIME-Version: 1.0
-
---===============0035287898381899620==
-Content-Type: text/cloud-config; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename="cloud-config.txt"
-
-#cloud-config
+        template = """#cloud-config
 repo_upgrade: none
 repo_releasever: 2015.03
 
---===============0035287898381899620==
-Content-Type: text/x-shellscript; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename="user-script.txt"
+# This is an example file to automatically install chef-client and run a
+# list of recipes when the instance boots for the first time.
+# Make sure that this file is valid yaml before starting instances.
+# It should be passed as user-data when starting the instance.
+#
+# This example assumes the instance is 12.04 (precise)
 
-#!/bin/bash
-sed -i '/requiretty/d' /etc/sudoers
-hostname {hostname}
-sed -i 's/^releasever=latest/# releasever=latest/' /etc/yum.conf
-yum clean all
-mkdir /etc/chef
-touch /etc/chef/client.rb
-mkdir -p /etc/chef/ohai/hints
-touch /etc/chef/ohai/hints/ec2.json
-echo '{validation_key}' > /etc/chef/validation.pem
-echo 'chef_server_url "http://chef.app.hudl.com/"
-node_name "{name}"
-validation_client_name "chef-validator"' > /etc/chef/client.rb
-/usr/bin/aws s3 cp s3://hudl-chef-artifacts/chef-client/encrypted_data_bag_secret /etc/chef/encrypted_data_bag_secret
-curl -L https://www.opscode.com/chef/install.sh | bash;
-yum install -y gcc
-chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}
---===============0035287898381899620==--
+# The default is to install from packages.
+
+# Key from http://apt.opscode.com/packages@opscode.com.gpg.key
+apt_sources:
+ - source: "deb http://apt.opscode.com/ $RELEASE-0.10 main"
+   key: |
+     -----BEGIN PGP PUBLIC KEY BLOCK-----
+     Version: GnuPG v1.4.9 (GNU/Linux)
+
+     mQGiBEppC7QRBADfsOkZU6KZK+YmKw4wev5mjKJEkVGlus+NxW8wItX5sGa6kdUu
+     twAyj7Yr92rF+ICFEP3gGU6+lGo0Nve7KxkN/1W7/m3G4zuk+ccIKmjp8KS3qn99
+     dxy64vcji9jIllVa+XXOGIp0G8GEaj7mbkixL/bMeGfdMlv8Gf2XPpp9vwCgn/GC
+     JKacfnw7MpLKUHOYSlb//JsEAJqao3ViNfav83jJKEkD8cf59Y8xKia5OpZqTK5W
+     ShVnNWS3U5IVQk10ZDH97Qn/YrK387H4CyhLE9mxPXs/ul18ioiaars/q2MEKU2I
+     XKfV21eMLO9LYd6Ny/Kqj8o5WQK2J6+NAhSwvthZcIEphcFignIuobP+B5wNFQpe
+     DbKfA/0WvN2OwFeWRcmmd3Hz7nHTpcnSF+4QX6yHRF/5BgxkG6IqBIACQbzPn6Hm
+     sMtm/SVf11izmDqSsQptCrOZILfLX/mE+YOl+CwWSHhl+YsFts1WOuh1EhQD26aO
+     Z84HuHV5HFRWjDLw9LriltBVQcXbpfSrRP5bdr7Wh8vhqJTPjrQnT3BzY29kZSBQ
+     YWNrYWdlcyA8cGFja2FnZXNAb3BzY29kZS5jb20+iGAEExECACAFAkppC7QCGwMG
+     CwkIBwMCBBUCCAMEFgIDAQIeAQIXgAAKCRApQKupg++Caj8sAKCOXmdG36gWji/K
+     +o+XtBfvdMnFYQCfTCEWxRy2BnzLoBBFCjDSK6sJqCu5Ag0ESmkLtBAIAIO2SwlR
+     lU5i6gTOp42RHWW7/pmW78CwUqJnYqnXROrt3h9F9xrsGkH0Fh1FRtsnncgzIhvh
+     DLQnRHnkXm0ws0jV0PF74ttoUT6BLAUsFi2SPP1zYNJ9H9fhhK/pjijtAcQwdgxu
+     wwNJ5xCEscBZCjhSRXm0d30bK1o49Cow8ZIbHtnXVP41c9QWOzX/LaGZsKQZnaMx
+     EzDk8dyyctR2f03vRSVyTFGgdpUcpbr9eTFVgikCa6ODEBv+0BnCH6yGTXwBid9g
+     w0o1e/2DviKUWCC+AlAUOubLmOIGFBuI4UR+rux9affbHcLIOTiKQXv79lW3P7W8
+     AAfniSQKfPWXrrcAAwUH/2XBqD4Uxhbs25HDUUiM/m6Gnlj6EsStg8n0nMggLhuN
+     QmPfoNByMPUqvA7sULyfr6xCYzbzRNxABHSpf85FzGQ29RF4xsA4vOOU8RDIYQ9X
+     Q8NqqR6pydprRFqWe47hsAN7BoYuhWqTtOLSBmnAnzTR5pURoqcquWYiiEavZixJ
+     3ZRAq/HMGioJEtMFrvsZjGXuzef7f0ytfR1zYeLVWnL9Bd32CueBlI7dhYwkFe+V
+     Ep5jWOCj02C1wHcwt+uIRDJV6TdtbIiBYAdOMPk15+VBdweBXwMuYXr76+A7VeDL
+     zIhi7tKFo6WiwjKZq0dzctsJJjtIfr4K4vbiD9Ojg1iISQQYEQIACQUCSmkLtAIb
+     DAAKCRApQKupg++CauISAJ9CxYPOKhOxalBnVTLeNUkAHGg2gACeIsbobtaD4ZHG
+     0GLl8EkfA8uhluM=
+     =zKAm
+     -----END PGP PUBLIC KEY BLOCK-----
+
+chef:
+
+ # Valid values are 'gems' and 'packages' and 'omnibus'
+ install_type: "packages"
+
+ # Boolean: run 'install_type' code even if chef-client
+ #          appears already installed.
+ force_install: false
+
+ # Chef settings
+ server_url: "http://chef.app.hudl.com/"
+
+ # Node Name
+ # Defaults to the instance-id if not present
+ node_name: "{name}"
+
+ # Environment
+ # Defaults to '_default' if not present
+ environment: "{environment}"
+
+ # Default validation name is chef-validator
+ validation_key: |
+                 {validation_key}
+
+ # if install_type is 'omnibus', change the url to download
+ omnibus_url: "https://www.opscode.com/chef/install.sh"
+
+# Capture all subprocess output into a logfile
+# Useful for troubleshooting cloud-init issues
+output: {{all: '| tee -a /var/log/cloud-init-output.log'}}
 """
 
         validation_key_path = os.path.expanduser('~/.chef/chef-validator.pem')
@@ -446,6 +487,7 @@ chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}
         return template.format(hostname=self.hostname,
                                validation_key=validation_key,
                                name=self.name,
+                               environment=self.environment,
                                logfile='/var/log/chef-client.log')
 
     @property
