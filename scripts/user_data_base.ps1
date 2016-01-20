@@ -160,4 +160,3 @@ catch [Exception]{
     Write-Output $_.Exception.Message | Out-File -FilePath $USERDATA_LOG -ErrorAction Stop
 }
 </powershell>
-<persist>true</persist>
