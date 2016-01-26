@@ -36,6 +36,91 @@ try {
   New-Item $LOG_DIR -type directory
 } catch {}
 
+# ----------------------------------------------------------------------------------------------
+# download a file
+# ----------------------------------------------------------------------------------------------
+Function Download-File {
+Param (
+    [Parameter(Mandatory=$True)] [System.Uri]$uri,
+    [Parameter(Mandatory=$True )] [string]$FilePath
+)
+
+#Make sure the destination directory exists
+#System.IO.FileInfo works even if the file/dir doesn't exist, which is better then get-item which requires the file to exist
+If (! ( Test-Path ([System.IO.FileInfo]$FilePath).DirectoryName ) ) { [void](New-Item ([System.IO.FileInfo]$FilePath).DirectoryName -force -type directory)}
+
+#see if this file exists
+if ( -not (Test-Path $FilePath) ) {
+    #use simple download
+    [void] (New-Object System.Net.WebClient).DownloadFile($uri.ToString(), $FilePath)
+} else {
+    try {
+        #use HttpWebRequest to download file
+        $webRequest = [System.Net.HttpWebRequest]::Create($uri);
+        $webRequest.IfModifiedSince = ([System.IO.FileInfo]$FilePath).LastWriteTime
+        $webRequest.Method = "GET";
+        [System.Net.HttpWebResponse]$webResponse = $webRequest.GetResponse()
+
+        #Read HTTP result
+        $stream = New-Object System.IO.StreamReader($response.GetResponseStream())
+        #Save to file
+        $stream.ReadToEnd() | Set-Content -Path $FilePath -Force 
+
+    } catch [System.Net.WebException] {
+        #Check for a 304
+        if ($_.Exception.Response.StatusCode -eq [System.Net.HttpStatusCode]::NotModified) {
+            Write-Host "  $FilePath not modified, not downloading..."
+        } else {
+            #Unexpected error
+            $Status = $_.Exception.Response.StatusCode
+            $msg = $_.Exception
+            Write-Host "  Error dowloading $FilePath, Status code: $Status - $msg"
+        }
+    }
+}
+}
+
+function Get-HudlRoleAttributes {
+
+    $role = Get-MyRole
+
+    #reset values
+    $environment = $environmentPrefix = $serverRole = $mvgroup = ""
+
+    $roleSplit = $role -Split '-'
+    if ($roleSplit.Length -eq 2) {
+        # [0] - Environment Letter, [1] - server role
+        $environmentPrefix = $roleSplit[0]
+        $serverRole = $roleSplit[1]
+        $group = "Monolith"
+    } elseif ($roleSplit.Length -eq 3) {
+        # [0] - Environment Letter, [1] - mvgroupmvgroup, [2] - server role
+        $environmentPrefix = $roleSplit[0]
+        $mvgroup = $roleSplit[1]
+        $serverRole = $roleSplit[2]
+    }
+    # Special case for monolith web servers, they have a different format role name
+    if ($serverRole -eq "role" -and $mvgroup -eq "web") {
+        $serverRole = "Web"
+        $mvgroup = "Monolith"
+    }
+    switch ($environmentPrefix) 
+    {
+        'p' { $environment = "prod" }
+        's' { $environment = "stage" }
+        'i' { $environment = "internal" }
+        't' { $environment = "thor" }
+    }
+    $result = new-object psobject -Property @{
+        EnvironmentPrefix = $environmentPrefix
+        Environment = $environment
+        ServerRole = $serverRole
+        Group = $mvgroup
+        IamRole = $role
+    }
+    return $result
+}
+
 
 function New-ServerName {
     $serverId=GetNewId
@@ -78,9 +163,7 @@ function ZBase32Encode([long] $number)
 }
 
 function Get-MyAvailabilityZone {
-   
     return (Invoke-WebRequest -UseBasicParsing -Uri $METADATA_BASEURL/placement/availability-zone).Content
-    
 }
 
 function Get-MyRegion {
@@ -97,7 +180,6 @@ function Get-MyRole {
     }
 }
 
-
 ### Determine server name and set it
 ### Generate client.rb
 ### Install chef
@@ -109,13 +191,49 @@ $File = Get-Content "c:\hudl\config\servername.txt"
 [System.IO.File]::WriteAllLines("c:\hudl\config\servername_chef", $File)
 New-EC2Tag -Region $region -ResourceId $instanceId -Tag @{key="Name"; value="$servername"}
 
-# Install Chef
+$roleAttributes = Get-HudlRoleAttributes
+
+# Set role tag if not set.
 $chef_tag_role = Get-EC2Tag -Filters @( @{Name="key"; values="Role"}, @{Name="resource-id"; Values=$instanceId})
-$chef_environment = Get-EC2Tag -Filters @( @{Name="key"; values="Environment"}, @{Name="resource-id"; Values=$instanceId})
+if ($chef_tag_role -eq $null) {
+    Write-Output "Creating Role Tag"
+    $tags = @()
+    $tags = $tags + @{Key='Role'; Value="Role$($roleAttributes.ServerRole)"}
+    New-EC2Tag -ResourceId $instanceid -Tag @tags
+    $chef_tag_role = Get-EC2Tag -Filters @( @{Name="key"; values="Role"}, @{Name="resource-id"; Values=$instanceId})
+}
+
+# Set environment tag if not set.
+$chef_tag_environment = Get-EC2Tag -Filters @( @{Name="key"; values="Environment"}, @{Name="resource-id"; Values=$instanceId})
+if ($chef_tag_environment -eq $null) {
+    Write-Output "Creating Environment Tag"
+    $tags = @()
+    $tags = $tags + @{Key='Environment'; Value="$($roleAttributes.Environment)"}
+    New-EC2Tag -ResourceId $instanceid -Tag @tags
+    $chef_tag_environment = Get-EC2Tag -Filters @( @{Name="key"; values="Environment"}, @{Name="resource-id"; Values=$instanceId})
+}
+
+# Set group tag if not set.
+$chef_tag_group = Get-EC2Tag -Filters @( @{Name="key"; values="Group"}, @{Name="resource-id"; Values=$instanceId})
+if ($chef_tag_group -eq $null) {
+    Write-Output "Creating Group Tag"
+    $tags = @()
+    $tags = $tags + @{Key='Group'; Value="$($roleAttributes.Group)"}
+    New-EC2Tag -ResourceId $instanceid -Tag @tags
+    $chef_tag_group = Get-EC2Tag -Filters @( @{Name="key"; values="Group"}, @{Name="resource-id"; Values=$instanceId})
+}
+
+if ($roleAttributes.Environment -eq "prod") {
+    $chef_environment = "prod"
+} else {
+    $chef_environment = "stage"
+}
+
+# Install Chef
 $windows_version = "2012r2"
 $chef_version = "chef-client-12.6.0-1-x86.msi"
 $server_name = $servername.Trim()
-$chef_env = $chef_environment.Value.ToLower().Trim()
+$chef_env = $chef_environment.ToLower().Trim()
 $client_rb = @"
 base_dir = "C:/Chef"
 log_level        :info
@@ -138,8 +256,13 @@ try { New-Item c:\temp -type directory } catch {}
 # It doesn't appear the windows version matters as there is only one
 # msi installer and it is listed for all types of Windows Server
 try {
-    Invoke-WebRequest "https://opscode-omnibus-packages.s3.amazonaws.com/windows/$windows_version/i386/$chef_version" -OutFile "c:\temp\chef-client.msi"
+    $chefDownloadSource = "https://opscode-omnibus-packages.s3.amazonaws.com/windows/$windows_version/i386/$chef_version"
+    $chefDownloadDestination = "c:\temp\chef-client.msi"
+    Download-File $chefDownloadSource $chefDownloadDestination
+    Write-Output "Chef Dowloaded, running installer."
+    #Invoke-WebRequest $chefDownloadSource -OutFile $chefDownloadDestination 
     Start-Process -FilePath "msiexec.exe" -ArgumentList "/qn /i c:\temp\chef-client.msi ADDLOCAL=`"ChefClientFeature,ChefServiceFeature,ChefPSModuleFeature`"" -Wait -NoNewWindow
+    Write-Output "Chef Installed, downloading chef client config."
     Read-S3Object -BucketName "hudl-chef-artifacts" -KeyPrefix "chef-client" -Folder "c:\chef"
     $format_client_rb = $client_rb -replace '[\u200B]+',''
     $format_client_rb.Trim() | Out-File "c:\chef\client.rb" -Encoding utf8
@@ -151,12 +274,25 @@ catch [Exception]{
 
 # Run Chef with the Role from the AWS Tag
 try {
+`   Write-Output "Starting saving Attributes step"
     $chef_role = "$($chef_tag_role.Value.ToLower())"
+    # Save Attribute Data
+    $attributeFile = "c:\chef\attributes.json"
+    $attributesContent = "{'hudl' : {'environment': '" + $roleAttributes.Environment + "','environmentPrefix': '" + $roleAttributes.EnvironmentPrefix + "','iamRole': '" + $roleAttributes.IamRole + "',serverRole': '" + $roleAttributes.ServerRole + "','group': '" + $roleAttributes.Group + "'}}"
+    $roleAttributes
+    Write-Output $attributesContent
+    Write-Output "Beginning write to file"
+    $attributesContent | Out-File $attributeFile -Encoding utf8
+    Write-Output "Chef attributes saved"
     $env:Path += ";C:\opscode\chef\bin"
-    Start-Process -FilePath "chef-client" -ArgumentList "-c `"c:\chef\client.rb`" -r `"role[$chef_role]`" -L `"c:\chef\chef-client-initial-run.log`"" -Wait -NoNewWindow
-}
+    Write-Output "Starting Chef run."
+    Start-Process -FilePath "chef-client" -ArgumentList "-c `"c:\chef\client.rb`" -r `"role[$chef_role]`" -L `"c:\chef\chef-client-initial-run.log`" -j `"c:\chef\attributes.json`"" -Wait -NoNewWindow
+    Write-Output "Chef run started."
+    }
 catch [Exception]{
     Write-Output "Failed to run Chef!" | Out-File -FilePath $USERDATA_LOG 
+    Write-Output "Failed to run chef"
     Write-Output $_.Exception.Message | Out-File -FilePath $USERDATA_LOG -ErrorAction Stop
+    Write-Output $_.Exception.Message
 }
 </powershell>
