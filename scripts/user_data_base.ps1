@@ -249,6 +249,14 @@ checksum_path "#{base_dir}/checksum"
 file_cache_path "#{base_dir}/cache"
 file_backup_path "#{base_dir}/backup"
 cache_options({:path => "#{base_dir}/cache/checksums", :skip_expires => true})
+
+ohai.disabled_plugins= [
+ "c", "cloud", "ec2", "rackspace", "eucalyptus", "command", "dmi", "dmi_common",
+ "erlang", "groovy", "ip_scopes", "java", "keys", "lua", "mono", "network_listeners",
+ "passwd", "perl", "php", "python", "ssh_host_key", "uptime", "virtualization",
+ "windows::virtualization", "windows::kernel_devices"
+ ]
+
 "@
 
 try { New-Item c:\temp -type directory } catch {}
