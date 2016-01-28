@@ -286,11 +286,21 @@ try {
     $chef_role = "$($chef_tag_role.Value.ToLower())"
     # Save Attribute Data
     $attributeFile = "c:\chef\attributes.json"
-    $attributesContent = "{'hudl' : {'environment': '" + $roleAttributes.Environment + "','environmentPrefix': '" + $roleAttributes.EnvironmentPrefix + "','iamRole': '" + $roleAttributes.IamRole + "',serverRole': '" + $roleAttributes.ServerRole + "','group': '" + $roleAttributes.Group + "'}}"
+    $attributesContent = @"
+    {
+      "hudl": {
+        "environment": "$($roleAttributes.Environment)",
+        "environmentPrefix": "$($roleAttributes.EnvironmentPrefix)",
+        "iamRole": "$($roleAttributes.IamRole)",
+        "serverRole": "$($roleAttributes.ServerRole)",
+        "group": "$($roleAttributes.Group)"
+      }
+    }
+"@
     $roleAttributes
     Write-Output $attributesContent
     Write-Output "Beginning write to file"
-    $attributesContent | Out-File $attributeFile -Encoding utf8
+    [System.IO.File]::WriteAllLines($attributeFile, $attributesContent)
     Write-Output "Chef attributes saved"
     $env:Path += ";C:\opscode\chef\bin"
     Write-Output "Starting Chef run."
