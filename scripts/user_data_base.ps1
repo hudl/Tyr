@@ -205,6 +205,11 @@ if ($chef_tag_role -eq $null) {
 
 # Set environment tag if not set.
 $chef_tag_environment = Get-EC2Tag -Filters @( @{Name="key"; values="Environment"}, @{Name="resource-id"; Values=$instanceId})
+# if someone tags an instance we want that to take precedence over tagging that
+# is completed within this script based on the role. This will primary be 
+# useful when someone is doing testing and will want to use the 'test'
+# chef environment.
+$chef_environment = "$($chef_tag_environment.Value)"
 if ($chef_tag_environment -eq $null) {
     Write-Output "Creating Environment Tag"
     $tags = @()
@@ -223,7 +228,7 @@ if ($chef_tag_group -eq $null) {
     $chef_tag_group = Get-EC2Tag -Filters @( @{Name="key"; values="Group"}, @{Name="resource-id"; Values=$instanceId})
 }
 
-if ($roleAttributes.Environment -eq "prod") {
+if ($roleAttributes.Environment -eq "prod" -and $chef_environment -eq $null) {
     $chef_environment = "prod"
 } else {
     $chef_environment = "stage"
