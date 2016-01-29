@@ -234,6 +234,14 @@ if ($roleAttributes.Environment -eq "prod" -and $chef_environment -eq $null) {
     $chef_environment = "stage"
 }
 
+if($chef_environment -eq "prod") {
+  # Prod VPC proxy server
+  $chef_server_url = 'http://ec2-107-21-20-8.compute-1.amazonaws.com/organizations/hudl'
+} else {
+  # EC2 classic proxy server
+  $chef_server_url = 'http://ec2-54-234-253-166.compute-1.amazonaws.com/organizations/hudl'
+}
+
 # Install Chef
 $windows_version = "2012r2"
 $chef_version = "chef-client-12.6.0-1-x86.msi"
@@ -243,7 +251,7 @@ $client_rb = @"
 base_dir = "C:/Chef"
 log_level        :info
 log_location     STDOUT
-chef_server_url  'https://ec2-54-86-160-148.compute-1.amazonaws.com/organizations/hudl'
+chef_server_url  "$chef_server_url"
 node_name  "$server_name"
 environment    "$chef_env"
 validation_client_name 'hudl-validator'
