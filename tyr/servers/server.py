@@ -400,7 +400,26 @@ class Server(object):
     @property
     def user_data(self):
 
-        template = """#!/bin/bash
+        template = """Content-Type: multipart/mixed; boundary="===============0035287898381899620=="
+MIME-Version: 1.0
+
+--===============0035287898381899620==
+Content-Type: text/cloud-config; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="cloud-config.txt"
+
+#cloud-config
+repo_upgrade: none
+repo_releasever: 2015.03
+
+--===============0035287898381899620==
+Content-Type: text/x-shellscript; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="user-script.txt"
+
+#!/bin/bash
 sed -i '/requiretty/d' /etc/sudoers
 hostname {hostname}
 sed -i 's/^releasever=latest/# releasever=latest/' /etc/yum.conf
@@ -416,7 +435,9 @@ validation_client_name "chef-validator"' > /etc/chef/client.rb
 /usr/bin/aws s3 cp s3://hudl-chef-artifacts/chef-client/encrypted_data_bag_secret /etc/chef/encrypted_data_bag_secret
 curl -L https://www.opscode.com/chef/install.sh | bash;
 yum install -y gcc
-chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}"""
+chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}
+--===============0035287898381899620==--
+"""
 
         validation_key_path = os.path.expanduser('~/.chef/chef-validator.pem')
         validation_key_file = open(validation_key_path, 'r')
