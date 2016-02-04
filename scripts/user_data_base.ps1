@@ -85,7 +85,7 @@ function Get-HudlRoleAttributes {
     $role = Get-MyRole
 
     #reset values
-    $environment = $environmentPrefix = $serverRole = $mvgroup = ""
+    $environment = $environmentPrefix = $serverRole = $group = ""
 
     $roleSplit = $role -Split '-'
     if ($roleSplit.Length -eq 2) {
@@ -96,13 +96,13 @@ function Get-HudlRoleAttributes {
     } elseif ($roleSplit.Length -eq 3) {
         # [0] - Environment Letter, [1] - mvgroupmvgroup, [2] - server role
         $environmentPrefix = $roleSplit[0]
-        $mvgroup = $roleSplit[1]
+        $group = $roleSplit[1]
         $serverRole = $roleSplit[2]
     }
     # Special case for monolith web servers, they have a different format role name
     if ($serverRole -eq "role" -and $mvgroup -eq "web") {
         $serverRole = "Web"
-        $mvgroup = "Monolith"
+        $group = "Monolith"
     }
     switch ($environmentPrefix) 
     {
@@ -115,7 +115,7 @@ function Get-HudlRoleAttributes {
         EnvironmentPrefix = $environmentPrefix
         Environment = $environment
         ServerRole = $serverRole
-        Group = $mvgroup
+        Group = $group
         IamRole = $role
     }
     return $result
@@ -228,10 +228,12 @@ if ($chef_tag_group -eq $null) {
     $chef_tag_group = Get-EC2Tag -Filters @( @{Name="key"; values="Group"}, @{Name="resource-id"; Values=$instanceId})
 }
 
-if ($roleAttributes.Environment -eq "prod" -and $chef_environment -eq $null) {
-    $chef_environment = "prod"
+if ($attributes.Environment -eq "prod") {
+      $chef_environment = "prod"
+} elseif ($attributes.Environment -eq "stage") {
+      $chef_environment = "stage"
 } else {
-    $chef_environment = "stage"
+      $chef_environment = "test"
 }
 
 if($chef_environment -eq "prod") {
