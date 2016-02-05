@@ -100,7 +100,7 @@ function Get-HudlRoleAttributes {
         $serverRole = $roleSplit[2]
     }
     # Special case for monolith web servers, they have a different format role name
-    if ($serverRole -eq "role" -and $mvgroup -eq "web") {
+    if ($serverRole -eq "role" -and $group -eq "web") {
         $serverRole = "Web"
         $group = "Monolith"
     }
