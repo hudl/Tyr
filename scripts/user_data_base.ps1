@@ -240,6 +240,15 @@ if($chef_environment -eq "prod") {
   $chef_server_url = 'http://ec2-54-234-253-166.compute-1.amazonaws.com/organizations/hudl'
 }
 
+# Check if in VPC to leave hint file for ec2 attributes in ohai
+$vpc_regex = "^vpc-.+$"
+$vpcid = ((Get-EC2Instance -Instance $instanceId).Instances | Select-Object VpcId).VpcId
+if ($vpcid -match $vpc_regex) {
+  Write-Output "We're in the VPC, creating hints directory!"
+  New-Item "c:\chef\ohai\hints" -type directory | Out-Null
+  New-Item "c:\chef\ohai\hints\ec2.json" -type file
+}
+
 # Install Chef
 $windows_version = "2012r2"
 $chef_version = "chef-client-12.6.0-1-x86.msi"
