@@ -249,6 +249,8 @@ if ($vpcid -match $vpc_regex) {
   New-Item "c:\chef\ohai\hints\ec2.json" -type file
 }
 
+$eurekaSet = Get-Random -minimum 1 -maximum 2
+
 # Install Chef
 $windows_version = "2012r2"
 $chef_version = "chef-client-12.6.0-1-x86.msi"
@@ -302,8 +304,9 @@ catch [Exception]{
 
 # Run Chef with the Role from the AWS Tag
 try {
-`   Write-Output "Starting saving Attributes step"
+    Write-Output "Starting saving Attributes step"
     $chef_role = "$($chef_tag_role.Value.ToLower())"
+
     # Save Attribute Data
     $attributeFile = "c:\chef\attributes.json"
     $attributesContent = @"
@@ -313,12 +316,12 @@ try {
         "environmentPrefix": "$($roleAttributes.EnvironmentPrefix)",
         "iamRole": "$($roleAttributes.IamRole)",
         "serverRole": "$($roleAttributes.ServerRole)",
-        "group": "$($roleAttributes.Group)"
+        "group": "$($roleAttributes.Group)",
+        "eureka_set": "$($eurekaSet)"
       }
     }
 "@
-    $roleAttributes
-    Write-Output $attributesContent
+
     Write-Output "Beginning write to file"
     [System.IO.File]::WriteAllLines($attributeFile, $attributesContent)
     Write-Output "Chef attributes saved"
