@@ -317,6 +317,7 @@ try {
         "iamRole": "$($roleAttributes.IamRole)",
         "serverRole": "$($roleAttributes.ServerRole)",
         "group": "$($roleAttributes.Group)",
+        "service": "$($roleAttributes.Group)",
         "eureka_set": "$($eurekaSet)"
       }
     }
