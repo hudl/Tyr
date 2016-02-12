@@ -249,7 +249,7 @@ if ($vpcid -match $vpc_regex) {
   New-Item "c:\chef\ohai\hints\ec2.json" -type file
 }
 
-$eurekaSet = Get-Random -minimum 1 -maximum 2
+$eurekaSet = Get-Random -minimum 1 -maximum 3
 
 # Install Chef
 $windows_version = "2012r2"
