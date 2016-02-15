@@ -1,4 +1,4 @@
-
+<powershell>
 #User Data script
 $ErrorActionPreference = "Stop";
 
@@ -69,6 +69,7 @@ if ( -not (Test-Path $FilePath) ) {
         #Check for a 304
         if ($_.Exception.Response.StatusCode -eq [System.Net.HttpStatusCode]::NotModified) {
             Write-Host "  $FilePath not modified, not downloading..."
+            $error.clear()
         } else {
             #Unexpected error
             $Status = $_.Exception.Response.StatusCode
@@ -339,4 +340,4 @@ catch [Exception]{
     Write-Output $_.Exception.Message | Out-File -FilePath $USERDATA_LOG -ErrorAction Stop
     Write-Output $_.Exception.Message
 }
-
+</powershell>
