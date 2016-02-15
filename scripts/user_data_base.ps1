@@ -74,7 +74,7 @@ if ( -not (Test-Path $FilePath) ) {
             #Unexpected error
             $Status = $_.Exception.Response.StatusCode
             $msg = $_.Exception
-            Write-Host "  Error dowloading $FilePath, Status code: $Status - $msg"
+            Write-Host "  Error downloading $FilePath, Status code: $Status - $msg"
         }
     }
 }
