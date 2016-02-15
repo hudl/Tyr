@@ -1,4 +1,4 @@
-<powershell>
+
 #User Data script
 $ErrorActionPreference = "Stop";
 
@@ -27,7 +27,6 @@ $REGIONS = @{'ap-northeast-1' = 'apne1';
              'us-east-1'= 'use1';
              'us-west-1'= 'usw1';
              'us-west-2'= 'usw2'}
-
 
 Set-DefaultAWSRegion -Region $region
 try {
@@ -241,12 +240,14 @@ if($chef_environment -eq "prod") {
 }
 
 # Check if in VPC to leave hint file for ec2 attributes in ohai
-$vpc_regex = "^vpc-.+$"
-$vpcid = ((Get-EC2Instance -Instance $instanceId).Instances | Select-Object VpcId).VpcId
-if ($vpcid -match $vpc_regex) {
-  Write-Output "We're in the VPC, creating hints directory!"
-  New-Item "c:\chef\ohai\hints" -type directory | Out-Null
-  New-Item "c:\chef\ohai\hints\ec2.json" -type file
+$hintsDir = "c:\chef\ohai\hints"
+if( -not (Test-Path $hintsDir)) {
+    Write-Output "Creating ohai hints directory"
+    New-Item $hintsDir -type directory | Out-Null
+}
+$hintsFile = "$($hintsDir)\ec2.json"
+if( -not (Test-Path $hintsFile)) {
+    New-Item "c:\chef\ohai\hints\ec2.json" -type file
 }
 
 $eurekaSet = Get-Random -minimum 1 -maximum 3
@@ -294,13 +295,14 @@ try {
     Start-Process -FilePath "msiexec.exe" -ArgumentList "/qn /i c:\temp\chef-client.msi ADDLOCAL=`"ChefClientFeature,ChefServiceFeature,ChefPSModuleFeature`"" -Wait -NoNewWindow
     Write-Output "Chef Installed, downloading chef client config."
     Read-S3Object -BucketName "hudl-chef-artifacts" -KeyPrefix "chef-client" -Folder "c:\chef"
-    $format_client_rb = $client_rb -replace '[\u200B]+',''
-    $format_client_rb.Trim() | Out-File "c:\chef\client.rb" -Encoding utf8
 }
 catch [Exception]{
     Write-Output "Failed to install Chef!" | Out-File -FilePath $USERDATA_LOG 
     Write-Output $_.Exception.Message | Out-File -FilePath $USERDATA_LOG -ErrorAction Stop
 }
+
+$format_client_rb = $client_rb -replace '[\u200B]+',''
+$format_client_rb.Trim() | Out-File "c:\chef\client.rb" -Encoding utf8
 
 # Run Chef with the Role from the AWS Tag
 try {
@@ -337,4 +339,4 @@ catch [Exception]{
     Write-Output $_.Exception.Message | Out-File -FilePath $USERDATA_LOG -ErrorAction Stop
     Write-Output $_.Exception.Message
 }
-</powershell>
+
