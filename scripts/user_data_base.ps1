@@ -247,10 +247,10 @@ if ($roleAttributes.Environment -eq "prod") {
 
 if($chef_environment -eq "prod") {
   # Prod VPC proxy server
-  $chef_server_url = 'http://ec2-107-21-20-8.compute-1.amazonaws.com/organizations/hudl'
+  $chef_server_url = 'https://ec2-107-21-20-8.compute-1.amazonaws.com/organizations/hudl'
 } else {
   # EC2 classic proxy server
-  $chef_server_url = 'http://ec2-54-234-253-166.compute-1.amazonaws.com/organizations/hudl'
+  $chef_server_url = 'https://ec2-54-234-253-166.compute-1.amazonaws.com/organizations/hudl'
 }
 
 # Check if in VPC to leave hint file for ec2 attributes in ohai
@@ -341,7 +341,6 @@ try {
 
 $dynamicAttributes | % getEnumerator | % {
     $dynamicAttribute = $_
-    $dynamicAttribute | ConvertTo-Json
     $attributesContent = $attributesContent + @"
 ,
         "$($dynamicAttribute.key)": $($dynamicAttribute.value | ConvertTo-Json)
