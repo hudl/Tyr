@@ -38,6 +38,7 @@ try {
 # ----------------------------------------------------------------------------------------------
 # download a file
 # ----------------------------------------------------------------------------------------------
+
 Function Download-File {
 Param (
     [Parameter(Mandatory=$True)] [System.Uri]$uri,
@@ -189,6 +190,7 @@ $servername = New-ServerName
 # Store and Set servername in config dir
 Write-Output $servername | Out-File -FilePath ($CONFIG + "\servername.txt") -ErrorAction Stop
 $File = Get-Content "c:\hudl\config\servername.txt"
+
 [System.IO.File]::WriteAllLines("c:\hudl\config\servername_chef", $File)
 New-EC2Tag -Region $region -ResourceId $instanceId -Tag @{key="Name"; value="$servername"}
 
@@ -225,6 +227,16 @@ if ($chef_tag_group -eq $null) {
     $chef_tag_group = Get-EC2Tag -Filters @( @{Name="key"; values="Group"}, @{Name="resource-id"; Values=$instanceId})
 }
 
+$chefAttributes = Get-EC2Tag -Filters @( @{Name="key"; values="chef:hudl:*"}, @{Name="resource-id"; Values=$instanceId})
+$dynamicAttributes = @()
+
+$chefAttributes | % {
+    $chefAttribute = $_
+    $attributeName = $chefAttribute.Key -replace "chef:hudl:"
+    $attributeValue = $chefAttribute.Value
+    $dynamicAttributes = $dynamicAttributes + @{$attributeName = $attributeValue;}
+}
+
 if ($roleAttributes.Environment -eq "prod") {
       $chef_environment = "prod"
 } elseif ($roleAttributes.Environment -eq "stage") {
@@ -247,6 +259,7 @@ if( -not (Test-Path $hintsDir)) {
     Write-Output "Creating ohai hints directory"
     New-Item $hintsDir -type directory | Out-Null
 }
+
 $hintsFile = "$($hintsDir)\ec2.json"
 if( -not (Test-Path $hintsFile)) {
     New-Item "c:\chef\ohai\hints\ec2.json" -type file
@@ -259,6 +272,7 @@ $windows_version = "2012r2"
 $chef_version = "chef-client-12.6.0-1-x86.msi"
 $server_name = $servername.Trim()
 $chef_env = $chef_environment.ToLower().Trim()
+
 $client_rb = @"
 base_dir = "C:/Chef"
 log_level        :info
@@ -323,9 +337,23 @@ try {
         "group": "$($roleAttributes.Group)",
         "service": "$($roleAttributes.Group)",
         "eureka_set": "$($eurekaSet)"
-      }
+"@
+
+$dynamicAttributes | % getEnumerator | % {
+    $dynamicAttribute = $_
+    $dynamicAttribute | ConvertTo-Json
+    $attributesContent = $attributesContent + @"
+,
+        "$($dynamicAttribute.key)": $($dynamicAttribute.value | ConvertTo-Json)
+"@
+}
+
+$attributesContent = $attributesContent + @"
+
+        }
     }
 "@
+
 
     Write-Output "Beginning write to file"
     [System.IO.File]::WriteAllLines($attributeFile, $attributesContent)
@@ -341,4 +369,5 @@ catch [Exception]{
     Write-Output $_.Exception.Message | Out-File -FilePath $USERDATA_LOG -ErrorAction Stop
     Write-Output $_.Exception.Message
 }
+
 </powershell>
