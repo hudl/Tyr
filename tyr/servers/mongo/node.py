@@ -11,12 +11,15 @@ class MongoNode(Server):
 
     IAM_ROLE_POLICIES = ['allow-volume-control']
 
+    MONGO_CM_GROUPS = ['stage', 'foundation', 'teamsports', 'community']
+
     def __init__(self, group=None, server_type=None, instance_type=None,
                  environment=None, ami=None, region=None, role=None,
                  keypair=None, availability_zone=None,
                  security_groups=None, block_devices=None,
                  chef_path=None, subnet_id=None, dns_zones=None,
-                 mongodb_version=None):
+                 mongodb_version=None, mongodb_automation_agent=False,
+                 mongodb_cm_group=None):
 
         self.mongodb_version = mongodb_version
 
@@ -48,7 +51,7 @@ class MongoNode(Server):
             self.mongodb_version = '2.4.13'
 
         self.log.info('Using version {version} of MongoDB'.format(
-                                                version=self.mongodb_version))
+            version=self.mongodb_version))
 
         # This is just a temporary fix to override the default security
         # groups for MongoDB nodes until the security_groups argument
@@ -62,6 +65,20 @@ class MongoNode(Server):
         ]
 
         self.resolve_security_groups()
+
+        # Validate the Mongo CM Group if the Automation agent is being
+        # installed.
+        if self.mongodb_automation_agent is True:
+            if self.mongodb_cm_group in self.MONGO_CM_GROUPS:
+                self.log.info('Using Mongo CM Group {group}'.format(
+                    group=self.mongodb_cm_group))
+            else:
+                error_msg = ("Not a valid Mongo CM Group!\n"
+                             "Must be: stage, teamsports, foundation, or "
+                             "community"
+                             )
+                self.log.critical(error_msg)
+                raise error_msg
 
     def run_mongo(self, command):
 
@@ -95,6 +112,21 @@ class MongoNode(Server):
                                                  self.CHEF_MONGODB_TYPE)
             self.log.info('Set the MongoDB node type to "{type_}"'.format(
                                             type_=self.CHEF_MONGODB_TYPE))
+
+            self.chef_node.attributes.set_dotted(
+                'mongodb.automation_agent.install',
+                self.mongodb_automation_agent)
+
+            if self.mongodb_automation_agent is True:
+                self.log.info('Installing the CM Automation Agent')
+
+                self.chef_node.attributes.set_dotted(
+                    'mongodb.automation_agent.mongo_cm_group',
+                    self.mongodb_cm_group)
+                self.log.info('Using Mongo CM Group {group}'.format(
+                    group=self.mongo_cm_group)
+            else:
+                self.log.info('Not installing the CM Automation Agent')
 
             self.chef_node.save()
             self.log.info('Saved the Chef Node configuration')
