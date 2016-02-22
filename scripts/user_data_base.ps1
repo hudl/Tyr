@@ -210,7 +210,7 @@ $chef_tag_environment = Get-EC2Tag -Filters @( @{Name="key"; values="Environment
 if ($chef_tag_environment -eq $null) {
     Write-Output "Creating Environment Tag"
     $tags = @()
-    $tags = $tags + @{Key='Environment'; Value="$($roleAttributes.Environment.ToLower)"}
+    $tags = $tags + @{Key='Environment'; Value="$($roleAttributes.Environment.ToLower())"}
     New-EC2Tag -ResourceId $instanceid -Tag @tags
     $chef_tag_environment = Get-EC2Tag -Filters @( @{Name="key"; values="Environment"}, @{Name="resource-id"; Values=$instanceId})
 }
@@ -220,7 +220,7 @@ $chef_tag_group = Get-EC2Tag -Filters @( @{Name="key"; values="Group"}, @{Name="
 if ($chef_tag_group -eq $null) {
     Write-Output "Creating Group Tag"
     $tags = @()
-    $tags = $tags + @{Key='Group'; Value="$($roleAttributes.Group.ToLower)"}
+    $tags = $tags + @{Key='Group'; Value="$($roleAttributes.Group.ToLower())"}
     New-EC2Tag -ResourceId $instanceid -Tag @tags
     $chef_tag_group = Get-EC2Tag -Filters @( @{Name="key"; values="Group"}, @{Name="resource-id"; Values=$instanceId})
 }
