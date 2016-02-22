@@ -92,7 +92,7 @@ function Get-HudlRoleAttributes {
         # [0] - Environment Letter, [1] - server role
         $environmentPrefix = $roleSplit[0]
         $serverRole = $roleSplit[1]
-        $group = "Monolith"
+        $group = "monolith"
     } elseif ($roleSplit.Length -eq 3) {
         # [0] - Environment Letter, [1] - mvgroupmvgroup, [2] - server role
         $environmentPrefix = $roleSplit[0]
@@ -102,7 +102,7 @@ function Get-HudlRoleAttributes {
     # Special case for monolith web servers, they have a different format role name
     if ($serverRole -eq "role" -and $group -eq "web") {
         $serverRole = "Web"
-        $group = "Monolith"
+        $group = "monolith"
     }
     switch ($environmentPrefix) 
     {
@@ -179,6 +179,7 @@ function Get-MyRole {
         return ""
     }
 }
+$TextInfo = (Get-Culture).TextInfo
 
 ### Determine server name and set it
 ### Generate client.rb
@@ -198,7 +199,7 @@ $chef_tag_role = Get-EC2Tag -Filters @( @{Name="key"; values="Role"}, @{Name="re
 if ($chef_tag_role -eq $null) {
     Write-Output "Creating Role Tag"
     $tags = @()
-    $tags = $tags + @{Key='Role'; Value="Role$($roleAttributes.ServerRole)"}
+    $tags = $tags + @{Key='Role'; Value="Role$($TextInfo.ToTitleCase($roleAttributes.ServerRole))"}
     New-EC2Tag -ResourceId $instanceid -Tag @tags
     $chef_tag_role = Get-EC2Tag -Filters @( @{Name="key"; values="Role"}, @{Name="resource-id"; Values=$instanceId})
 }
@@ -209,7 +210,7 @@ $chef_tag_environment = Get-EC2Tag -Filters @( @{Name="key"; values="Environment
 if ($chef_tag_environment -eq $null) {
     Write-Output "Creating Environment Tag"
     $tags = @()
-    $tags = $tags + @{Key='Environment'; Value="$($roleAttributes.Environment)"}
+    $tags = $tags + @{Key='Environment'; Value="$($roleAttributes.Environment.ToLower)"}
     New-EC2Tag -ResourceId $instanceid -Tag @tags
     $chef_tag_environment = Get-EC2Tag -Filters @( @{Name="key"; values="Environment"}, @{Name="resource-id"; Values=$instanceId})
 }
@@ -219,7 +220,7 @@ $chef_tag_group = Get-EC2Tag -Filters @( @{Name="key"; values="Group"}, @{Name="
 if ($chef_tag_group -eq $null) {
     Write-Output "Creating Group Tag"
     $tags = @()
-    $tags = $tags + @{Key='Group'; Value="$($roleAttributes.Group)"}
+    $tags = $tags + @{Key='Group'; Value="$($roleAttributes.Group.ToLower)"}
     New-EC2Tag -ResourceId $instanceid -Tag @tags
     $chef_tag_group = Get-EC2Tag -Filters @( @{Name="key"; values="Group"}, @{Name="resource-id"; Values=$instanceId})
 }
