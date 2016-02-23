@@ -123,8 +123,8 @@ class MongoNode(Server):
                 self.chef_node.attributes.set_dotted(
                     'mongodb.automation_agent.mongo_cm_group',
                     self.mongodb_cm_group)
-                self.log.info('Using Mongo CM Group {group}'.format(
-                    group=self.mongo_cm_group)
+                self.log.info('Using Mongo CM Group "{group}"'.format(
+                    group=self.mongo_cm_group))
             else:
                 self.log.info('Not installing the CM Automation Agent')
 

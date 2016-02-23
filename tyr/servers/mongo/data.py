@@ -19,14 +19,17 @@ class MongoDataNode(MongoReplicaSetMember):
                  replica_set=None, data_volume_size=None,
                  data_volume_iops=None, journal_volume_size=None,
                  journal_volume_iops=None, log_volume_size=None,
-                 log_volume_iops=None, mongodb_version=None):
+                 log_volume_iops=None, mongodb_version=None,
+                 mongodb_automation_agent=False, mongodb_cm_group=None):
 
         super(MongoDataNode, self).__init__(group, server_type, instance_type,
                                             environment, ami, region, role,
                                             keypair, availability_zone,
                                             security_groups, block_devices,
                                             chef_path, subnet_id, dns_zones,
-                                            replica_set, mongodb_version)
+                                            replica_set, mongodb_version,
+                                            mongodb_automation_agent,
+                                            mongodb_cm_group)
 
         self.data_volume_size = data_volume_size
         self.data_volume_iops = data_volume_iops
