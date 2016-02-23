@@ -22,6 +22,8 @@ class MongoNode(Server):
                  mongodb_cm_group=None):
 
         self.mongodb_version = mongodb_version
+        self.mongodb_automation_agent = mongodb_automation_agent
+        self.mongodb_cm_group = mongodb_cm_group
 
         if server_type is None:
             server_type = self.SERVER_TYPE
@@ -124,7 +126,7 @@ class MongoNode(Server):
                     'mongodb.automation_agent.mongo_cm_group',
                     self.mongodb_cm_group)
                 self.log.info('Using Mongo CM Group "{group}"'.format(
-                    group=self.mongo_cm_group))
+                    group=self.mongodb_cm_group))
             else:
                 self.log.info('Not installing the CM Automation Agent')
 
