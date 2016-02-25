@@ -49,9 +49,92 @@ ACCEPTED_JSON_STRUCT = """
       "log_volume_iops": 0,
       "mongodb_cm_group": "stage",
       "mongodb_type": "data"
+    },
+    {
+      "group": "foundation",
+      "server_type": "mongo",
+      "availability_zone": "e",
+      "instance_type": "m3.medium",
+      "environment": "stage",
+      "chef_path": "/Users/steve.schmidt/hudl_work/hudl-chef-repo/.chef/",
+      "data_volume_size": 5,
+      "data_volume_iops": 0,
+      "journal_volume_size": 5,
+      "journal_volume_iops": 0,
+      "log_volume_size": 1,
+      "log_volume_iops": 0,
+      "mongodb_cm_group": "stage",
+      "mongodb_type": "data"
+    },
+  ]
+}
+"""
+
+JSON_CLUSTER = """
+{
+  "servers": [
+    {
+      "group": "foundation",
+      "server_type": "mongo-router",
+      "availability_zone": "c",
+      "instance_type": "m3.medium",
+      "environment": "stage",
+      "chef_path": "/Users/steve.schmidt/hudl_work/hudl-chef-repo/.chef/",
+      "mongodb_cm_group": "stage",
+      "mongodb_type": "router"
+    },
+    {
+      "group": "foundation",
+      "server_type": "mongo-config",
+      "availability_zone": "c",
+      "instance_type": "m3.medium",
+      "environment": "stage",
+      "chef_path": "/Users/steve.schmidt/hudl_work/hudl-chef-repo/.chef/",
+      "data_volume_size": 5,
+      "data_volume_iops": 0,
+      "journal_volume_size": 5,
+      "journal_volume_iops": 0,
+      "log_volume_size": 1,
+      "log_volume_iops": 0,
+      "mongodb_cm_group": "stage",
+      "mongodb_type": "config"
+    },
+    {
+      "group": "foundation",
+      "server_type": "mongo",
+      "availability_zone": "c",
+      "instance_type": "m3.medium",
+      "environment": "stage",
+      "chef_path": "/Users/steve.schmidt/hudl_work/hudl-chef-repo/.chef/",
+      "data_volume_size": 5,
+      "data_volume_iops": 0,
+      "journal_volume_size": 5,
+      "journal_volume_iops": 0,
+      "log_volume_size": 1,
+      "log_volume_iops": 0,
+      "mongodb_cm_group": "stage",
+      "mongodb_type": "data"
+    },
+    {
+      "group": "foundation",
+      "server_type": "mongo",
+      "availability_zone": "d"
+      "instance_type": "m3.medium",
+      "environment": "stage",
+      "chef_path": "/Users/steve.schmidt/hudl_work/hudl-chef-repo/.chef/",
+      "data_volume_size": 5,
+      "data_volume_iops": 0,
+      "journal_volume_size": 5,
+      "journal_volume_iops": 0,
+      "log_volume_size": 1,
+      "log_volume_iops": 0,
+      "mongodb_cm_group": "stage",
+      "mongodb_type": "data"
     }
   ]
 }
+
+Setup: 1 Router, 1 Config RS, 1 data node per RS
 """
 
 
@@ -101,12 +184,21 @@ def update_dict(server_dict):
 
 def build_mongo_servers():
     parser = argparse.ArgumentParser()
-    json_file_help_msg = ("JSON input file with server deployment options\n\n"
-                          "Use the following JSON structure: \n\n"
-                          "{json_struct}".format(
-                              json_struct=ACCEPTED_JSON_STRUCT))
+    json_file_help_msg = "JSON input file with server deployment options"
     parser.add_argument("--json_file", help=json_file_help_msg)
+    parser.add_argument("--cluster_example", help="See JSON for Stage Cluster Deploy",
+                        action="store_true")
+    parser.add_argument("--rs_example", help="See JSON for Stage RS Deploy",
+                        action="store_true")
     args = parser.parse_args()
+
+    if args.cluster_example:
+        print JSON_CLUSTER
+        sys.exit(0)
+
+    if args.rs_example:
+        print ACCEPTED_JSON_STRUCT
+        sys.exit(0)
 
     if not args.json_file:
         log.error("Must specify a JSON input file!")
