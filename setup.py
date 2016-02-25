@@ -19,6 +19,7 @@ setup(
     ],
     scripts=[
         'scripts/replace-mongodb-servers',
-        'scripts/compact-mongodb-servers'
+        'scripts/compact-mongodb-servers',
+        'scripts/create_cm_automation_servers.py'
     ]
 )
