@@ -180,6 +180,14 @@ def update_dict(server_dict):
     for k in diff_dict:
         server_dict[k] = default_dict[k]
 
+    check_dict = set(server_dict.keys()) - set(default_dict.keys())
+    if check_dict:
+        for k in check_dict:
+            log.error("An invalid instance parameter was used: {k}".format(
+                k=k))
+            log.error("Please check the JSON deployment file to correct the above issue!")
+        sys.exit(1)
+
     return server_dict
 
 def build_mongo_servers():
