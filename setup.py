@@ -20,5 +20,8 @@ setup(
     scripts=[
         'scripts/replace-mongodb-servers',
         'scripts/compact-mongodb-servers'
+    ],
+    data_files=[
+        # Insert data files in here as necessary
     ]
 )
