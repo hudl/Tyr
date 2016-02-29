@@ -1,0 +1,155 @@
+from tyr.utilities.create_cm_automation_servers import build_mongo_servers
+import click
+
+ACCEPTED_JSON_STRUCT = """
+{
+  "servers": [
+    {
+      "group": "foundation",
+      "server_type": "mongo",
+      "availability_zone": "c",
+      "instance_type": "m3.medium",
+      "environment": "stage",
+      "chef_path": "/Users/steve.schmidt/hudl_work/hudl-chef-repo/.chef/",
+      "data_volume_size": 5,
+      "data_volume_iops": 0,
+      "journal_volume_size": 5,
+      "journal_volume_iops": 0,
+      "log_volume_size": 1,
+      "log_volume_iops": 0,
+      "mongodb_cm_group": "stage",
+      "mongodb_type": "data"
+    },
+    {
+      "group": "foundation",
+      "server_type": "mongo",
+      "availability_zone": "d"
+      "instance_type": "m3.medium",
+      "environment": "stage",
+      "chef_path": "/Users/steve.schmidt/hudl_work/hudl-chef-repo/.chef/",
+      "data_volume_size": 5,
+      "data_volume_iops": 0,
+      "journal_volume_size": 5,
+      "journal_volume_iops": 0,
+      "log_volume_size": 1,
+      "log_volume_iops": 0,
+      "mongodb_cm_group": "stage",
+      "mongodb_type": "data"
+    },
+    {
+      "group": "foundation",
+      "server_type": "mongo",
+      "availability_zone": "e",
+      "instance_type": "m3.medium",
+      "environment": "stage",
+      "chef_path": "/Users/steve.schmidt/hudl_work/hudl-chef-repo/.chef/",
+      "data_volume_size": 5,
+      "data_volume_iops": 0,
+      "journal_volume_size": 5,
+      "journal_volume_iops": 0,
+      "log_volume_size": 1,
+      "log_volume_iops": 0,
+      "mongodb_cm_group": "stage",
+      "mongodb_type": "data"
+    },
+  ]
+}
+"""
+
+JSON_CLUSTER = """
+{
+  "servers": [
+    {
+      "group": "foundation",
+      "server_type": "mongo-router",
+      "availability_zone": "c",
+      "instance_type": "m3.medium",
+      "environment": "stage",
+      "chef_path": "/Users/steve.schmidt/hudl_work/hudl-chef-repo/.chef/",
+      "mongodb_cm_group": "stage",
+      "mongodb_type": "router"
+    },
+    {
+      "group": "foundation",
+      "server_type": "mongo-config",
+      "availability_zone": "c",
+      "instance_type": "m3.medium",
+      "environment": "stage",
+      "chef_path": "/Users/steve.schmidt/hudl_work/hudl-chef-repo/.chef/",
+      "data_volume_size": 5,
+      "data_volume_iops": 0,
+      "journal_volume_size": 5,
+      "journal_volume_iops": 0,
+      "log_volume_size": 1,
+      "log_volume_iops": 0,
+      "mongodb_cm_group": "stage",
+      "mongodb_type": "config"
+    },
+    {
+      "group": "foundation",
+      "server_type": "mongo",
+      "availability_zone": "c",
+      "instance_type": "m3.medium",
+      "environment": "stage",
+      "chef_path": "/Users/steve.schmidt/hudl_work/hudl-chef-repo/.chef/",
+      "data_volume_size": 5,
+      "data_volume_iops": 0,
+      "journal_volume_size": 5,
+      "journal_volume_iops": 0,
+      "log_volume_size": 1,
+      "log_volume_iops": 0,
+      "mongodb_cm_group": "stage",
+      "mongodb_type": "data"
+    },
+    {
+      "group": "foundation",
+      "server_type": "mongo",
+      "availability_zone": "d"
+      "instance_type": "m3.medium",
+      "environment": "stage",
+      "chef_path": "/Users/steve.schmidt/hudl_work/hudl-chef-repo/.chef/",
+      "data_volume_size": 5,
+      "data_volume_iops": 0,
+      "journal_volume_size": 5,
+      "journal_volume_iops": 0,
+      "log_volume_size": 1,
+      "log_volume_iops": 0,
+      "mongodb_cm_group": "stage",
+      "mongodb_type": "data"
+    }
+  ]
+}
+
+Setup: 1 Router, 1 Config RS, 1 data node per RS
+"""
+
+
+@click.group()
+def deployment():
+  pass
+
+
+@deployment.command()
+@click.argument('json_file', type=click.Path(exists=True), required=False)
+def deploy_servers(json_file):
+  build_mongo_servers(json_file)
+
+
+@click.group()
+def example():
+  pass
+
+
+@example.command()
+@click.option('--cluster', is_flag=True)
+@click.option('--rs', is_flag=True)
+def show_example(cluster, rs):
+    if cluster:
+        print JSON_CLUSTER
+    elif rs:
+        print ACCEPTED_JSON_STRUCT
+
+create_cm_automation_servers = click.CommandCollection(sources=[deployment, example])
+
+if __name__ == '__main__':
+    create_cm_automation_servers()

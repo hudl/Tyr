@@ -1,9 +1,7 @@
-#!/usr/bin/env python
 import sys
 from tyr.servers.mongo import AutomationAgent
 import logging
 import json
-import argparse
 
 log = logging.getLogger('Tyr.Scripts.MongoAutomationServers')
 log.setLevel(logging.DEBUG)
@@ -190,29 +188,13 @@ def update_dict(server_dict):
 
     return server_dict
 
-def build_mongo_servers():
-    parser = argparse.ArgumentParser()
-    json_file_help_msg = "JSON input file with server deployment options"
-    parser.add_argument("--json_file", help=json_file_help_msg)
-    parser.add_argument("--cluster_example", help="See JSON for Stage Cluster Deploy",
-                        action="store_true")
-    parser.add_argument("--rs_example", help="See JSON for Stage RS Deploy",
-                        action="store_true")
-    args = parser.parse_args()
+def build_mongo_servers(json_file):
 
-    if args.cluster_example:
-        print JSON_CLUSTER
-        sys.exit(0)
-
-    if args.rs_example:
-        print ACCEPTED_JSON_STRUCT
-        sys.exit(0)
-
-    if not args.json_file:
+    if not json_file:
         log.error("Must specify a JSON input file!")
         sys.exit(1)
 
-    json_result = read_json(args.json_file)
+    json_result = read_json(json_file)
 
     try:
         for server in json_result['servers']:
@@ -250,6 +232,3 @@ def build_mongo_servers():
         log.debug(key_msg)
         log.error(error_msg)
         sys.exit(1)
-
-if __name__ == '__main__':
-    build_mongo_servers()
