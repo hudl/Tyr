@@ -1,4 +1,15 @@
 from setuptools import setup
+import os
+
+
+def load_data_files():
+    data_files = []
+
+    for root, _, files in os.walk('data'):
+        data_files.extend(['{r}/{f}'.format(r=root, f=f) for f in files])
+
+    return [('data', data_files)]
+
 
 setup(
     name='tyr',
@@ -21,7 +32,5 @@ setup(
         'scripts/replace-mongodb-servers',
         'scripts/compact-mongodb-servers'
     ],
-    data_files=[
-        # Insert data files in here as necessary
-    ]
+    data_files=load_data_files()
 )
