@@ -1,5 +1,6 @@
 import os
 from tyr.helpers import data_file
+from nose.tools import raises
 
 
 def setup_successful_file():
@@ -30,3 +31,8 @@ def test_successful_file():
 
 test_successful_file.setUp = setup_successful_file
 test_successful_file.tearDown = cleanup_successful_file
+
+
+@raises(IOError)
+def test_missing_file():
+    f = data_file('oh-boy-i-really-hope-no-one-used-this-name-for-a-data-file')
