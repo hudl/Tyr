@@ -16,6 +16,7 @@ setup(
     version='0.0.1',
     author='Mihir Singh (@citruspi)',
     author_email='mihir.singh@hudl.com',
+    test_suite='nose.collector',
     packages=['tyr'],
     zip_safe=False,
     include_package_data=True,
@@ -26,7 +27,8 @@ setup(
         'paramiko',
         'click',
         'PyYAML',
-        'requests'
+        'requests',
+        'nose'
     ],
     scripts=[
         'scripts/replace-mongodb-servers',
