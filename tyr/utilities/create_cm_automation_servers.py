@@ -18,7 +18,7 @@ ACCEPTED_JSON_STRUCT = """
   "servers": [
     {
       "group": "foundation",
-      "server_type": "mongo",
+      "server_type": "mongo-rs1",
       "availability_zone": "c",
       "instance_type": "m3.medium",
       "environment": "stage",
@@ -34,7 +34,7 @@ ACCEPTED_JSON_STRUCT = """
     },
     {
       "group": "foundation",
-      "server_type": "mongo",
+      "server_type": "mongo-rs1",
       "availability_zone": "d"
       "instance_type": "m3.medium",
       "environment": "stage",
@@ -50,7 +50,7 @@ ACCEPTED_JSON_STRUCT = """
     },
     {
       "group": "foundation",
-      "server_type": "mongo",
+      "server_type": "mongo-rs1",
       "availability_zone": "e",
       "instance_type": "m3.medium",
       "environment": "stage",
@@ -99,7 +99,7 @@ JSON_CLUSTER = """
     },
     {
       "group": "foundation",
-      "server_type": "mongo",
+      "server_type": "mongo-rs0",
       "availability_zone": "c",
       "instance_type": "m3.medium",
       "environment": "stage",
@@ -115,7 +115,7 @@ JSON_CLUSTER = """
     },
     {
       "group": "foundation",
-      "server_type": "mongo",
+      "server_type": "mongo-rs1",
       "availability_zone": "d"
       "instance_type": "m3.medium",
       "environment": "stage",
