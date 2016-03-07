@@ -17,7 +17,7 @@ class AutoScaler(object):
                  default_cooldown=300,
                  availability_zones=None,
                  subnet_ids=None,
-                 health_check_grace_period=300):
+                 health_check_grace_period=900):
         self.log = logging.getLogger('Tyr.Clusters.AutoScaler')
         self.log.setLevel(logging.DEBUG)
 
@@ -77,6 +77,7 @@ class AutoScaler(object):
                                      get_security_group_ids(
                                          self.node_obj.security_groups),
                                      user_data=self.node_obj.user_data,
+                                     instance_type=self.node_obj.instance_type,
                                      instance_profile_name=self.node_obj.role)
             self.conn.create_launch_configuration(lc)
             self.launch_configuration = lc
