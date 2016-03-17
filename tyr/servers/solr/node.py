@@ -14,14 +14,12 @@ class SolrNode(Server):
                  environment=None, ami=None, region=None, role=None,
                  keypair=None, availability_zone=None, security_groups=None,
                  block_devices=None, chef_path=None, subnet_id=None,
-                 dns_zones=None, is_master=True, is_slave=False,
-                 master_host=None):
+                 dns_zones=None, is_master=True, master_host=None):
 
         if server_type is None:
             server_type = self.SERVER_TYPE
 
         self.is_master = is_master
-        self.is_slave = is_slave
         self.master_host = master_host
 
         super(SolrNode, self).__init__(group, server_type, instance_type,
@@ -47,6 +45,10 @@ class SolrNode(Server):
         ]
 
         self.resolve_security_groups()
+
+    @property
+    def is_slave(self):
+        return not self.is_master
 
     def bake(self):
         super(SolrNode, self).bake()

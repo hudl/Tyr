@@ -14,4 +14,5 @@ class SolrSlaveNode(SolrNode):
                                             keypair, availability_zone,
                                             security_groups, block_devices,
                                             chef_path, subnet_id, dns_zones,
-                                            False, True, master_host)
+                                            is_master=False,
+                                            master_host=master_host)

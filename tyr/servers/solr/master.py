@@ -13,5 +13,4 @@ class SolrMasterNode(SolrNode):
                                              environment, ami, region, role,
                                              keypair, availability_zone,
                                              security_groups, block_devices,
-                                             chef_path, subnet_id, dns_zones,
-                                             True, False)
+                                             chef_path, subnet_id, dns_zones)
