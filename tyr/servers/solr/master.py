@@ -1,14 +1,7 @@
-from tyr.servers.server import Server
+from tyr.servers.solr import SolrNode
 
 
-class SolrMasterNode(Server):
-
-    SERVER_TYPE = 'solr'
-    CHEF_RUNLIST = ['role[RoleSolr]']
-    IAM_ROLE_POLICIES = [
-        'allow-volume-control',
-        'allow-get-solr-schema'
-    ]
+class SolrMasterNode(SolrNode):
 
     def __init__(self, group=None, server_type=None, instance_type=None,
                  environment=None, ami=None, region=None, role=None,
@@ -16,41 +9,8 @@ class SolrMasterNode(Server):
                  block_devices=None, chef_path=None, subnet_id=None,
                  dns_zones=None):
 
-        if server_type is None:
-            server_type = self.SERVER_TYPE
-
         super(SolrMasterNode, self).__init__(group, server_type, instance_type,
                                              environment, ami, region, role,
                                              keypair, availability_zone,
                                              security_groups, block_devices,
                                              chef_path, subnet_id, dns_zones)
-
-    def configure(self):
-        super(SolrMasterNode, self).configure()
-
-        self.security_groups = [
-            'management',
-            'chef-nodes',
-            self.envcl,
-            '{env}-solr-management'.format(env=self.environment[0])
-        ]
-
-        self.resolve_security_groups()
-
-    def bake(self):
-        super(SolrMasterNode, self).bake()
-
-        with self.chef_api:
-            self.chef_node.attributes.set_dotted('solr.is_master', True)
-            self.log.info('Set solr.is_master to True')
-
-            self.chef_node.attributes.set_dotted('solr.group', self.group)
-            self.log.info('Set solr.group to {group}'.format(group=self.group))
-
-            self.chef_node.attributes.set_dotted('solr.master_host',
-                                                 self.hostname)
-            self.log.info('Set solr.master_host to {master}'.format(
-                          master=self.hostname))
-
-            self.chef_node.save()
-            self.log.info('Saved the Chef Node configuration')
