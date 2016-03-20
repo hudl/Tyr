@@ -137,7 +137,7 @@ class Server(object):
 
         if self.ami is None:
             self.log.warn('No AMI provided')
-            self.ami = 'ami-1ecae776'
+            self.ami = 'ami-8fcee4e5'
 
         try:
             self.ec2.get_all_images(image_ids=[self.ami])
@@ -903,8 +903,8 @@ named {name}""".format(path=d['path'], name=d['name']))
                                    username='ec2-user',
                                    key_filename=keys)
                 break
-            except Exception:
-                self.log.warn('Unable to establish SSH connection')
+            except Exception as err:
+                self.log.warn('Unable to establish SSH connection ' + str(err))
                 time.sleep(10)
 
         self.log.info('Successfully established SSH connection')
