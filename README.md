@@ -31,6 +31,10 @@ At this point, the only dependencies are
 
 These are specified in the `setup.py` file and will automatically be installed.
 
+Also need to set `STACKDRIVER_USERNAME` and `STACKDRIVER_API_KEY`
+
+Chef credentials are also required to be present in `~/.chef/chef-validator.pem`
+
 ## Usage
 
 Ideally, the usage of each server and cluster type should be documented.
