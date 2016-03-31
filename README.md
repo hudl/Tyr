@@ -31,9 +31,19 @@ At this point, the only dependencies are
 
 These are specified in the `setup.py` file and will automatically be installed.
 
-Also need to set `STACKDRIVER_USERNAME` and `STACKDRIVER_API_KEY`
+## Setup
 
-Chef credentials are also required to be present in `~/.chef/chef-validator.pem`
+In order to use Tyr, you'll need the following:
+
+- (Administrator) Stackdriver credentials
+  - Export the environment variables `STACKDRIVER_USERNAME` and `STACKDRIVER_API_KEY`
+
+- (Administrator) Chef credentials
+  - If your Chef credentials are not in `~/.chef`, set the `chef_path` argument when provisioning infrastructure
+
+- AWS credentials
+  - These may be placed in `~/.botorc`, `~/.aws/credentials`, or any other place that `boto` will look
+  - You'll need EC2, IAM, and Route53 permissions 
 
 ## Usage
 
