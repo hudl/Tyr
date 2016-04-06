@@ -259,9 +259,9 @@ class Server(object):
                             'ttl': 60
                         },
                         {
-                            'type': 'CNAME',
+                            'type': 'A',
                             'name': '{hostname}.',
-                            'value': '{private_dns_name}',
+                            'value': '{private_ip_address}',
                             'ttl': 60
                         }
                     ]
@@ -274,9 +274,9 @@ class Server(object):
                     },
                     'records': [
                         {
-                            'type': 'CNAME',
+                            'type': 'A',
                             'name': '{hostname}.',
-                            'value': '{private_dns_name}',
+                            'value': '{private_ip_address}',
                             'ttl': 60
                         }
                     ]
