@@ -219,13 +219,15 @@ class Server(object):
         if self.block_devices is None:
             self.log.warn('No block devices provided')
 
-            self.block_devices = [
-                {
-                    'type': 'ephemeral',
-                    'name': 'ephemeral0',
-                    'path': 'xvdc'
-                }
-            ]
+            if self.ephemeral_storage != []:
+                self.log.info('Defining ephemeral storage devices')
+                self.block_devices = [
+                    {
+                        'type': 'ephemeral',
+                        'name': 'ephemeral0',
+                        'path': 'xvdc'
+                    }
+                ]
 
         self.log.info('Using EC2 block devices {devices}'.format(
                       devices=self.block_devices))
@@ -467,6 +469,9 @@ chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}
         bdm = boto.ec2.blockdevicemapping.BlockDeviceMapping()
 
         self.log.info('Created new Block Device Mapping')
+
+        if self.block_devices is None:
+            return bdm
 
         for d in self.block_devices:
 
