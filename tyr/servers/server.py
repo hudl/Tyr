@@ -17,7 +17,7 @@ from boto.vpc import VPCConnection
 from paramiko.client import AutoAddPolicy, SSHClient
 from tyr.policies import policies
 from tyr.utilities.stackdriver import set_maintenance_mode
-
+import cloudspecs.aws.ec2
 
 class Server(object):
 
@@ -788,6 +788,10 @@ named {name}""".format(path=d['path'], name=d['name']))
     def tag(self):
         self.ec2.create_tags([self.instance.id], self.tags)
         self.log.info('Tagged instance with {tags}'.format(tags=self.tags))
+
+    @property
+    def ephemeral_storage(self):
+        return cloudspecs.aws.ec2.instances[self.instance_type]['instance_storage']
 
     def route(self, wait=False):
 
