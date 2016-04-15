@@ -145,7 +145,7 @@ class MongoDataNode(MongoReplicaSetMember):
 
         with self.chef_api:
 
-            self.chef_node.attributes.set_dotted('hudl_ebs.volumes', [
+            ebs_volumes = [
                 {
                     'user': 'mongod',
                     'group': 'mongod',
@@ -170,7 +170,22 @@ class MongoDataNode(MongoReplicaSetMember):
                     'device': '/dev/xvdh',
                     'mount': '/mongologs',
                 }
-            ])
+            ]
+
+            if self.ephemeral_storage == []:
+                ebs_volumes.append({
+                    'user': 'root',
+                    'group': 'root',
+                    'size': 8,
+                    'iops': 24,
+                    'device': '/dev/xvdc',
+                    'mount': '/media/ephemeral0'
+                })
+
+                self.log.debug('No instance storage; including swap device')
+
+            self.chef_node.attributes.set_dotted('hudl_ebs.volumes',
+                                                 ebs_volumes)
 
             self.log.info('Configured the hudl_ebs.volumes attribute')
 
