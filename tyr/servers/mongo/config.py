@@ -29,8 +29,7 @@ class MongoConfigNode(MongoNode):
         super(MongoConfigNode, self).bake()
 
         with self.chef_api:
-
-            self.chef_node.attributes.set_dotted('hudl_ebs.volumes', [
+            ebs_volumes = [
                 {
                     'user': 'mongod',
                     'group': 'mongod',
@@ -55,7 +54,22 @@ class MongoConfigNode(MongoNode):
                     'device': '/dev/xvdh',
                     'mount': '/mongologs',
                 }
-            ])
+            ]
+
+            self.chef_node.attributes.set_dotted('hudl_ebs.volumes',
+                                                 ebs_volumes)
+
+            if self.ephemeral_storage == []:
+                ebs_volumes.append({
+                    'user': 'root',
+                    'group': 'root',
+                    'size': 8,
+                    'iops': 24,
+                    'device': '/dev/xvdc',
+                    'mount': '/media/ephemeral0'
+                })
+
+                self.log.debug('No instance storage; including swap device')
 
             self.log.info('Configured the hudl_ebs.volumes attribute')
 

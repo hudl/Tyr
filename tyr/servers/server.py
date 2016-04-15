@@ -17,7 +17,7 @@ from boto.vpc import VPCConnection
 from paramiko.client import AutoAddPolicy, SSHClient
 from tyr.policies import policies
 from tyr.utilities.stackdriver import set_maintenance_mode
-
+import cloudspecs.aws.ec2
 
 class Server(object):
 
@@ -219,13 +219,15 @@ class Server(object):
         if self.block_devices is None:
             self.log.warn('No block devices provided')
 
-            self.block_devices = [
-                {
-                    'type': 'ephemeral',
-                    'name': 'ephemeral0',
-                    'path': 'xvdc'
-                }
-            ]
+            if self.ephemeral_storage != []:
+                self.log.info('Defining ephemeral storage devices')
+                self.block_devices = [
+                    {
+                        'type': 'ephemeral',
+                        'name': 'ephemeral0',
+                        'path': 'xvdc'
+                    }
+                ]
 
         self.log.info('Using EC2 block devices {devices}'.format(
                       devices=self.block_devices))
@@ -467,6 +469,9 @@ chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}
         bdm = boto.ec2.blockdevicemapping.BlockDeviceMapping()
 
         self.log.info('Created new Block Device Mapping')
+
+        if self.block_devices is None:
+            return bdm
 
         for d in self.block_devices:
 
@@ -788,6 +793,10 @@ named {name}""".format(path=d['path'], name=d['name']))
     def tag(self):
         self.ec2.create_tags([self.instance.id], self.tags)
         self.log.info('Tagged instance with {tags}'.format(tags=self.tags))
+
+    @property
+    def ephemeral_storage(self):
+        return cloudspecs.aws.ec2.instances[self.instance_type]['instance_storage']
 
     def route(self, wait=False):
 
