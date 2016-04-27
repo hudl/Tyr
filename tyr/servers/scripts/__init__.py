@@ -1,1 +1,1 @@
-from server import ScriptsServer
+from tyr.serves.scripts.server import ScriptsServer

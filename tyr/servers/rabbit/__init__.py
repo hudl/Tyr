@@ -1,1 +1,1 @@
-from server import RabbitMQServer
+from tyr.servers.rabbit.server import RabbitMQServer

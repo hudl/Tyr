@@ -1,4 +1,4 @@
-from member import MongoReplicaSetMember
+from tyr.servers.mongo.member import MongoReplicaSetMember
 
 
 class MongoArbiterNode(MongoReplicaSetMember):

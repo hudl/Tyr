@@ -1,1 +1,1 @@
-from master import PostfixMaster
+from tyr.servers.postfix.master import PostfixMaster

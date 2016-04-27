@@ -1,1 +1,1 @@
-from node import IISNode
+from tyr.servers.iis.node import IISNode

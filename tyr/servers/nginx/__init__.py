@@ -1,1 +1,1 @@
-from server import NginxServer
+from tyr.servers.nginx.server import NginxServer

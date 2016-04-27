@@ -1,4 +1,4 @@
-from node import MongoNode
+from tyr.servers.mongo.node import MongoNode
 
 
 class MongoConfigNode(MongoNode):

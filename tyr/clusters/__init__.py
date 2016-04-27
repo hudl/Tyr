@@ -1,3 +1,3 @@
-from mongo import MongoCluster
-from iis import IISCluster
-from autoscaling import AutoScaler
+from tyr.clusters.mongo import MongoCluster
+from tyr.clusters.iis import IISCluster
+from tyr.clusters.autoscaling import AutoScaler

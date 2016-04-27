@@ -1,1 +1,1 @@
-from server import CacheServer
+from tyr.servers.cache.server import CacheServer

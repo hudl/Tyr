@@ -1,7 +1,8 @@
-from exceptions import (InvalidKeyPair, InvalidAvailabilityZone,
-                        NoSubnetReturned, RegionDoesNotExist,
-                        InvalidCluster, InvalidAMI, NoSecurityGroupsReturned,
-                        MultipleSecurityGroupsReturned)
+from tyr.servers.exceptions import (InvalidKeyPair, InvalidAvailabilityZone,
+                                    NoSubnetReturned, RegionDoesNotExist,
+                                    InvalidCluster, InvalidAMI,
+                                    NoSecurityGroupsReturned,
+                                    MultipleSecurityGroupsReturned)
 import boto.ec2
 import boto.route53
 import boto.ec2.networkinterface

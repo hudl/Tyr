@@ -1,1 +1,1 @@
-from server import ElasticsearchServer
+from tyr.servers.elasticsearch.server import ElasticsearchServer
