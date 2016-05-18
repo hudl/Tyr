@@ -34,6 +34,7 @@ setup(
         'scripts/replace-mongodb-servers',
         'scripts/compact-mongodb-servers',
         'scripts/create_cm_automation_servers'
+        'scripts/build-mv-service'
     ],
     data_files=load_data_files()
 )
