@@ -94,23 +94,41 @@ function Get-HudlRoleAttributes {
         $environmentPrefix = $roleSplit[0]
         $serverRole = $roleSplit[1]
         $group = "monolith"
+        
     } elseif ($roleSplit.Length -eq 3) {
         # [0] - Environment Letter, [1] - mvgroupmvgroup, [2] - server role
         $environmentPrefix = $roleSplit[0]
         $group = $roleSplit[1]
         $serverRole = $roleSplit[2]
+    } 
+    # Thors should be treated as multiverse servers now
+    elseif ($role -eq "thor") {
+        # [0] - Environment Letter, [1] - mvgroupmvgroup, [2] - server role
+        $environmentPrefix = "t"
+        $group = "thor"
+        $serverRole = "web"
+        $treatMonolithAsMultiverse = $true
     }
     # Special case for monolith web servers, they have a different format role name
     if ($serverRole -eq "role" -and $group -eq "web") {
         $serverRole = "Web"
         $group = "monolith"
     }
+
+    if ($envrionmentPrefix == "p") {
+      $treatMonolithAsMultiverse = $false
+    }
+
+    if ($envrionmentPrefix == "s") {
+      $treatMonolithAsMultiverse = $false
+    }
+
     switch ($environmentPrefix) 
     {
         'p' { $environment = "prod" }
         's' { $environment = "stage" }
         'i' { $environment = "internal" }
-        't' { $environment = "thor" }
+        't' { $environment = "test" }
     }
     $result = new-object psobject -Property @{
         EnvironmentPrefix = $environmentPrefix
@@ -118,6 +136,7 @@ function Get-HudlRoleAttributes {
         ServerRole = $serverRole
         Group = $group
         IamRole = $role
+        TreatMonolithAsMultiverse = $treatMonolithAsMultiverse
     }
     return $result
 }
@@ -180,12 +199,27 @@ function Get-MyRole {
         return ""
     }
 }
+
+function Get-MyName {
+    $instanceId = (New-Object System.Net.WebClient).DownloadString("http://169.254.169.254/latest/meta-data/instance-id")
+    $nameTag =  Get-EC2Tag | ` Where-Object {$_.ResourceId -eq $instanceId -and $_.Key -eq 'Name'}
+    return $nameTag.Value
+}
+
 $TextInfo = (Get-Culture).TextInfo
 
 ### Determine server name and set it
 ### Generate client.rb
 ### Install chef
-$servername = New-ServerName
+$role = Get-MyRole
+Write-Host "Server IAM role is: $role"
+if ($role -eq "thor") {
+    $servername = Get-MyName
+    Write-Host "Not changing servername, as is thor - servername is: $serverName"
+} else {
+    $servername = New-ServerName
+    Write-Host "New Servername is: $serverName"
+}
 
 # Store and Set servername in config dir
 Write-Output $servername | Out-File -FilePath ($CONFIG + "\servername.txt") -ErrorAction Stop
@@ -329,6 +363,10 @@ try {
     $attributeFile = "c:\chef\attributes.json"
     $attributesContent = @"
     {
+      "seven_zip": {
+         "syspath":""
+      }, 
+
       "hudl": {
         "environment": "$($roleAttributes.Environment)",
         "environmentPrefix": "$($roleAttributes.EnvironmentPrefix)",
@@ -336,7 +374,8 @@ try {
         "serverRole": "$($roleAttributes.ServerRole)",
         "group": "$($roleAttributes.Group)",
         "service": "$($roleAttributes.Group)",
-        "eureka_set": "$($eurekaSet)"
+        "eureka_set": "$($eurekaSet)",
+        "treat_monolith_as_multiverse": $($roleAttributes.TreatMonolithAsMultiverse)
 "@
 
 $dynamicAttributes | % getEnumerator | % {
