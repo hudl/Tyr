@@ -17,7 +17,7 @@ from boto.vpc import VPCConnection
 from paramiko.client import AutoAddPolicy, SSHClient
 from tyr.policies import policies
 from tyr.utilities.stackdriver import set_maintenance_mode
-
+import cloudspecs.aws.ec2
 
 class Server(object):
 
@@ -137,7 +137,7 @@ class Server(object):
 
         if self.ami is None:
             self.log.warn('No AMI provided')
-            self.ami = 'ami-1ecae776'
+            self.ami = 'ami-8fcee4e5'
 
         try:
             self.ec2.get_all_images(image_ids=[self.ami])
@@ -219,13 +219,15 @@ class Server(object):
         if self.block_devices is None:
             self.log.warn('No block devices provided')
 
-            self.block_devices = [
-                {
-                    'type': 'ephemeral',
-                    'name': 'ephemeral0',
-                    'path': 'xvdc'
-                }
-            ]
+            if self.ephemeral_storage != []:
+                self.log.info('Defining ephemeral storage devices')
+                self.block_devices = [
+                    {
+                        'type': 'ephemeral',
+                        'name': 'ephemeral0',
+                        'path': 'xvdc'
+                    }
+                ]
 
         self.log.info('Using EC2 block devices {devices}'.format(
                       devices=self.block_devices))
@@ -259,9 +261,9 @@ class Server(object):
                             'ttl': 60
                         },
                         {
-                            'type': 'CNAME',
+                            'type': 'A',
                             'name': '{hostname}.',
-                            'value': '{private_dns_name}',
+                            'value': '{private_ip_address}',
                             'ttl': 60
                         }
                     ]
@@ -274,9 +276,9 @@ class Server(object):
                     },
                     'records': [
                         {
-                            'type': 'CNAME',
+                            'type': 'A',
                             'name': '{hostname}.',
-                            'value': '{private_dns_name}',
+                            'value': '{private_ip_address}',
                             'ttl': 60
                         }
                     ]
@@ -400,7 +402,26 @@ class Server(object):
     @property
     def user_data(self):
 
-        template = """#!/bin/bash
+        template = """Content-Type: multipart/mixed; boundary="===============0035287898381899620=="
+MIME-Version: 1.0
+
+--===============0035287898381899620==
+Content-Type: text/cloud-config; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="cloud-config.txt"
+
+#cloud-config
+repo_upgrade: none
+repo_releasever: 2015.03
+
+--===============0035287898381899620==
+Content-Type: text/x-shellscript; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="user-script.txt"
+
+#!/bin/bash
 sed -i '/requiretty/d' /etc/sudoers
 hostname {hostname}
 sed -i 's/^releasever=latest/# releasever=latest/' /etc/yum.conf
@@ -416,7 +437,9 @@ validation_client_name "chef-validator"' > /etc/chef/client.rb
 /usr/bin/aws s3 cp s3://hudl-chef-artifacts/chef-client/encrypted_data_bag_secret /etc/chef/encrypted_data_bag_secret
 curl -L https://www.opscode.com/chef/install.sh | bash;
 yum install -y gcc
-chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}"""
+chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}
+--===============0035287898381899620==--
+"""
 
         validation_key_path = os.path.expanduser('~/.chef/chef-validator.pem')
         validation_key_file = open(validation_key_path, 'r')
@@ -446,6 +469,9 @@ chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}"""
         bdm = boto.ec2.blockdevicemapping.BlockDeviceMapping()
 
         self.log.info('Created new Block Device Mapping')
+
+        if self.block_devices is None:
+            return bdm
 
         for d in self.block_devices:
 
@@ -768,6 +794,10 @@ named {name}""".format(path=d['path'], name=d['name']))
         self.ec2.create_tags([self.instance.id], self.tags)
         self.log.info('Tagged instance with {tags}'.format(tags=self.tags))
 
+    @property
+    def ephemeral_storage(self):
+        return cloudspecs.aws.ec2.instances[self.instance_type]['instance_storage']
+
     def route(self, wait=False):
 
         for dns_zone in self.dns_zones:
@@ -882,8 +912,8 @@ named {name}""".format(path=d['path'], name=d['name']))
                                    username='ec2-user',
                                    key_filename=keys)
                 break
-            except Exception:
-                self.log.warn('Unable to establish SSH connection')
+            except Exception as err:
+                self.log.warn('Unable to establish SSH connection ' + str(err))
                 time.sleep(10)
 
         self.log.info('Successfully established SSH connection')

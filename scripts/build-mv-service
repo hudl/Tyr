@@ -1,0 +1,99 @@
+#!/usr/bin/env python
+
+from tyr.servers.mongo import MongoDataNode
+from tyr.clusters.iis import IISCluster
+import logging
+import sys
+
+log = logging.getLogger('Tyr.Utilities.BuildMvService')
+if not log.handlers:
+    log.setLevel(logging.DEBUG)
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(
+            '%(asctime)s [%(name)s] %(levelname)s: %(message)s',
+            datefmt='%H:%M:%S')
+    ch.setFormatter(formatter)
+    log.addHandler(ch)
+
+
+def build_mv_service(
+    service=None,
+    build_production=False,
+    build_stage=True,
+    build_web_cluster=True,
+    prod_subnet_ids=['subnet-e7156e90', 'subnet-f42eb1ad', 'subnet-bfe16094'],
+    stage_availability_zones=['us-east-1c', 'us-east-1d'],
+    # Web Server Properties
+    prod_web_instance_type='t2.large',
+    stage_web_instance_type='m3.medium',
+    prod_web_ami='ami-9c0f7ef6',
+    stage_web_ami='ami-9c0f7ef6',
+    prod_desired_capacity=3,
+    stage_desired_capacity=2,
+    # Mongo Properties
+    build_mongo_cluster=True,
+    prod_mongo_instance_type='r3.xlarge',
+    stage_mongo_instance_type='r3.xlarge',
+    mongo_data_volume_size=100,
+    prod_mongo_data_piops=1000,
+    stage_mongo_data_piops=500,
+    mongo_version='2.6.9'
+):
+
+    if service is None:
+        log.error("Must supply a service")
+        sys.exit(1)
+
+    region = 'us-east-1'
+    prod_environment = 'prod'
+    stage_environment = 'stage'
+
+    # Build Stage Web Servers
+    if build_web_cluster & build_stage:
+        IISCluster(group=service,
+                   instance_type=stage_web_instance_type,
+                   environment=stage_environment,
+                   ami=stage_web_ami,
+                   region=region,
+                   desired_capacity=stage_desired_capacity,
+                   max_size=stage_desired_capacity,
+                   min_size=stage_desired_capacity,
+                   availability_zones=stage_availability_zones).autorun()
+
+    # Build Production Web Servers
+    if build_web_cluster & build_production:
+        IISCluster(group=service,
+                   instance_type=prod_web_instance_type,
+                   environment=prod_environment,
+                   ami=prod_web_ami,
+                   region=region,
+                   desired_capacity=prod_desired_capacity,
+                   subnet_ids=prod_subnet_ids,
+                   max_size=prod_desired_capacity,
+                   min_size=prod_desired_capacity).autorun()
+
+    # Build Stage Mongo Servers
+    if build_mongo_cluster & build_stage:
+        MongoDataNode(group=service,
+                      environment=stage_environment,
+                      instance_type=stage_mongo_instance_type,
+                      availability_zone='c',
+                      data_volume_size=mongo_data_volume_size,
+                      data_volume_iops=stage_mongo_data_piops,
+                      mongodb_version=mongo_version).autorun()
+
+    # Build Production Mongo Servers
+    if build_mongo_cluster & build_production:
+        for prod_subnet in prod_subnet_ids:
+            MongoDataNode(group=service,
+                          environment=prod_environment,
+                          instance_type=prod_mongo_instance_type,
+                          subnet_id=prod_subnet,
+                          data_volume_size=mongo_data_volume_size,
+                          data_volume_iops=prod_mongo_data_piops,
+                          mongodb_version=mongo_version).autorun()
+
+
+if __name__ == '__main__':
+    build_mv_service()
