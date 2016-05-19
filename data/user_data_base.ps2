@@ -105,7 +105,8 @@ function Get-HudlRoleAttributes {
     elseif ($role -eq "thor") {
         # [0] - Environment Letter, [1] - mvgroupmvgroup, [2] - server role
         $environmentPrefix = "t"
-        $group = "thor"
+        #TODO: Set me correctly
+        $group = "jobs"
         $serverRole = "web"
         $treatMonolithAsMultiverse = $true
     }
@@ -115,11 +116,11 @@ function Get-HudlRoleAttributes {
         $group = "monolith"
     }
 
-    if ($envrionmentPrefix == "p") {
+    if ($envrionmentPrefix -eq "p") {
       $treatMonolithAsMultiverse = $false
     }
 
-    if ($envrionmentPrefix == "s") {
+    if ($envrionmentPrefix -eq "s") {
       $treatMonolithAsMultiverse = $false
     }
 
@@ -375,7 +376,7 @@ try {
         "group": "$($roleAttributes.Group)",
         "service": "$($roleAttributes.Group)",
         "eureka_set": "$($eurekaSet)",
-        "treat_monolith_as_multiverse": $($roleAttributes.TreatMonolithAsMultiverse)
+        "treat_monolith_as_multiverse": $($roleAttributes.TreatMonolithAsMultiverse | ConvertTo-Json) 
 "@
 
 $dynamicAttributes | % getEnumerator | % {
