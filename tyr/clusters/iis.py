@@ -11,6 +11,7 @@ class IISCluster():
                  environment=None,
                  ami=None,
                  region=None,
+		 root_volume_size=40,
                  subnet_ids=[],
                  role=None,
                  keypair=None,

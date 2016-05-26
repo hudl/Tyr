@@ -15,6 +15,7 @@ class AutoScaler(object):
                  max_size=1,
                  min_size=1,
                  default_cooldown=300,
+		 root_volume_size=None,
                  availability_zones=None,
                  subnet_ids=None,
                  health_check_grace_period=900):
@@ -24,6 +25,12 @@ class AutoScaler(object):
         self.launch_configuration = launch_configuration
         self.autoscaling_group = autoscaling_group
         self.desired_capacity = desired_capacity
+	self.root_volume_size = root_volume_size
+
+	if self.root_volume_size is not None:
+		dev_sda1 = BlockDeviceType()
+		dev_sda1.size = root_volume_size
+		self.launch_configuration.block_device_mappings = dev_sda1
 
         # You can set a list of availability zones explicitly, else it will
         # just use the one from the node object

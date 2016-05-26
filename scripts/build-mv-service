@@ -18,7 +18,7 @@ if not log.handlers:
 
 
 def build_mv_service(
-    service=None,
+    service="supportinvestigator",
     build_production=False,
     build_stage=True,
     build_web_cluster=True,
@@ -27,12 +27,13 @@ def build_mv_service(
     # Web Server Properties
     prod_web_instance_type='t2.large',
     stage_web_instance_type='m3.medium',
-    prod_web_ami='ami-c8a9baa2',
-    stage_web_ami='ami-c8a9baa2',
-    prod_desired_capacity=3,
-    stage_desired_capacity=2,
+    prod_web_ami='ami-e0e00f8d',
+    stage_web_ami='ami-e0e00f8d',
+    prod_desired_capacity=0,
+    stage_desired_capacity=0,
+    root_volume_size=40,
     # Mongo Properties
-    build_mongo_cluster=True,
+    build_mongo_cluster=False,
     prod_mongo_instance_type='r3.xlarge',
     stage_mongo_instance_type='r3.xlarge',
     mongo_data_volume_size=100,
@@ -68,6 +69,7 @@ def build_mv_service(
                    environment=prod_environment,
                    ami=prod_web_ami,
                    region=region,
+		   root_volume_size=root_volume_size,
                    desired_capacity=prod_desired_capacity,
                    subnet_ids=prod_subnet_ids,
                    max_size=prod_desired_capacity,
