@@ -18,7 +18,7 @@ from paramiko.client import AutoAddPolicy, SSHClient
 from tyr.policies import policies
 from tyr.utilities.stackdriver import set_maintenance_mode
 from tyr.alerts.stackdriver import StackDriver
-
+import cloudspecs.aws.ec2
 
 class Server(object):
 
@@ -141,7 +141,7 @@ class Server(object):
 
         if self.ami is None:
             self.log.warn('No AMI provided')
-            self.ami = 'ami-1ecae776'
+            self.ami = 'ami-8fcee4e5'
 
         try:
             self.ec2.get_all_images(image_ids=[self.ami])
@@ -223,13 +223,15 @@ class Server(object):
         if self.block_devices is None:
             self.log.warn('No block devices provided')
 
-            self.block_devices = [
-                {
-                    'type': 'ephemeral',
-                    'name': 'ephemeral0',
-                    'path': 'xvdc'
-                }
-            ]
+            if self.ephemeral_storage != []:
+                self.log.info('Defining ephemeral storage devices')
+                self.block_devices = [
+                    {
+                        'type': 'ephemeral',
+                        'name': 'ephemeral0',
+                        'path': 'xvdc'
+                    }
+                ]
 
         self.log.info('Using EC2 block devices {devices}'.format(
                       devices=self.block_devices))
@@ -263,9 +265,9 @@ class Server(object):
                             'ttl': 60
                         },
                         {
-                            'type': 'CNAME',
+                            'type': 'A',
                             'name': '{hostname}.',
-                            'value': '{private_dns_name}',
+                            'value': '{private_ip_address}',
                             'ttl': 60
                         }
                     ]
@@ -278,9 +280,9 @@ class Server(object):
                     },
                     'records': [
                         {
-                            'type': 'CNAME',
+                            'type': 'A',
                             'name': '{hostname}.',
-                            'value': '{private_dns_name}',
+                            'value': '{private_ip_address}',
                             'ttl': 60
                         }
                     ]
@@ -475,6 +477,9 @@ chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}
         bdm = boto.ec2.blockdevicemapping.BlockDeviceMapping()
 
         self.log.info('Created new Block Device Mapping')
+
+        if self.block_devices is None:
+            return bdm
 
         for d in self.block_devices:
 
@@ -797,6 +802,10 @@ named {name}""".format(path=d['path'], name=d['name']))
         self.ec2.create_tags([self.instance.id], self.tags)
         self.log.info('Tagged instance with {tags}'.format(tags=self.tags))
 
+    @property
+    def ephemeral_storage(self):
+        return cloudspecs.aws.ec2.instances[self.instance_type]['instance_storage']
+
     def route(self, wait=False):
 
         for dns_zone in self.dns_zones:
@@ -911,8 +920,8 @@ named {name}""".format(path=d['path'], name=d['name']))
                                    username='ec2-user',
                                    key_filename=keys)
                 break
-            except Exception:
-                self.log.warn('Unable to establish SSH connection')
+            except Exception as err:
+                self.log.warn('Unable to establish SSH connection ' + str(err))
                 time.sleep(10)
 
         self.log.info('Successfully established SSH connection')
