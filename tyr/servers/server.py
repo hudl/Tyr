@@ -139,6 +139,13 @@ class Server(object):
             self.log.warn('No AMI provided')
             self.ami = 'ami-8fcee4e5'
 
+	# Check AMI exists:
+	image = self.ec2.get_all_images(image_ids=self.ami)[0]
+	self.log.info("AWS AMI Image state [" + image.state + "]")
+	if image.state != 'available':
+		self.log.info("AWS AMI Image state [" + image.state + "], please update your AMI to one that is available")
+		exit(1)
+
         try:
             self.ec2.get_all_images(image_ids=[self.ami])
         except Exception as e:
