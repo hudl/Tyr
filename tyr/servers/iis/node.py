@@ -24,7 +24,7 @@ class IISNode(Server):
 
     def __init__(self, group=None, server_type=None, instance_type=None,
                  environment=None, ami=None, region=None, role=None,
-                 keypair=None, availability_zone=None, security_groups=None,
+                 block_devices=None, keypair=None, availability_zone=None, security_groups=None,
                  subnet_id=None, mongos_service="no_mongos",
                  mongo_servers=""):
 
@@ -40,6 +40,7 @@ class IISNode(Server):
                                       ami=ami,
                                       region=region,
                                       role=role,
+				      block_devices=block_devices,
                                       keypair=keypair,
                                       availability_zone=availability_zone,
                                       security_groups=security_groups,

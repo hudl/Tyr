@@ -24,6 +24,8 @@ def build_mv_service(
     build_web_cluster=True,
     prod_subnet_ids=['subnet-e7156e90', 'subnet-f42eb1ad', 'subnet-bfe16094'],
     stage_availability_zones=['us-east-1c', 'us-east-1d'],
+    mongos_preference='no_mongos',
+    mongos_servers='',
     # Web Server Properties
     prod_web_instance_type='t2.large',
     stage_web_instance_type='m3.medium',
@@ -50,6 +52,10 @@ def build_mv_service(
     prod_environment = 'prod'
     stage_environment = 'stage'
 
+    tags = list()
+    tags.append({'name':'chef:hudl:mongos_preference', 'value':mongos_preference})
+    tags.append({'name':'chef:hudl:mongo_config_servers', 'value':mongos_servers})
+
     # Build Stage Web Servers
     if build_web_cluster & build_stage:
         IISCluster(group=service,
@@ -57,6 +63,8 @@ def build_mv_service(
                    environment=stage_environment,
                    ami=stage_web_ami,
                    region=region,
+		   tags=tags,
+		   root_volume_size=root_volume_size,
                    desired_capacity=stage_desired_capacity,
                    max_size=stage_desired_capacity,
                    min_size=stage_desired_capacity,
@@ -69,6 +77,7 @@ def build_mv_service(
                    environment=prod_environment,
                    ami=prod_web_ami,
                    region=region,
+		   tags=tags,
 		   root_volume_size=root_volume_size,
                    desired_capacity=prod_desired_capacity,
                    subnet_ids=prod_subnet_ids,
