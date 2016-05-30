@@ -30,6 +30,8 @@ class Server(object):
                                 'allow-describe-instances'
     ]
 
+    IAM_MANAGED_POLICIES = []
+
     IAM_ROLE_POLICIES = []
 
     CHEF_RUNLIST = ['role[RoleBase]']
@@ -604,74 +606,89 @@ named {name}""".format(path=d['path'], name=d['name']))
 
         self.IAM_ROLE_POLICIES.extend(self.GLOBAL_IAM_ROLE_POLICIES)
         self.IAM_ROLE_POLICIES = list(set(self.IAM_ROLE_POLICIES))
-        for policy_template in self.IAM_ROLE_POLICIES:
-            policy = policy_template.format(environment=self.environment)
 
-            self.log.info('Processing policy "{policy}"'.format(policy=policy))
+        # If managed policies exist, then use these instead of line policies:
+        if (len(self.IAM_MANAGED_POLICIES) > 0):
+            self.log.info("Adding managed policies [" + str(self.IAM_MANAGED_POLICIES).format(environment=self.environment) + "] to role [" + self.role + "]")
 
-            if policy not in existing_policies:
+            for m_policy in self.IAM_MANAGED_POLICIES:
+                #self.log.info("Attaching {m_policy}".format(m_policy=m_policy))
+                m_policy_id = m_policy.format(environment=self.environment)
+                arn = self.iam.get_user().user.arn
+                ARN = arn[arn.find('::')+2:arn.rfind(':')]
+                m_policy_arn = self.iam.get_policy("arn:aws:iam::{account_id}:policy/{policy}".format(account_id=ARN,policy=m_policy_id))
+                self.iam.attach_role_policy("arn:aws:iam::{account_id}:policy/{policy}".format(account_id=ARN, policy=m_policy_id), self.role)
 
-                rolePolicy = policies[policy]
+        # Use inline roles instead of managed policies:
+        else:
+            for policy_template in self.IAM_ROLE_POLICIES:
+                policy = policy_template.format(environment=self.environment)
 
-                if rolePolicy is None:
-                    self.log.info("No policy defined for {policy}".format(
-                                  policy=policy))
-                    continue  # Go to the next policy
+                self.log.info('Processing policy "{policy}"'.format(policy=policy))
 
-                self.log.info('Policy "{policy}" does not exist'.format(
-                              policy=policy))
+                if policy not in existing_policies:
 
-                try:
-                    self.iam.put_role_policy(self.role, policy,
-                                             rolePolicy)
+                    rolePolicy = policies[policy]
 
-                    self.log.info('Added policy "{policy}"'.format(
-                                  policy=policy))
-                except Exception as e:
-                    self.log.error(str(e))
-                    raise e
-
-            else:
-
-                self.log.info('Policy "{policy}" already exists'.format(
-                              policy=policy))
-
-                tyr_copy = json.loads(policies[policy])
-
-                aws_copy = self.iam.get_role_policy(self.role, policy)
-                aws_copy = aws_copy['get_role_policy_response']
-                aws_copy = aws_copy['get_role_policy_result']
-                aws_copy = aws_copy['policy_document']
-                aws_copy = urllib.unquote(aws_copy)
-                aws_copy = json.loads(aws_copy)
-
-                if tyr_copy == aws_copy:
-                    self.log.info('Policy "{policy}" is accurate'.format(
-                                  policy=policy))
-
-                else:
-
-                    self.log.warn('Policy "{policy}" has been modified'.format(
-                                  policy=policy))
-
-                    try:
-                        self.iam.delete_role_policy(self.role, policy)
-
-                        self.log.info('Removed policy "{policy}"'.format(
+                    if rolePolicy is None:
+                        self.log.info("No policy defined for {policy}".format(
                                       policy=policy))
-                    except Exception as e:
-                        self.log.error(str(e))
-                        raise e
+                        continue  # Go to the next policy
+
+                    self.log.info('Policy "{policy}" does not exist'.format(
+                                  policy=policy))
 
                     try:
                         self.iam.put_role_policy(self.role, policy,
-                                                 policies[policy])
+                                                 rolePolicy)
 
                         self.log.info('Added policy "{policy}"'.format(
                                       policy=policy))
                     except Exception as e:
                         self.log.error(str(e))
                         raise e
+
+                else:
+
+                    self.log.info('Policy "{policy}" already exists'.format(
+                                  policy=policy))
+
+                    tyr_copy = json.loads(policies[policy])
+
+                    aws_copy = self.iam.get_role_policy(self.role, policy)
+                    aws_copy = aws_copy['get_role_policy_response']
+                    aws_copy = aws_copy['get_role_policy_result']
+                    aws_copy = aws_copy['policy_document']
+                    aws_copy = urllib.unquote(aws_copy)
+                    aws_copy = json.loads(aws_copy)
+
+                    if tyr_copy == aws_copy:
+                        self.log.info('Policy "{policy}" is accurate'.format(
+                                      policy=policy))
+
+                    else:
+
+                        self.log.warn('Policy "{policy}" has been modified'.format(
+                                      policy=policy))
+
+                        try:
+                            self.iam.delete_role_policy(self.role, policy)
+
+                            self.log.info('Removed policy "{policy}"'.format(
+                                          policy=policy))
+                        except Exception as e:
+                            self.log.error(str(e))
+                            raise e
+
+                        try:
+                            self.iam.put_role_policy(self.role, policy,
+                                                     policies[policy])
+
+                            self.log.info('Added policy "{policy}"'.format(
+                                          policy=policy))
+                        except Exception as e:
+                            self.log.error(str(e))
+                            raise e
 
     def establish_ec2_connection(self):
 

@@ -85,6 +85,6 @@ class IISNode(Server):
     def user_data(self):
         # read in userdata file
         self.log.info("Setting user data from location [" + os.path.realpath(sys.path[0]) + "/user-data" + "]")
-	f = open(os.path.dirname(os.path.realpath(sys.path[0])) + "/scripts/user-data", 'r')
-	ud = f.read()
+        f = open(os.path.dirname(os.path.realpath(sys.path[0])) + "/scripts/user-data", 'r')
+        ud = f.read()
         return ud
