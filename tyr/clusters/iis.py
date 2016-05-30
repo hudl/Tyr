@@ -11,6 +11,8 @@ class IISCluster():
                  environment=None,
                  ami=None,
                  region=None,
+		             tags=None,
+		             root_volume_size=40,
                  subnet_ids=[],
                  role=None,
                  keypair=None,
@@ -32,6 +34,8 @@ class IISCluster():
         self.ami = ami
         self.region = region
         self.role = role
+        self.tags = tags
+        self.root_volume_size = root_volume_size
         self.subnet_ids = subnet_ids
 
         self.keypair = keypair
@@ -87,6 +91,8 @@ class IISCluster():
         auto = AutoScaler(launch_configuration=self.launch_configuration,
                           autoscaling_group=self.autoscaling_group,
                           desired_capacity=self.desired_capacity,
+			  tags=self.tags,
+			  root_volume_size=self.root_volume_size,
                           max_size=self.max_size,
                           min_size=self.min_size,
                           default_cooldown=self.default_cooldown,

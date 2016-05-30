@@ -1,5 +1,5 @@
 from tyr.servers.server import Server
-import json
+import sys, os
 
 
 class IISNode(Server):
@@ -10,20 +10,22 @@ class IISNode(Server):
     # Do not run chef
     CHEF_RUNLIST = []
 
-    IAM_ROLE_POLICIES = [
-        'allow-describe-instances',
-        'allow-create-tags',
-        'allow-describe-tags',
-        'allow-describe-elbs',
-        'allow-set-cloudwatch-alarms',
-        'allow-remove-cloudwatch-alarms',
-        'allow-deploy-web-updates',
+    IAM_MANAGED_POLICIES = [
+        'hudl-webserver-generic',
+        'aws-hudl-base',
+        'ChefAllowAccess'
     ]
+    
+    IAM_ROLE_POLICIES = [
+
+    ]
+
+
 
     def __init__(self, group=None, server_type=None, instance_type=None,
                  environment=None, ami=None, region=None, role=None,
-                 keypair=None, availability_zone=None, security_groups=None,
-                 subnet_id=None, mongos_service="MongosHost",
+                 block_devices=None, keypair=None, availability_zone=None, security_groups=None,
+                 subnet_id=None, mongos_service="no_mongos",
                  mongo_servers=""):
 
         if server_type is None:
@@ -38,6 +40,7 @@ class IISNode(Server):
                                       ami=ami,
                                       region=region,
                                       role=role,
+				      block_devices=block_devices,
                                       keypair=keypair,
                                       availability_zone=availability_zone,
                                       security_groups=security_groups,
@@ -52,14 +55,10 @@ class IISNode(Server):
             "{env}-mv-web".format(env=env_prefix),
             "{env}-{grp}-web".format(env=env_prefix, grp=self.group),
             "{env}-hudl-{grp}".format(env=env_prefix, grp=self.group),
-            "{env}-web".format(env=env_prefix),
+            "chef-nodes",
         ]
 
         self.classic_link_vpc_security_groups = [
-            "{env}-management".format(env=env_prefix),
-            "{env}-mv-web".format(env=env_prefix),
-            "{env}-{grp}-web".format(env=env_prefix, grp=self.group),
-            "{env}-hudl-{grp}".format(env=env_prefix, grp=self.group),
         ]
 
         self.ingress_groups_to_add = [
@@ -69,16 +68,14 @@ class IISNode(Server):
         ]
 
         if self.mongos_service:
-            mongo_ops = ("MongosHost", "Disabled", "MongosService")
+            mongo_ops = ("mongos_host", "no_mongos", "mongos_service")
             if self.mongos_service not in mongo_ops:
                 raise ValueError(
                     "Mongo service name must be one of: {0}".format(
                         mongo_ops))
 
         self.ports_to_authorize = [9000, 9001, 8095, 8096]
-
-        self.IAM_ROLE_POLICIES.append('allow-web-initialization-{environment}')
-        self.IAM_ROLE_POLICIES.append('allow-outpost-sns-{environment}')
+        self.IAM_MANAGED_POLICIES.append('hudl-webserver-{environment}-multiverse')
 
     def configure(self):
         super(IISNode, self).establish_logger()
@@ -86,14 +83,8 @@ class IISNode(Server):
 
     @property
     def user_data(self):
-        data = {
-            "bucket": "hudl-config",
-            "key": "{env}-mv-web/init.config.json".format(
-                env=self.environment[0]),
-            "mongos": self.mongos_service,
-            "mongoServers": self.mongo_servers
-        }
-
-        ud = json.dumps(data)
-        self.log.info("Setting user data to: {ud}".format(ud=ud))
+        # read in userdata file
+        self.log.info("Setting user data from location [" + os.path.realpath(sys.path[0]) + "/user-data" + "]")
+        f = open(os.path.dirname(os.path.realpath(sys.path[0])) + "/scripts/user-data", 'r')
+        ud = f.read()
         return ud
