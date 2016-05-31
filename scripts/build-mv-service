@@ -26,6 +26,7 @@ def build_mv_service(
     stage_availability_zones=['us-east-1c', 'us-east-1d'],
     mongos_preference='no_mongos',
     mongos_servers='',
+    mongos_version='2.4.12',
     # Web Server Properties
     prod_web_instance_type='t2.large',
     stage_web_instance_type='m3.medium',
@@ -55,6 +56,7 @@ def build_mv_service(
     tags = list()
     tags.append({'name':'chef:hudl:mongos_preference', 'value':mongos_preference})
     tags.append({'name':'chef:hudl:mongo_config_servers', 'value':mongos_servers})
+    tags.append({'name':'chef:hudl:mongos_version', 'value':mongos_version})
 
     # Build Stage Web Servers
     if build_web_cluster & build_stage:
