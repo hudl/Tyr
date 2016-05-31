@@ -65,6 +65,23 @@ class Server(object):
         self.add_route53_dns = add_route53_dns
         self.ebs_optimized = False
 
+
+    def get_latest_ami(self, ami=None, filter=None):
+        if ami is not None:
+            return ami
+
+        if filter is None:
+            ami_filter = { 'architecture': 'x86_64', 'name':'Windows_Server-2012-R2_RTM-English-64Bit-Base-*' }
+        else:
+            ami_filter = filter
+
+        self.log.info("Printing filter " + str(ami_filter))
+
+        image = self.ec2.get_all_images(owners=['amazon'], filters=ami_filter)[-1]
+
+        return image.id
+
+
     def establish_logger(self):
 
         try:
@@ -138,15 +155,9 @@ class Server(object):
         self.establish_route53_connection()
 
         if self.ami is None:
-            self.log.warn('No AMI provided')
-            self.ami = 'ami-8fcee4e5'
-
-	# Check AMI exists:
-	image = self.ec2.get_all_images(image_ids=self.ami)[0]
-	self.log.info("AWS AMI Image state [" + image.state + "]")
-	if image.state != 'available':
-		self.log.info("AWS AMI Image state [" + image.state + "], please update your AMI to one that is available")
-		exit(1)
+            self.log.warn('No AMI provided, searching for latest one...')
+            self.ami = self.get_latest_ami(self.ami)
+            self.log.info('Found AMI [' + self.ami + ']')
 
         try:
             self.ec2.get_all_images(image_ids=[self.ami])
