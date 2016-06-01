@@ -112,7 +112,7 @@ class AutoScaler(object):
 	    # Convert our tags list into something that AWS can understand:
 	    aws_tags = list()
 	    for tag in self.tags:
-		self.log.info("Adding tag [" + tag['name'] + "] with value [" + tag['value'] + "]")
+		self.log.info("Adding tag [" + str(tag['name']) + "] with value [" + str(tag['value']) + "]")
 		aws_tags.append(Tag(resource_id=self.autoscaling_group, key=tag['name'], value=tag['value'], propagate_at_launch=True))
 	    
             ag = AutoScalingGroup(name=self.autoscaling_group,
