@@ -26,7 +26,7 @@ class IISNode(Server):
                  environment=None, ami=None, region=None, role=None,
                  block_devices=None, keypair=None, availability_zone=None, security_groups=None,
                  subnet_id=None, mongos_service="no_mongos",
-                 mongo_servers=""):
+                 mongo_servers="", platform="Windows"):
 
         if server_type is None:
             server_type = self.SERVER_TYPE
@@ -40,13 +40,14 @@ class IISNode(Server):
                                       ami=ami,
                                       region=region,
                                       role=role,
-				      block_devices=block_devices,
+				                              block_devices=block_devices,
                                       keypair=keypair,
                                       availability_zone=availability_zone,
                                       security_groups=security_groups,
                                       subnet_id=subnet_id,
                                       dns_zones=None,
-                                      add_route53_dns=False)
+                                      add_route53_dns=False,
+                                      platform=platform)
 
         env_prefix = self.environment[0]
 

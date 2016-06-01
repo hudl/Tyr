@@ -18,6 +18,7 @@ from paramiko.client import AutoAddPolicy, SSHClient
 from tyr.policies import policies
 from tyr.utilities.stackdriver import set_maintenance_mode
 import cloudspecs.aws.ec2
+from operator import attrgetter
 
 class Server(object):
 
@@ -42,7 +43,7 @@ class Server(object):
                  block_devices=None, chef_path=None, subnet_id=None,
                  dns_zones=None, ingress_groups_to_add=None,
                  ports_to_authorize=None, classic_link=False,
-                 add_route53_dns=True):
+                 add_route53_dns=True, platform=None):
 
         self.instance_type = instance_type
         self.group = group
@@ -64,20 +65,22 @@ class Server(object):
         self.classic_link = classic_link
         self.add_route53_dns = add_route53_dns
         self.ebs_optimized = False
+        self.platform = platform
 
 
-    def get_latest_ami(self, ami=None, filter=None):
+    def get_latest_ami(self, ami=None, platform="linux"):
         if ami is not None:
             return ami
 
-        if filter is None:
-            ami_filter = { 'architecture': 'x86_64', 'name':'Windows_Server-2012-R2_RTM-English-64Bit-Base-*' }
+        if self.platform is None or self.platform.lower() is "linux":
+            ami_filter = { 'architecture': 'x86_64', 'name':'amzn-ami-hvm-*gp2' }
         else:
-            ami_filter = filter
+            ami_filter = { 'architecture': 'x86_64', 'name':'Windows_Server-2012-R2_RTM-English-64Bit-Base-*' }
 
-        self.log.info("Printing filter " + str(ami_filter))
+        self.log.info("AMI filter " + str(ami_filter))
 
-        image = self.ec2.get_all_images(owners=['amazon'], filters=ami_filter)[-1]
+        images = self.ec2.get_all_images(owners=['amazon'], filters=ami_filter)
+        image = sorted(images, key=attrgetter('creationDate'))[-1]
 
         return image.id
 
