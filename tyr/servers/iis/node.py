@@ -1,5 +1,5 @@
 from tyr.servers.server import Server
-import sys, os
+from tyr.helpers import data_file
 
 
 class IISNode(Server):
@@ -85,7 +85,11 @@ class IISNode(Server):
     @property
     def user_data(self):
         # read in userdata file
-        self.log.info("Setting user data from location [" + os.path.realpath(sys.path[0]) + "/user-data" + "]")
-        f = open(os.path.dirname(os.path.realpath(sys.path[0])) + "/scripts/user-data", 'r')
-        ud = f.read()
-        return ud
+        user_data = None
+        try:
+            f = data_file('user_data_base.ps1')
+            user_data = f.read()
+        except IOError:
+            # Handle error reading file
+            pass
+        return user_data
