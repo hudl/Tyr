@@ -17,8 +17,8 @@ class AutoScaler(object):
                  max_size=1,
                  min_size=1,
                  default_cooldown=300,
-		 tags=None,
-		 root_volume_size=None,
+                 tags=None,
+                 root_volume_size=None,
                  availability_zones=None,
                  subnet_ids=None,
                  health_check_grace_period=900):
@@ -94,7 +94,7 @@ class AutoScaler(object):
                                      get_security_group_ids(
                                          self.node_obj.security_groups),
                                      instance_monitoring=False,
-				     block_device_mappings=[self.volumes], 
+                                     block_device_mappings=[self.volumes], 
                                      user_data=self.node_obj.user_data,
                                      instance_type=self.node_obj.instance_type,
                                      instance_profile_name=self.node_obj.role)
@@ -116,7 +116,7 @@ class AutoScaler(object):
 		aws_tags.append(Tag(resource_id=self.autoscaling_group, key=tag['name'], value=tag['value'], propagate_at_launch=True))
 	    
             ag = AutoScalingGroup(name=self.autoscaling_group,
-	    			  tags=aws_tags,
+                                  tags=aws_tags,
                                   availability_zones=self.
                                   autoscale_availability_zones,
                                   desired_capacity=self.desired_capacity,
