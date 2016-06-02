@@ -40,7 +40,7 @@ class IISNode(Server):
                                       ami=ami,
                                       region=region,
                                       role=role,
-				                              block_devices=block_devices,
+                                      block_devices=block_devices,
                                       keypair=keypair,
                                       availability_zone=availability_zone,
                                       security_groups=security_groups,
