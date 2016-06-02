@@ -24,10 +24,11 @@ def build_mv_service(
     build_web_cluster=True,
     prod_subnet_ids=['subnet-e7156e90', 'subnet-f42eb1ad', 'subnet-bfe16094'],
     stage_availability_zones=['us-east-1c', 'us-east-1d'],
+    prod_availability_zones=['us-east-1c', 'us-east-1d', 'us-east-1e'],
     mongos_preference='no_mongos',
     mongos_servers=None,
     # Web Server Properties
-    prod_web_instance_type='t2.large',
+    prod_web_instance_type='t2.medium',
     stage_web_instance_type='m3.medium',
     prod_web_ami=None,
     stage_web_ami=None,
@@ -54,7 +55,7 @@ def build_mv_service(
 
     tags = list()
     tags.append({'name':'chef:hudl:mongos_preference', 'value':mongos_preference})
-    if mongos_servers is not '' or monogos_servers is not None:
+    if mongos_servers is not '' and mongos_servers is not None:
       tags.append({'name':'chef:hudl:mongo_config_servers', 'value':mongos_servers})
     if mongo_version is not None:
       tags.append({'name':'chef:hudl:mongos_version', 'value':mongos_version})
@@ -66,8 +67,8 @@ def build_mv_service(
                    environment=stage_environment,
                    ami=stage_web_ami,
                    region=region,
-		   tags=tags,
-		   root_volume_size=root_volume_size,
+                   tags=tags,
+                   root_volume_size=root_volume_size,
                    desired_capacity=stage_desired_capacity,
                    max_size=stage_desired_capacity,
                    min_size=stage_desired_capacity,
@@ -80,12 +81,13 @@ def build_mv_service(
                    environment=prod_environment,
                    ami=prod_web_ami,
                    region=region,
-		   tags=tags,
+                   tags=tags,
                    root_volume_size=root_volume_size,
                    desired_capacity=prod_desired_capacity,
                    subnet_ids=prod_subnet_ids,
                    max_size=prod_desired_capacity,
-                   min_size=prod_desired_capacity).autorun()
+                   min_size=prod_desired_capacity,
+                   availability_zones=prod_availability_zones).autorun()
 
     # Build Stage Mongo Servers
     if build_mongo_cluster & build_stage:
