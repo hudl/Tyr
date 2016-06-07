@@ -55,9 +55,6 @@ class IISCluster():
         else:
             self.node_zone = None
 
-    def provision(self):
-
-        self.log.info('Provisioning IISCluster')
         if not self.launch_configuration:
             self.launch_configuration = "{env}-{grp}-web".format(
                 env=self.environment[0], grp=self.group)
@@ -70,32 +67,36 @@ class IISCluster():
                 env=self.environment[0], grp=self.group)
 
         # Template to use with an autoscaling group
-        node = IISNode(group=self.group,
-                       server_type=self.server_type,
-                       instance_type=self.instance_type,
-                       environment=self.environment,
-                       ami=self.ami,
-                       region=self.region,
-                       role=self.role,
-                       keypair=self.keypair,
-                       availability_zone=self.node_zone,
-                       security_groups=self.security_groups,
-                       subnet_id=self.node_subnet)
-        node.configure()
+        self.node = IISNode(group=self.group,
+                            server_type=self.server_type,
+                            instance_type=self.instance_type,
+                            environment=self.environment,
+                            ami=self.ami,
+                            region=self.region,
+                            role=self.role,
+                            keypair=self.keypair,
+                            availability_zone=self.node_zone,
+                            security_groups=self.security_groups,
+                            subnet_id=self.node_subnet)
+
+        self.autoscaler = AutoScaler(launch_configuration=self.launch_configuration,
+                                     autoscaling_group=self.autoscaling_group,
+                                     desired_capacity=self.desired_capacity,
+                                     max_size=self.max_size,
+                                     min_size=self.min_size,
+                                     default_cooldown=self.default_cooldown,
+                                     availability_zones=self.availability_zones,
+                                     subnet_ids=self.subnet_ids,
+                                     health_check_grace_period=self.
+                                     health_check_grace_period,
+                                     node_obj=self.node)
+
+    def provision(self):
+        self.log.info('Provisioning IISCluster')
+        self.node.configure()
 
         self.log.info('Creating autoscaler')
-        auto = AutoScaler(launch_configuration=self.launch_configuration,
-                          autoscaling_group=self.autoscaling_group,
-                          desired_capacity=self.desired_capacity,
-                          max_size=self.max_size,
-                          min_size=self.min_size,
-                          default_cooldown=self.default_cooldown,
-                          availability_zones=self.availability_zones,
-                          subnet_ids=self.subnet_ids,
-                          health_check_grace_period=self.
-                          health_check_grace_period,
-                          node_obj=node)
-        auto.autorun()
+        self.autoscaler.autorun()
 
     def baked(self):
         return False

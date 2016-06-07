@@ -346,6 +346,7 @@ def launch_server(environment, group, subnet_id, instance_type,
         log.critical('chef-client failed to finish running')
         sys.exit(1)
 
+
 @timeit
 def wait_for_sync(node):
 
@@ -427,6 +428,7 @@ def stop_decommissioned_node(address, terminate=False):
         else:
             log.debug('Failed to stop {instance}'.format(
                                                         instance=instance_id))
+
 
 @timeit
 def replace_server(environment=None, group=None, subnet_id=None,
