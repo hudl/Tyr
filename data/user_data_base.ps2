@@ -105,9 +105,8 @@ function Get-HudlRoleAttributes {
     elseif ($role -eq "thor") {
         # [0] - Environment Letter, [1] - mvgroupmvgroup, [2] - server role
         $environmentPrefix = "t"
-        #TODO: Set me correctly
-        $group = "jobs"
-        $serverRole = "web"
+        $group = "thor"
+        $serverRole = "thor"
         $treatMonolithAsMultiverse = $true
     }
     # Special case for monolith web servers, they have a different format role name
