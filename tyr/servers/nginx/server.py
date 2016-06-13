@@ -36,4 +36,5 @@ class NginxServer(Server):
 
     def configure(self):
 
+        super(NginxServer, self).establish_logger()
         super(NginxServer, self).configure()
