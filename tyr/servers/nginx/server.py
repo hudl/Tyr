@@ -1,4 +1,5 @@
 from tyr.servers.server import Server
+from tyr.helpers import data_file
 import chef
 import requests
 import time
@@ -14,6 +15,8 @@ class NginxServer(Server):
     IAM_ROLE_POLICIES = [
         'allow-describe-instances',
         'allow-describe-tags',
+        'allow-create-tags',
+        'allow-lifecycle-nginx-stage',
         'allow-describe-elbs',
         'allow-get-nginx-config',
         'allow-modify-nginx-elbs-{environment}'
@@ -35,5 +38,18 @@ class NginxServer(Server):
                                           chef_path, subnet_id, dns_zones)
 
     def configure(self):
-
+        super(NginxServer, self).establish_logger()
         super(NginxServer, self).configure()
+
+    @property
+    def user_data(self):    
+        # read in userdata file
+        user_data = None
+        try:
+            self.log.info("Loading user-data [user_data_file.ps1]")
+            f = data_file('user_data_base.ps1')
+            user_data = f.read()
+        except IOError:
+            # Handle error reading file
+            pass
+        return user_data

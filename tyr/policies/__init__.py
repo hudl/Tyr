@@ -22,6 +22,7 @@ policies = {
     'allow-outpost-sns-test': ec2.allow_outpost_sns_test,
     'allow-outpost-sns-stage': ec2.allow_outpost_sns_stage,
     'allow-outpost-sns-prod': ec2.allow_outpost_sns_prod,
+    'allow-lifecycle-nginx-stage': ec2.allow_lifecycle_nginx_stage,
     'allow-web-initialization-prod': ec2.allow_web_initialization_prod,
     'allow-web-initialization-stage': ec2.allow_web_initialization_stage,
     'allow-set-cloudwatch-alarms': ec2.allow_set_cloudwatch_alarms,
