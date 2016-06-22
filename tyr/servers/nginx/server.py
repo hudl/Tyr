@@ -44,12 +44,13 @@ class NginxServer(Server):
     @property
     def user_data(self):    
         # read in userdata file
+        self.log.info("Loading user-data [user_data_file.ps2]")
         user_data = None
         try:
-            self.log.info("Loading user-data [user_data_file.ps1]")
-            f = data_file('user_data_base.ps1')
+            f = data_file('user_data_base.ps2')
             user_data = f.read()
         except IOError:
             # Handle error reading file
             pass
+            self.log.warning("Could not load user data file")
         return user_data

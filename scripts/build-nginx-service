@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from tyr.clusters.nginx import NginxCluster
+from tyr.helpers import data_file
 import logging
 
 log = logging.getLogger('Tyr.Utilities.BuildNginxService')
@@ -13,7 +14,6 @@ if not log.handlers:
             datefmt='%H:%M:%S')
     ch.setFormatter(formatter)
     log.addHandler(ch)
-
 
 def build_nginx_service(
         environment='stage',
