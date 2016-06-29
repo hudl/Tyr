@@ -20,6 +20,7 @@ from tyr.utilities.stackdriver import set_maintenance_mode
 from tyr.alerts.stackdriver import StackDriver
 import cloudspecs.aws.ec2
 
+
 class Server(object):
 
     NAME_TEMPLATE = '{envcl}-{location}-{index}'
@@ -29,7 +30,7 @@ class Server(object):
     GLOBAL_IAM_ROLE_POLICIES = ['allow-get-chef-artifacts-chef-client',
                                 'allow-describe-tags',
                                 'allow-describe-instances'
-    ]
+                                ]
 
     IAM_ROLE_POLICIES = []
 
@@ -197,7 +198,7 @@ class Server(object):
                               availability_zone=self.availability_zone))
 
         if len(self.availability_zone) == 1:
-            self.availability_zone = self.region+self.availability_zone
+            self.availability_zone = self.region + self.availability_zone
 
         valid = lambda z: z in [zone.name for zone in self.ec2.get_all_zones()]
 
@@ -292,7 +293,6 @@ class Server(object):
         if 'p' in self.environment[0] and self.create_alerts:
             self.apply_alerts()
 
-
     @property
     def location(self):
 
@@ -318,7 +318,7 @@ class Server(object):
         except Exception:
             pass
 
-        template = self.NAME_SEARCH_PREFIX+'*'
+        template = self.NAME_SEARCH_PREFIX + '*'
 
         name_filter = template.format(**supplemental)
 
@@ -342,8 +342,8 @@ class Server(object):
         index = -1
 
         for i in range(99):
-            if (i+1) not in indexes:
-                index = i+1
+            if (i + 1) not in indexes:
+                index = i + 1
                 break
 
         self.index = str(index)
