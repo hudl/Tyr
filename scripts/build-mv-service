@@ -18,6 +18,9 @@ if not log.handlers:
     log.addHandler(ch)
 
 
+# Typical example of building a new service, this will build stage web and mongo servers.
+
+# > ./build-mv-service --service notifications --build_mongo_cluster True --stage_mongo_instance_type 'm3.medium' --mongo_version '2.6.9'
 
 @click.command()
 @click.option('--service', type=click.STRING)
