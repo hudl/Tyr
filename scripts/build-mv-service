@@ -4,6 +4,7 @@ from tyr.servers.mongo import MongoDataNode
 from tyr.clusters.iis import IISCluster
 import logging
 import sys
+import click
 
 log = logging.getLogger('Tyr.Utilities.BuildMvService')
 if not log.handlers:
@@ -17,6 +18,32 @@ if not log.handlers:
     log.addHandler(ch)
 
 
+
+@click.command()
+@click.option('--service', type=click.STRING)
+@click.option('--build_production', type=click.BOOL)
+@click.option('--build_stage',  type=click.BOOL)
+@click.option('--build_web_cluster',  type=click.BOOL)
+@click.option('--mongos_preference', type=click.STRING)
+@click.option('--mongos_servers', type=click.STRING)
+@click.option('--mongos_version', type=click.STRING)
+# Web Server Properties
+@click.option('--prod_web_instance_type', type=click.STRING)
+@click.option('--stage_web_instance_type', type=click.STRING)
+@click.option('--prod_web_ami', type=click.STRING)
+@click.option('--stage_web_ami', type=click.STRING)
+@click.option('--prod_desired_capacity', type=click.INT)
+@click.option('--stage_desired_capacity', type=click.INT)
+@click.option('--root_volume_size', type=click.INT)
+# Mongo Properties
+@click.option('--build_mongo_cluster', type=click.BOOL)
+@click.option('--prod_mongo_instance_type', type=click.STRING)
+@click.option('--stage_mongo_instance_type', type=click.STRING)
+@click.option('--mongo_data_volume_size', type=click.INT)
+@click.option('--prod_mongo_data_piops' type=click.INT)
+@click.option('--stage_mongo_data_piops' type=click.INT)
+@click.option('--mongo_version', type=click.STRING)
+
 def build_mv_service(
     service=None,
     build_production=False,
@@ -27,6 +54,7 @@ def build_mv_service(
     prod_availability_zones=['us-east-1c', 'us-east-1d', 'us-east-1e'],
     mongos_preference='no_mongos',
     mongos_servers=None,
+    mongos_version=None,
     # Web Server Properties
     prod_web_instance_type='t2.medium',
     stage_web_instance_type='m3.medium',
@@ -57,7 +85,7 @@ def build_mv_service(
     tags.append({'name':'chef:hudl:mongos_preference', 'value':mongos_preference})
     if mongos_servers is not '' and mongos_servers is not None:
       tags.append({'name':'chef:hudl:mongo_config_servers', 'value':mongos_servers})
-    if mongo_version is not None:
+    if mongos_version is not None:
       tags.append({'name':'chef:hudl:mongos_version', 'value':mongos_version})
 
     # Build Stage Web Servers
