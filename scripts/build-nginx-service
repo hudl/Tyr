@@ -42,7 +42,6 @@ def build_nginx_service(
                 instance_type=instance_type,
                 tags=tags,
                 # subnet_ids=prod_subnet_ids,
-                root_volume_size=20,
                 availability_zones=availability_zones,
                 max_size=max,
                 min_size=min,
