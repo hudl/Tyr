@@ -30,18 +30,9 @@ class AutoScaler(object):
         self.autoscaling_group = autoscaling_group
         self.desired_capacity = desired_capacity
 
-	self.tags = tags
-	self.volumes=None
-	self.root_volume_size = root_volume_size
-
-	if self.root_volume_size is not None:
-		# sda rather than xvda (for Windows)
-		dev_sda1 = BlockDeviceType()
-		dev_sda1.size = root_volume_size
-		dev_sda1.delete_on_termination=True
-		volume = BlockDeviceMapping()
-		volume['/dev/sda1'] = dev_sda1
-		self.volumes=volume
+        self.tags = tags
+        self.volumes=None
+        self.root_volume_size = root_volume_size
 
         # You can set a list of availability zones explicitly, else it will
         # just use the one from the node object
@@ -78,6 +69,38 @@ class AutoScaler(object):
             self.log.info('Established connection to autoscale')
         except:
             raise
+
+    def establish_ec2_connection(self):
+
+        self.log.info('Using EC2 Region "{region}"'.format(
+                      region=self.node_obj.region))
+        self.log.info("Attempting to connect to EC2")
+
+        try:
+            self.ec2 = boto.ec2.connect_to_region(self.node_obj.region)
+            self.log.info('Established connection to EC2')
+        except Exception as e:
+            self.log.error(str(e))
+            raise e
+
+    def create_root_block_device(self):
+        # if the root volume size is not the same as the AMI default value:
+        if self.root_volume_size is not None:
+            # sda rather than xvda (for Windows)
+            dev_sda1 = BlockDeviceType()
+            dev_sda1.size = self.root_volume_size
+            dev_sda1.delete_on_termination=True
+            volume = BlockDeviceMapping()
+
+            # Check the OS type, if its windows we use sda, linux: xvda
+            images = self.ec2.get_all_images(image_ids=[self.node_obj.ami])
+            image = images[0]
+            
+            if image.platform is None:
+               volume['/dev/xvda'] = dev_sda1
+            else:
+               volume['/dev/sda1'] = dev_sda1
+            self.volumes = volume
 
     def create_launch_configuration(self):
         self.log.info("Getting launch_configuration: {l}"
@@ -136,5 +159,7 @@ class AutoScaler(object):
 
     def autorun(self):
         self.establish_autoscale_connection()
+        self.establish_ec2_connection()
+        self.create_root_block_device()
         self.create_launch_configuration()
         self.create_autoscaling_group()
