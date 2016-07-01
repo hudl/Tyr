@@ -468,10 +468,12 @@ chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}
 """
 
         try:
-            validation_key_path = os.path.expanduser(self.chef_path + '/hudl-validator.pem')
+            validation_key_path = os.path.expanduser(self.chef_path +
+                                                     '/hudl-validator.pem')
             validation_key_file = open(validation_key_path, 'r')
         except IOError:
-            validation_key_path = os.path.expanduser(self.chef_path + '/chef-validator.pem')
+            validation_key_path = os.path.expanduser(self.chef_path +
+                                                     '/chef-validator.pem')
             validation_key_file = open(validation_key_path, 'r')
 
         validation_key = validation_key_file.read()
