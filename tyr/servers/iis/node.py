@@ -87,9 +87,11 @@ class IISNode(Server):
         # read in userdata file
         user_data = None
         try:
-            f = data_file('user_data_base.ps1')
+            f = data_file('user_data_base.ps2')
             user_data = f.read()
         except IOError:
             # Handle error reading file
+            self.log.critical('Could not load user_data_base, quitting')
+            exit(1)
             pass
         return user_data
