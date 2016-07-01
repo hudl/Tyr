@@ -19,6 +19,7 @@ from tyr.policies import policies
 from tyr.utilities.stackdriver import set_maintenance_mode
 from tyr.alerts.stackdriver import StackDriver
 import cloudspecs.aws.ec2
+import re
 
 
 class Server(object):
@@ -44,7 +45,7 @@ class Server(object):
                  block_devices=None, chef_path=None, subnet_id=None,
                  dns_zones=None, ingress_groups_to_add=None,
                  ports_to_authorize=None, classic_link=False,
-                 add_route53_dns=True):
+                 add_route53_dns=True, chef_server_url=None):
 
         self.instance_type = instance_type
         self.group = group
@@ -67,6 +68,21 @@ class Server(object):
         self.add_route53_dns = add_route53_dns
         self.ebs_optimized = False
         self.create_alerts = False
+        self.chef_server_url = chef_server_url
+
+        if chef_server_url is None:
+            if self.environment == 'prod':
+                self.chef_server_url = ('https://chef12-vpc.app.hudl.com/'
+                                        'organizations/hudl'
+                                        )
+            elif self.environment == 'internal':
+                self.chef_server_url = ('https://chef12.app.hudl.com/'
+                                        'organizations/hudl'
+                                        )
+            else:
+                self.chef_server_url = ('https://chef12-ec2.app.hudl.com/'
+                                        'organizations/hudl'
+                                        )
 
     def establish_logger(self):
 
@@ -439,9 +455,11 @@ touch /etc/chef/client.rb
 mkdir -p /etc/chef/ohai/hints
 touch /etc/chef/ohai/hints/ec2.json
 echo '{validation_key}' > /etc/chef/validation.pem
-echo 'chef_server_url "http://chef.app.hudl.com/"
+echo 'chef_server_url "{chef_server_url}"
 node_name "{name}"
-validation_client_name "chef-validator"' > /etc/chef/client.rb
+environment "{chef_env}"
+validation_client_name "{validation_client_name}"
+ssl_verify_mode :verify_none' > /etc/chef/client.rb
 /usr/bin/aws s3 cp s3://hudl-chef-artifacts/chef-client/encrypted_data_bag_secret /etc/chef/encrypted_data_bag_secret
 curl -L https://www.opscode.com/chef/install.sh | bash;
 yum install -y gcc
@@ -449,11 +467,24 @@ chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}
 --===============0035287898381899620==--
 """
 
-        validation_key_path = os.path.expanduser('~/.chef/chef-validator.pem')
-        validation_key_file = open(validation_key_path, 'r')
+        try:
+            validation_key_path = os.path.expanduser('~/.chef/hudl-validator.pem')
+            validation_key_file = open(validation_key_path, 'r')
+        except IOError:
+            validation_key_path = os.path.expanduser('~/.chef/chef-validator.pem')
+            validation_key_file = open(validation_key_path, 'r')
+
         validation_key = validation_key_file.read()
 
+        validation_client = 'hudl-validator'
+
+        if re.match('chef\.app\.hudl\.com', self.chef_server_url):
+            validation_client = 'chef-validator'
+
         return template.format(hostname=self.hostname,
+                               chef_env=self.environment,
+                               validation_client_name=validation_client,
+                               chef_server_url=self.chef_server_url,
                                validation_key=validation_key,
                                name=self.name,
                                logfile='/var/log/chef-client.log')
