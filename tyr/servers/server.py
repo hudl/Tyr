@@ -70,20 +70,6 @@ class Server(object):
         self.create_alerts = False
         self.chef_server_url = chef_server_url
 
-        if chef_server_url is None:
-            if self.environment == 'prod':
-                self.chef_server_url = ('https://chef12-vpc.app.hudl.com/'
-                                        'organizations/hudl'
-                                        )
-            elif self.environment == 'internal':
-                self.chef_server_url = ('https://chef12.app.hudl.com/'
-                                        'organizations/hudl'
-                                        )
-            else:
-                self.chef_server_url = ('https://chef12-ec2.app.hudl.com/'
-                                        'organizations/hudl'
-                                        )
-
     def establish_logger(self):
 
         try:
@@ -106,6 +92,20 @@ class Server(object):
             logging.getLogger('boto').setLevel(logging.CRITICAL)
 
     def configure(self):
+
+        if self.chef_server_url is None:
+            if self.environment == 'prod':
+                self.chef_server_url = ('https://chef12-vpc.app.hudl.com/'
+                                        'organizations/hudl'
+                                        )
+            elif self.environment == 'internal':
+                self.chef_server_url = ('https://chef12.app.hudl.com/'
+                                        'organizations/hudl'
+                                        )
+            else:
+                self.chef_server_url = ('https://chef12-ec2.app.hudl.com/'
+                                        'organizations/hudl'
+                                        )
 
         if self.instance_type is None:
             self.log.warn('No Instance Type provided')
@@ -468,10 +468,10 @@ chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}
 """
 
         try:
-            validation_key_path = os.path.expanduser('~/.chef/hudl-validator.pem')
+            validation_key_path = os.path.expanduser(self.chef_path + '/hudl-validator.pem')
             validation_key_file = open(validation_key_path, 'r')
         except IOError:
-            validation_key_path = os.path.expanduser('~/.chef/chef-validator.pem')
+            validation_key_path = os.path.expanduser(self.chef_path + '/chef-validator.pem')
             validation_key_file = open(validation_key_path, 'r')
 
         validation_key = validation_key_file.read()
