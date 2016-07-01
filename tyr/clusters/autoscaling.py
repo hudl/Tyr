@@ -29,18 +29,18 @@ class AutoScaler(object):
         self.autoscaling_group = autoscaling_group
         self.desired_capacity = desired_capacity
 
-	self.tags = tags
-	self.volumes=None
-	self.root_volume_size = root_volume_size
+        self.tags = tags
+        self.volumes=None
+        self.root_volume_size = root_volume_size
 
-	if self.root_volume_size is not None:
-		# sda rather than xvda (for Windows)
-		dev_sda1 = BlockDeviceType()
-		dev_sda1.size = root_volume_size
-		dev_sda1.delete_on_termination=True
-		volume = BlockDeviceMapping()
-		volume['/dev/sda1'] = dev_sda1
-		self.volumes=volume
+        if self.root_volume_size is not None:
+            # sda rather than xvda (for Windows)
+            dev_sda1 = BlockDeviceType()
+            dev_sda1.size = root_volume_size
+            dev_sda1.delete_on_termination=True
+            volume = BlockDeviceMapping()
+            volume['/dev/sda1'] = dev_sda1
+            self.volumes=volume
 
         # You can set a list of availability zones explicitly, else it will
         # just use the one from the node object
@@ -109,12 +109,12 @@ class AutoScaler(object):
             self.log.info("Creating new autoscaling group: {g}"
                           .format(g=self.autoscaling_group))
 
-	    # Convert our tags list into something that AWS can understand:
-	    aws_tags = list()
-	    for tag in self.tags:
-		self.log.info("Adding tag [" + str(tag['name']) + "] with value [" + str(tag['value']) + "]")
-		aws_tags.append(Tag(resource_id=self.autoscaling_group, key=tag['name'], value=tag['value'], propagate_at_launch=True))
-	    
+            # Convert our tags list into something that AWS can understand:
+            aws_tags = []
+            for tag in self.tags:
+                self.log.info("Adding tag [" + str(tag['name']) + "] with value [" + str(tag['value']) + "]")
+                aws_tags.append(Tag(resource_id=self.autoscaling_group, key=tag['name'], value=tag['value'], propagate_at_launch=True))
+
             ag = AutoScalingGroup(name=self.autoscaling_group,
                                   tags=aws_tags,
                                   availability_zones=self.

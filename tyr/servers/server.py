@@ -629,7 +629,7 @@ named {name}""".format(path=d['path'], name=d['name']))
                 m_policy_id = m_policy.format(environment=self.environment)
                 arn = self.iam.get_user().user.arn
                 account_id = arn[arn.find('::')+2:arn.rfind(':')]
-                m_policy_arn = self.iam.get_policy("arn:aws:iam::{account_id}:policy/{policy}".format(account_id=account_id,policy=m_policy_id))
+                self.iam.get_policy("arn:aws:iam::{account_id}:policy/{policy}".format(account_id=account_id,policy=m_policy_id))
                 self.iam.attach_role_policy("arn:aws:iam::{account_id}:policy/{policy}".format(account_id=account_id, policy=m_policy_id), self.role)
 
         # Use inline roles instead of managed policies:

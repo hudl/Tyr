@@ -16,11 +16,7 @@ class IISNode(Server):
         'ChefAllowAccess'
     ]
     
-    IAM_ROLE_POLICIES = [
-
-    ]
-
-
+    IAM_ROLE_POLICIES = []
 
     def __init__(self, group=None, server_type=None, instance_type=None,
                  environment=None, ami=None, region=None, role=None,
@@ -93,5 +89,4 @@ class IISNode(Server):
             # Handle error reading file
             self.log.critical('Could not load user_data_base, quitting')
             exit(1)
-            pass
         return user_data
