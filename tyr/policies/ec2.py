@@ -399,6 +399,22 @@ allow_describe_snapshots = """{
     ]
 }"""
 
+allow_lifecycle_nginx_prod = """{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "Stmt1465948914000",
+            "Effect": "Allow",
+            "Action": [
+                "autoscaling:CompleteLifecycleAction"
+            ],
+            "Resource": [
+                "*"
+            ]
+        }
+    ]
+}"""
+
 allow_lifecycle_nginx_stage = """{
     "Version": "2012-10-17",
     "Statement": [
