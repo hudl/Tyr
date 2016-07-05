@@ -49,7 +49,7 @@ class NginxCluster():
         self.health_check_grace_period = health_check_grace_period
         self.launch_configuration = launch_configuration
 
-        if 'Role' not in self.tags:
+        if tags is None or 'Role' not in self.tags:
           self.tags.append({'name':'Role', 'value':'RoleNginx'})
 
         if subnet_ids:

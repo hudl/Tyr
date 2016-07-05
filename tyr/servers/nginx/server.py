@@ -44,10 +44,10 @@ class NginxServer(Server):
     @property
     def user_data(self):    
         # read in userdata file
-        self.log.info("Loading user-data [user_data_file.ps2]")
+        self.log.info("Loading user-data [user_data_chef_provision]")
         user_data = None
         try:
-            f = data_file('user_data_base.ps2')
+            f = data_file('user_data_chef_provision')
             user_data = f.read()
         except IOError:
             # Handle error reading file
