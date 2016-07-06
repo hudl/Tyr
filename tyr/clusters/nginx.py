@@ -88,6 +88,8 @@ class NginxCluster():
                            availability_zone=self.node_zone,
                            security_groups=self.security_groups,
                            subnet_id=self.node_subnet)
+                           
+        node.establish_logger()
         node.configure()
 
         self.log.info('Creating autoscaler')

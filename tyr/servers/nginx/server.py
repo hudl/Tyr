@@ -38,7 +38,6 @@ class NginxServer(Server):
                                           chef_path, subnet_id, dns_zones)
 
     def configure(self):
-        super(NginxServer, self).establish_logger()
         super(NginxServer, self).configure()
 
     @property
