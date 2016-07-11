@@ -22,6 +22,7 @@ setup(
     platforms='any',
     install_requires=[
         'boto',
+        'boto3',
         'pyChef',
         'paramiko',
         'click',

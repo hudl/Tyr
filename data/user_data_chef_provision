@@ -73,7 +73,7 @@ FULL_HOSTNAME="$SERVER_NAME$SUBDOMAIN"
 
 mkdir /etc/chef
 
-CHANGE="{\"Comment\": \"Add recordset for $SERVER_NAME\", \"Changes\": [ { \"Action\": \"UPSERT\", \"ResourceRecordSet\": { \"Name\": \"$FULL_HOSTNAME\", \"Type\": \"CNAME\", \"TTL\": 60, \"ResourceRecords\": [ { \"Value\": \"$LOCAL_HOSTNAME\" } ] } } ] }"
+CHANGE="{{\"Comment\": \"Add recordset for $SERVER_NAME\", \"Changes\": [ {{ \"Action\": \"UPSERT\", \"ResourceRecordSet\": {{ \"Name\": \"$FULL_HOSTNAME\", \"Type\": \"CNAME\", \"TTL\": 60, \"ResourceRecords\": [ {{ \"Value\": \"$LOCAL_HOSTNAME\" }} ] }} }} ] }}"
 echo $CHANGE > /etc/chef/route53change.json
 
 aws route53 change-resource-record-sets --hosted-zone-id $HOSTED_ZONE --change-batch file:///etc/chef/route53change.json
@@ -91,10 +91,10 @@ mkdir -p /etc/chef/ohai/hints
 touch /etc/chef/ohai/hints/ec2.json
 
 # Write first boot json
-echo "{\"run_list\": [\"role[$ROLE]\"]}" > /etc/chef/firstrun.json
+echo "{{\"run_list\": [\"role[$ROLE]\"]}}" > /etc/chef/firstrun.json
 
 # Write Validation key to server
-echo 'nothing to see here' > /etc/chef/validation.pem
+echo '{validation_key}' > /etc/chef/validation.pem
 
 echo 'chef_server_url "http://chef.app.hudl.com/"' > /etc/chef/client.rb
 SERVERNAMELINE="node_name \"$SERVER_NAME\""

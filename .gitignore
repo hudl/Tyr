@@ -4,3 +4,4 @@
 *.pyc
 .ropeproject
 *.swp
+.DS_Store

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from tyr.clusters.nginx import NginxCluster
+from tyr.lifecycle.asgevent import ASGEvent
 import logging
 
 log = logging.getLogger('Tyr.Utilities.BuildNginxService')
@@ -15,8 +16,8 @@ if not log.handlers:
     log.addHandler(ch)
 
 def build_nginx_service(
-        environment='stage',
-        group='recruit',
+        environment=None,
+        group=None,
         ami='ami-a4827dc9',
         availability_zones=['us-east-1c', 'us-east-1d'],
         instance_type='m3.medium',
@@ -47,6 +48,10 @@ def build_nginx_service(
                 health_check_grace_period=health_check_grace_period,
                 default_cooldown=default_cooldown).autorun()
 
+    hook_name='{env}-{group}-nginx-startup'.format(env=environment[0], group=group)
+    asg_name='{env}-{group}-nginx-asg'.format(env=environment[0], group=group)
+    role_name='{env}-{group}-nginx'.format(env=environment[0], group=group)
+    ASGEvent(hook_name=hook_name, asg_name=asg_name, role_name=role_name).create_event()
 
 if __name__ == '__main__':
     build_nginx_service()    

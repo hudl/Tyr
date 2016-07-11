@@ -1,5 +1,6 @@
 from tyr.servers.server import Server
 from tyr.helpers import data_file
+import re
 import chef
 import requests
 import time
@@ -41,15 +42,21 @@ class NginxServer(Server):
         super(NginxServer, self).configure()
 
     @property
-    def user_data(self):    
+    def user_data(self):
         # read in userdata file
-        self.log.info("Loading user-data [user_data_chef_provision]")
         user_data = None
         try:
             f = data_file('user_data_chef_provision')
             user_data = f.read()
+
+            validation_key_path = os.path.expanduser('~/.chef/chef-validator.pem')
+            validation_key_file = open(validation_key_path, 'r')
+            validation_key = validation_key_file.read()
+
+            return user_data.format(validation_key=validation_key)
+
         except IOError:
             # Handle error reading file
             pass
-            self.log.warning("Could not load user data file")
-        return user_data
+
+

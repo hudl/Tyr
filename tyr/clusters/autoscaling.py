@@ -2,6 +2,7 @@ from boto.ec2.blockdevicemapping import BlockDeviceType, BlockDeviceMapping
 from boto.ec2.autoscale import LaunchConfiguration
 from boto.ec2.autoscale import AutoScalingGroup
 from boto.ec2.autoscale import Tag
+from tyr.lifecycle.asg import ASG
 import boto.ec2
 import logging
 
