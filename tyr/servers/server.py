@@ -1021,7 +1021,7 @@ named {name}""".format(path=d['path'], name=d['name']))
     def bake(self):
         # Cannot use CamelCase for roles on the Chef12 Server convert to lower.
         if re.match('.+chef12.+', self.chef_server_url):
-            self.CHEF_LIST = map(lambda l: l.lower(), self.CHEF_LIST)
+            self.CHEF_RUNLIST = map(lambda l: l.lower(), self.CHEF_RUNLIST)
             msg = """
             Chef 12 Server Detected - all Roles must be in lower case!
             Double-check that you have the corresponding Role(s) on Chef 12.
