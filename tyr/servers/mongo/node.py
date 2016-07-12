@@ -11,7 +11,9 @@ class MongoNode(Server):
 
     IAM_ROLE_POLICIES = ['allow-volume-control']
 
-    MONGO_CM_GROUPS = ['stage', 'foundation', 'teamsports', 'community']
+    MONGO_CM_GROUPS = ['stage', 'foundation', 'teamsports', 'community',
+                       'teamsports-stage', 'foundation-stage', 'community-stage'
+                       ]
 
     def __init__(self, group=None, server_type=None, instance_type=None,
                  environment=None, ami=None, region=None, role=None,
