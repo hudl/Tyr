@@ -463,7 +463,7 @@ ssl_verify_mode :verify_none' > /etc/chef/client.rb
 /usr/bin/aws s3 cp s3://hudl-chef-artifacts/chef-client/encrypted_data_bag_secret /etc/chef/encrypted_data_bag_secret
 curl -L https://www.opscode.com/chef/install.sh | bash;
 yum install -y gcc
-chef-client -c '/etc/chef/client.rb' -L {logfile}
+chef-client -L {logfile}
 --===============0035287898381899620==--
 """
 
@@ -480,7 +480,7 @@ chef-client -c '/etc/chef/client.rb' -L {logfile}
 
         validation_client = 'hudl-validator'
 
-        if re.match('chef\.app\.hudl\.com', self.chef_server_url):
+        if re.match('.*chef\.app\.hudl\.com.*', self.chef_server_url):
             validation_client = 'chef-validator'
 
         return template.format(hostname=self.hostname,
