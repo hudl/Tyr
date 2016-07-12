@@ -463,7 +463,7 @@ ssl_verify_mode :verify_none' > /etc/chef/client.rb
 /usr/bin/aws s3 cp s3://hudl-chef-artifacts/chef-client/encrypted_data_bag_secret /etc/chef/encrypted_data_bag_secret
 curl -L https://www.opscode.com/chef/install.sh | bash;
 yum install -y gcc
-chef-client -S 'http://chef.app.hudl.com/' -c '/etc/chef/client.rb'-N {name} -L {logfile}
+chef-client -c '/etc/chef/client.rb' -L {logfile}
 --===============0035287898381899620==--
 """
 
