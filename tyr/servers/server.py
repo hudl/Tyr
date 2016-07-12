@@ -468,12 +468,12 @@ chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}
 """
 
         try:
-            validation_key_path = os.path.expanduser(self.chef_path +
-                                                     '/hudl-validator.pem')
+            validation_key_path = os.path.join(self.chef_path,
+                                               'hudl-validator.pem')
             validation_key_file = open(validation_key_path, 'r')
         except IOError:
-            validation_key_path = os.path.expanduser(self.chef_path +
-                                                     '/chef-validator.pem')
+            validation_key_path = os.path.join(self.chef_path,
+                                               'chef-validator.pem')
             validation_key_file = open(validation_key_path, 'r')
 
         validation_key = validation_key_file.read()
@@ -1019,6 +1019,15 @@ named {name}""".format(path=d['path'], name=d['name']))
                             instance=instance_id))
 
     def bake(self):
+        # Cannot use CamelCase for roles on the Chef12 Server convert to lower.
+        if re.match('.+chef12.+', self.chef_server_url):
+            self.CHEF_LIST = map(lambda l: l.lower(), self.CHEF_LIST)
+            msg = """
+            Chef 12 Server Detected - all Roles must be in lower case!
+            Double-check that you have the corresponding Role(s) on Chef 12.
+            """
+            self.log.info(msg)
+
         if self.CHEF_RUNLIST:
             chef_path = os.path.expanduser(self.chef_path)
             self.chef_api = chef.autoconfigure(chef_path)

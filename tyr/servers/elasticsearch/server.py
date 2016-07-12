@@ -18,7 +18,7 @@ class ElasticsearchServer(Server):
                  environment=None, ami=None, region=None, role=None,
                  keypair=None, availability_zone=None, chef_path=None,
                  security_groups=None, block_devices=None, subnet_id=None,
-                 dns_zones=None):
+                 dns_zones=None, chef_server_url=None):
 
         if server_type is None: server_type = self.SERVER_TYPE
 
@@ -29,4 +29,5 @@ class ElasticsearchServer(Server):
                                                   security_groups,
                                                   block_devices,
                                                   chef_path,
-                                                  subnet_id, dns_zones)
+                                                  subnet_id, dns_zones,
+                                                  chef_server_url)

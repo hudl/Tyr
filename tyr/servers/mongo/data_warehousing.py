@@ -22,7 +22,7 @@ class MongoDataWarehousingNode(MongoReplicaSetMember):
                  security_groups=None, block_devices=None,
                  chef_path=None, subnet_id=None, dns_zones=None,
                  replica_set=None, data_volume_size=None,
-                 mongodb_version=None):
+                 mongodb_version=None, chef_server_url=None):
 
         super(MongoDataWarehousingNode, self).__init__(group, server_type,
                                                        instance_type,
@@ -34,7 +34,8 @@ class MongoDataWarehousingNode(MongoReplicaSetMember):
                                                        chef_path, subnet_id,
                                                        dns_zones,
                                                        replica_set,
-                                                       mongodb_version)
+                                                       mongodb_version,
+                                                       chef_server_url)
 
         self.data_volume_size = data_volume_size
 

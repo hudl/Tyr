@@ -21,7 +21,8 @@ class KafkaBroker(Server):
                  keypair=None, availability_zone=None, security_groups=None,
                  block_devices=None, chef_path=None, subnet_id=None,
                  dns_zones=None, volume_count=None, volume_size=None,
-                 volume_type=None, logdir_root=None, zookeeper_connection=None):
+                 volume_type=None, logdir_root=None, zookeeper_connection=None,
+                 chef_server_url=None):
 
         if server_type is None:
             server_type = self.SERVER_TYPE
@@ -36,7 +37,8 @@ class KafkaBroker(Server):
                                           environment, ami, region, role,
                                           keypair, availability_zone,
                                           security_groups, block_devices,
-                                          chef_path, subnet_id, dns_zones)
+                                          chef_path, subnet_id, dns_zones,
+                                          chef_server_url)
 
     def bake(self):
 
