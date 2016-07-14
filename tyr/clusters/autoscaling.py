@@ -32,7 +32,7 @@ class AutoScaler(object):
         self.desired_capacity = desired_capacity
 
         self.tags = tags
-        self.volumes=None
+        self.volumes = None
         self.root_volume_size = root_volume_size
 
         # You can set a list of availability zones explicitly, else it will
@@ -96,11 +96,11 @@ class AutoScaler(object):
             # Check the OS type, if its windows we use sda, linux: xvda
             images = self.ec2.get_all_images(image_ids=[self.node_obj.ami])
             image = images[0]
-            
+
             if image.platform is None:
-               volume['/dev/xvda'] = dev_sda1
+                volume['/dev/xvda'] = dev_sda1
             else:
-               volume['/dev/sda1'] = dev_sda1
+                volume['/dev/sda1'] = dev_sda1
             self.volumes = volume
 
     def create_launch_configuration(self):
@@ -119,7 +119,7 @@ class AutoScaler(object):
                                      get_security_group_ids(
                                          self.node_obj.security_groups),
                                      instance_monitoring=False,
-                                     block_device_mappings=[self.volumes], 
+                                     block_device_mappings=[self.volumes],
                                      user_data=self.node_obj.user_data,
                                      instance_type=self.node_obj.instance_type,
                                      instance_profile_name=self.node_obj.role)
@@ -134,12 +134,12 @@ class AutoScaler(object):
             self.log.info("Creating new autoscaling group: {g}"
                           .format(g=self.autoscaling_group))
 
-	    # Convert our tags list into something that AWS can understand:
-	    aws_tags = list()
-	    for tag in self.tags:
-		self.log.info("Adding tag [" + str(tag['name']) + "] with value [" + str(tag['value']) + "]")
-		aws_tags.append(Tag(resource_id=self.autoscaling_group, key=tag['name'], value=tag['value'], propagate_at_launch=True))
-	    
+        # Convert our tags list into something that AWS can understand:
+        aws_tags = list()
+        for tag in self.tags:
+            self.log.info("Adding tag [" + str(tag['name']) + "] with value [" + str(tag['value']) + "]")
+            aws_tags.append(Tag(resource_id=self.autoscaling_group, key=tag['name'], value=tag['value'], propagate_at_launch=True))
+
             ag = AutoScalingGroup(name=self.autoscaling_group,
                                   tags=aws_tags,
                                   availability_zones=self.
