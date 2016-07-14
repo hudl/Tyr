@@ -18,9 +18,12 @@ class ElasticsearchServer(Server):
                  environment=None, ami=None, region=None, role=None,
                  keypair=None, availability_zone=None, chef_path=None,
                  security_groups=None, block_devices=None, subnet_id=None,
-                 dns_zones=None, chef_server_url=None):
+                 dns_zones=None, ingress_groups_to_add=None,
+                 ports_to_authorize=None, classic_link=False,
+                 add_route53_dns=True, chef_server_url=None):
 
-        if server_type is None: server_type = self.SERVER_TYPE
+        if server_type is None:
+            server_type = self.SERVER_TYPE
 
         super(ElasticsearchServer, self).__init__(group, server_type,
                                                   instance_type, environment,
@@ -30,4 +33,7 @@ class ElasticsearchServer(Server):
                                                   block_devices,
                                                   chef_path,
                                                   subnet_id, dns_zones,
+                                                  ingress_groups_to_add,
+                                                  ports_to_authorize,
+                                                  classic_link, add_route53_dns,
                                                   chef_server_url)
