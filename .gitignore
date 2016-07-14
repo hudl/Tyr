@@ -5,3 +5,4 @@
 .ropeproject
 *.swp
 .DS_Store
+.idea
