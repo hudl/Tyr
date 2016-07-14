@@ -74,10 +74,8 @@ class Server(object):
         self.use_latest_ami = use_latest_ami
 
     def get_latest_ami(self, ami=None, platform="linux"):
-        if self.use_latest_ami is False:
-            self.log.info('how can you be false?')
         if self.ami is not None or self.use_latest_ami is False:
-            self.log.info('RETURNING NONE')
+            self.log.info('No AMI set and use_latest_ami is set to false')
             return ami
 
         if self.platform is None or self.platform.lower() is "linux":
@@ -86,8 +84,6 @@ class Server(object):
         else:
             ami_filter = {'architecture': 'x86_64',
                           'name': 'Windows_Server-2012-R2_RTM-English-64Bit-Base-*'}
-
-        self.log.info("AMI filter " + str(ami_filter))
 
         images = self.ec2.get_all_images(owners=['amazon'], filters=ami_filter)
         image = sorted(images, key=attrgetter('creationDate'))[-1]
