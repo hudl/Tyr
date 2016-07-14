@@ -15,12 +15,10 @@ class IISNode(Server):
         'aws-hudl-base',
         'ChefAllowAccess'
     ]
-    
+
     IAM_ROLE_POLICIES = [
 
     ]
-
-
 
     def __init__(self, group=None, server_type=None, instance_type=None,
                  environment=None, ami=None, region=None, role=None,

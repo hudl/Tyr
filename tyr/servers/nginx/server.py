@@ -58,5 +58,3 @@ class NginxServer(Server):
         except IOError:
             # Handle error reading file
             pass
-
-
