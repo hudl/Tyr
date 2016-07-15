@@ -535,9 +535,6 @@ named {name}""".format(path=d['path'], name=d['name']))
         vpc_conn = VPCConnection()
         subnets = vpc_conn.get_all_subnets(
             filters={'subnet_id': subnet_id})
-        self.log.info("sn ID: " + str(subnet_id))
-        self.log.info("sn count: " + str(len(subnets)))
-        self.log.info("Subnets " + str(subnets))
         if len(subnets) == 1:
             vpc_id = subnets[0].vpc_id
             return vpc_id
