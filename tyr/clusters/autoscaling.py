@@ -2,7 +2,6 @@ from boto.ec2.blockdevicemapping import BlockDeviceType, BlockDeviceMapping
 from boto.ec2.autoscale import LaunchConfiguration
 from boto.ec2.autoscale import AutoScalingGroup
 from boto.ec2.autoscale import Tag
-from tyr.lifecycle.asg import ASG
 import boto.ec2
 import logging
 
@@ -90,7 +89,7 @@ class AutoScaler(object):
             # sda rather than xvda (for Windows)
             dev_sda1 = BlockDeviceType()
             dev_sda1.size = self.root_volume_size
-            dev_sda1.delete_on_termination=True
+            dev_sda1.delete_on_termination = True
             volume = BlockDeviceMapping()
 
             # Check the OS type, if its windows we use sda, linux: xvda
@@ -134,11 +133,11 @@ class AutoScaler(object):
             self.log.info("Creating new autoscaling group: {g}"
                           .format(g=self.autoscaling_group))
 
-        # Convert our tags list into something that AWS can understand:
-        aws_tags = list()
-        for tag in self.tags:
-            self.log.info("Adding tag [" + str(tag['name']) + "] with value [" + str(tag['value']) + "]")
-            aws_tags.append(Tag(resource_id=self.autoscaling_group, key=tag['name'], value=tag['value'], propagate_at_launch=True))
+            # Convert our tags list into something that AWS can understand:
+            aws_tags = list()
+            for tag in self.tags:
+                self.log.info("Adding tag [" + str(tag['name']) + "] with value [" + str(tag['value']) + "]")
+                aws_tags.append(Tag(resource_id=self.autoscaling_group, key=tag['name'], value=tag['value'], propagate_at_launch=True))
 
             ag = AutoScalingGroup(name=self.autoscaling_group,
                                   tags=aws_tags,
@@ -154,6 +153,7 @@ class AutoScaler(object):
                                   vpc_zone_identifier=self.autoscale_subnets,
                                   connection=self.conn)
             self.conn.create_auto_scaling_group(ag)
+
         else:
             self.log.info('Autoscaling group {g} already exists.'
                           .format(g=self.autoscaling_group))

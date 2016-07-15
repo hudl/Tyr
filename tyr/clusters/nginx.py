@@ -50,7 +50,7 @@ class NginxCluster():
         self.launch_configuration = launch_configuration
 
         if tags is None or 'Role' not in self.tags:
-          self.tags.append({'name':'Role', 'value':'RoleNginx'})
+            self.tags.append({'name': 'Role', 'value': 'RoleNginx'})
 
         if subnet_ids:
             self.node_subnet = self.subnet_ids[0]
@@ -88,7 +88,7 @@ class NginxCluster():
                            availability_zone=self.node_zone,
                            security_groups=self.security_groups,
                            subnet_id=self.node_subnet)
-                           
+
         node.establish_logger()
         node.configure()
 

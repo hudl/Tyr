@@ -27,11 +27,15 @@ REGION="`echo \"$AVAILABILITY_ZONE\" | sed -e 's:\([0-9][0-9]*\)[a-z]*\$:\\1:'`"
 
 AVAILABILITY_ZONE_LETTER="`echo $AVAILABILITY_ZONE | sed 's/.*\(.\)/\1/'`"
 
-#Sleep a bit wait for tags to get set.
-sleep 5
-
+# Sleep a bit wait for tags to get set.
 # Get the environment from the tag
-ENVIRONMENT=`aws ec2 describe-tags --region $REGION --filter "Name=resource-id,Values=$INSTANCE_ID" "Name=key,Values=Environment" --output=text | sed -r 's/TAGS\t(.*)\t.*\t.*\t(.*)/\2/'`
+ENVIRONMENT=''
+while [ "$ENVIRONMENT" == '' ]
+do
+    sleep 5
+    ENVIRONMENT=`aws ec2 describe-tags --region $REGION --filter "Name=resource-id,Values=$INSTANCE_ID" "Name=key,Values=Environment" --output=text | sed -r 's/TAGS\t(.*)\t.*\t.*\t(.*)/\2/'`
+done
+
 # Get the role from the tag
 ROLE=`aws ec2 describe-tags --region $REGION --filter "Name=resource-id,Values=$INSTANCE_ID" "Name=key,Values=Role" --output=text | sed -r 's/TAGS\t(.*)\t.*\t.*\t(.*)/\2/'`
 # Get the group from the tag
