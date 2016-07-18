@@ -43,7 +43,9 @@ GROUP=`aws ec2 describe-tags --region $REGION --filter "Name=resource-id,Values=
 # Pull that stupid role prefix out of the role.
 ROLE_MINUS_ROLE="$(echo $ROLE | sed -r 's/[Role]+//g')"
 # Get the uniqueness from the instance id
-UNIQUENESS="$(echo $INSTANCE_ID | sed -r 's/[i-]+//g')"
+INSTANCE_ID_SUFFIX="$(echo $INSTANCE_ID | sed -r 's/[i-]+//g')"
+UNIQUENESS=${INSTANCE_ID_SUFFIX:0:6}
+
 # pull the first letter out of the environment
 ENVIRONMENT_PREFIX="$(echo $ENVIRONMENT | head -c 1)"
 # join them all together into a server name
