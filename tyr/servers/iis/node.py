@@ -23,8 +23,8 @@ class IISNode(Server):
     def __init__(self, group=None, server_type=None, instance_type=None,
                  environment=None, ami=None, region=None, role=None,
                  block_devices=None, keypair=None, availability_zone=None, security_groups=None,
-                 subnet_id=None, mongos_service="no_mongos",
-                 mongo_servers="", platform="Windows"):
+                 subnet_id=None, platform="Windows", use_latest_ami=False,
+                 mongos_service="no_mongos", mongo_servers=""):
 
         if server_type is None:
             server_type = self.SERVER_TYPE
@@ -43,9 +43,10 @@ class IISNode(Server):
                                       availability_zone=availability_zone,
                                       security_groups=security_groups,
                                       subnet_id=subnet_id,
+                                      platform=platform,
+                                      use_latest_ami=use_latest_ami,
                                       dns_zones=None,
-                                      add_route53_dns=False,
-                                      platform=platform)
+                                      add_route53_dns=False)
 
         env_prefix = self.environment[0]
 

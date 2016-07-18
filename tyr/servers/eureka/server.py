@@ -16,7 +16,7 @@ class EurekaServer(Server):
                  environment=None, ami=None, region=None, role=None,
                  keypair=None, availability_zone=None, security_groups=None,
                  block_devices=None, chef_path=None, subnet_id=None,
-                 dns_zones=None):
+                 dns_zones=None, platform=None, use_latest_ami=False):
 
         if server_type is None:
             server_type = self.SERVER_TYPE
@@ -25,4 +25,5 @@ class EurekaServer(Server):
                                            environment, ami, region, role,
                                            keypair, availability_zone,
                                            security_groups, block_devices,
-                                           chef_path, subnet_id, dns_zones)
+                                           chef_path, subnet_id, dns_zones,
+                                           platform, use_latest_ami)
