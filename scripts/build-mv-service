@@ -46,7 +46,6 @@ if not log.handlers:
 @click.option('--prod_mongo_data_piops', type=click.INT, default=1000)
 @click.option('--stage_mongo_data_piops', type=click.INT, default=500)
 @click.option('--mongo_version', type=click.STRING, default=None)
-
 def build_mv_service(
     service=None,
     build_production=False,
