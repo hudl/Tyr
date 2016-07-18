@@ -27,7 +27,6 @@ REGION="`echo \"$AVAILABILITY_ZONE\" | sed -e 's:\([0-9][0-9]*\)[a-z]*\$:\\1:'`"
 
 AVAILABILITY_ZONE_LETTER="`echo $AVAILABILITY_ZONE | sed 's/.*\(.\)/\1/'`"
 
-# Sleep a bit wait for tags to get set.
 # Get the environment from the tag
 ENVIRONMENT=''
 while [ "$ENVIRONMENT" == '' ]
@@ -44,7 +43,7 @@ GROUP=`aws ec2 describe-tags --region $REGION --filter "Name=resource-id,Values=
 ROLE_MINUS_ROLE="$(echo $ROLE | sed -r 's/[Role]+//g')"
 # Get the uniqueness from the instance id
 INSTANCE_ID_SUFFIX="$(echo $INSTANCE_ID | sed -r 's/[i-]+//g')"
-UNIQUENESS=${INSTANCE_ID_SUFFIX:0:6}
+UNIQUENESS=${INSTANCE_ID_SUFFIX:0:8}
 
 # pull the first letter out of the environment
 ENVIRONMENT_PREFIX="$(echo $ENVIRONMENT | head -c 1)"
