@@ -463,7 +463,6 @@ ssl_verify_mode :verify_none' > /etc/chef/client.rb
 /usr/bin/aws s3 cp s3://hudl-chef-artifacts/chef-client/encrypted_data_bag_secret /etc/chef/encrypted_data_bag_secret
 curl -L https://www.opscode.com/chef/install.sh | bash;
 yum install -y gcc
-chef-client -L {logfile}
 --===============0035287898381899620==--
 """
 
@@ -488,8 +487,7 @@ chef-client -L {logfile}
                                validation_client_name=validation_client,
                                chef_server_url=self.chef_server_url,
                                validation_key=validation_key,
-                               name=self.name,
-                               logfile='/var/log/chef-client.log')
+                               name=self.name)
 
     @property
     def tags(self):
@@ -1041,6 +1039,14 @@ named {name}""".format(path=d['path'], name=d['name']))
                                   node=self.name))
                 except chef.exceptions.ChefServerNotFoundError:
                     pass
+                except chef.exceptions.ChefServerError as e:
+                    # This gets thrown on chef12 when the client/node does not
+                    # exist.
+                    if str(e) == 'Forbidden':
+                        pass
+                    else:
+                        self.log.error(str(e))
+                        raise e
                 except Exception as e:
                     self.log.error(str(e))
                     raise e
@@ -1053,28 +1059,49 @@ named {name}""".format(path=d['path'], name=d['name']))
                                   .format(client=self.name))
                 except chef.exceptions.ChefServerNotFoundError:
                     pass
+                except chef.exceptions.ChefServerError as e:
+                    # This gets thrown on chef12 when the client/node does not
+                    # exist.
+                    if str(e) == 'Forbidden':
+                        pass
+                    else:
+                        self.log.error(str(e))
+                        raise e
                 except Exception as e:
                     self.log.error(str(e))
                     raise e
 
-                node = chef.Node.create(self.name)
+               # node = chef.Node.create(self.name)
 
-                self.chef_node = node
+               # self.chef_node = node
 
-                self.log.info('Created new Chef Node "{node}"'.format(
-                              node=self.name))
+               # self.log.info('Created new Chef Node "{node}"'.format(
+               #               node=self.name))
 
-                self.chef_node.chef_environment = self.environment
+               # self.chef_node.chef_environment = self.environment
 
-                self.log.info('Set the Chef Environment to "{env}"'.format(
-                              env=self.chef_node.chef_environment))
+               # self.log.info('Set the Chef Environment to "{env}"'.format(
+               #               env=self.chef_node.chef_environment))
 
-                self.chef_node.run_list = self.CHEF_RUNLIST
+               # self.chef_node.run_list = self.CHEF_RUNLIST
 
-                self.log.info('Set Chef run list to {list}'.format(
-                              list=self.chef_node.run_list))
+               # self.log.info('Set Chef run list to {list}'.format(
+               #               list=self.chef_node.run_list))
 
-                self.chef_node.save()
+                #self.chef_node.save()
+
+                self.log.info('Running Chef on instance, leveraging {run_list} '
+                              'and logging all output to {logfile}. This will '
+                              'automatically register the node with the Chef '
+                              'Server.  Environment and node name are now set '
+                              'from within the /etc/chef/client.rb '
+                              'file.'.format(run_list=self.CHEF_RUNLIST,
+                                             logfile='/var/log/chef-client.log')
+                              )
+                self.run('sudo chef-client -r {run_list} -L {logfile}'.format(
+                    run_list=self.CHEF_RUNLIST,
+                    logfile='/var/log/chef-client.log')
+                )
                 self.log.info('Saved the Chef Node configuration')
 
     def baked(self):
