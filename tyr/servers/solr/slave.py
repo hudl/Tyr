@@ -16,7 +16,9 @@ class SolrSlaveNode(Server):
                  keypair=None, availability_zone=None, security_groups=None,
                  data_volume_size=None, data_volume_iops=None, chef_path=None,
                  subnet_id=None, dns_zones=None, platform=None,
-                 use_latest_ami=False, master=None):
+                 use_latest_ami=False, ingress_groups_to_add=None,
+                 ports_to_authorize=None, classic_link=False,
+                 add_route53_dns=True, master=None):
 
         self.master = master
         self.data_volume_size = data_volume_size
@@ -34,7 +36,9 @@ class SolrSlaveNode(Server):
                                             keypair, availability_zone,
                                             security_groups, None,
                                             chef_path, subnet_id, dns_zones,
-                                            platform, use_latest_ami)
+                                            platform, use_latest_ami, ingress_groups_to_add,
+                                            ports_to_authorize, classic_link,
+                                            add_route53_dns)
 
     def configure(self):
 

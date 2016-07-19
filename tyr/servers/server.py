@@ -46,7 +46,7 @@ class Server(object):
                  keypair=None, availability_zone=None, security_groups=None,
                  block_devices=None, chef_path=None, subnet_id=None,
                  dns_zones=None, platform=None, use_latest_ami=False, 
-                 ingress_groups_to_add=None, ports_to_authorize=None, 
+                 ingress_groups_to_add=None, ports_to_authorize=None,
                  classic_link=False, add_route53_dns=True):
 
         self.instance_type = instance_type
