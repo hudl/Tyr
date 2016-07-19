@@ -20,6 +20,8 @@ from tyr.utilities.stackdriver import set_maintenance_mode
 from tyr.alerts.stackdriver import StackDriver
 import cloudspecs.aws.ec2
 import re
+import boto3
+import subprocess
 
 
 class Server(object):
@@ -425,6 +427,14 @@ class Server(object):
 
     @property
     def user_data(self):
+        # Cannot use CamelCase for roles on the Chef12 Server convert to lower.
+        if re.match('.+chef12.+', self.chef_server_url):
+            self.CHEF_RUNLIST = map(lambda l: l.lower(), self.CHEF_RUNLIST)
+            msg = """
+            Chef 12 Server Detected - all Roles must be in lower case!
+            Double-check that you have the corresponding Role(s) on Chef 12.
+            """
+            self.log.warn(msg)
 
         template = """Content-Type: multipart/mixed; boundary="===============0035287898381899620=="
 MIME-Version: 1.0
@@ -463,6 +473,7 @@ ssl_verify_mode :verify_none' > /etc/chef/client.rb
 /usr/bin/aws s3 cp s3://hudl-chef-artifacts/chef-client/encrypted_data_bag_secret /etc/chef/encrypted_data_bag_secret
 curl -L https://www.opscode.com/chef/install.sh | bash;
 yum install -y gcc
+chef-client -r '{run_list}' -L {logfile}
 --===============0035287898381899620==--
 """
 
@@ -487,7 +498,9 @@ yum install -y gcc
                                validation_client_name=validation_client,
                                chef_server_url=self.chef_server_url,
                                validation_key=validation_key,
-                               name=self.name)
+                               name=self.name,
+                               run_list=self.CHEF_RUNLIST[0],
+                               logfile='/var/log/chef-client.log')
 
     @property
     def tags(self):
@@ -1011,21 +1024,27 @@ named {name}""".format(path=d['path'], name=d['name']))
 
         if instance_id in terminated:
             self.log.info('Successfully terminated {instance}'.format(
-                            instance=instance_id))
+                instance=instance_id))
         else:
             self.log.info('Failed to terminate {instance}'.format(
-                            instance=instance_id))
+                instance=instance_id))
+
+    def ami_type(self):
+        ami_type = ''
+        try:
+            ec2_client = boto3.client('ec2')
+            image_details = ec2_client.describe_images(ImageIds=[self.ami])
+            ami_type = image_details['Images'][0]['Platform']
+        except KeyError:
+            ami_type = None
+            pass
+        except Exception as e:
+            self.log.error('Unable to get AMI info: {err}'.format(err=e))
+            raise e
+
+        return ami_type
 
     def bake(self):
-        # Cannot use CamelCase for roles on the Chef12 Server convert to lower.
-        if re.match('.+chef12.+', self.chef_server_url):
-            self.CHEF_RUNLIST = map(lambda l: l.lower(), self.CHEF_RUNLIST)
-            msg = """
-            Chef 12 Server Detected - all Roles must be in lower case!
-            Double-check that you have the corresponding Role(s) on Chef 12.
-            """
-            self.log.warn(msg)
-
         if self.CHEF_RUNLIST:
             chef_path = os.path.expanduser(self.chef_path)
             self.chef_api = chef.autoconfigure(chef_path)
@@ -1071,38 +1090,17 @@ named {name}""".format(path=d['path'], name=d['name']))
                     self.log.error(str(e))
                     raise e
 
-               # node = chef.Node.create(self.name)
-
-               # self.chef_node = node
-
-               # self.log.info('Created new Chef Node "{node}"'.format(
-               #               node=self.name))
-
-               # self.chef_node.chef_environment = self.environment
-
-               # self.log.info('Set the Chef Environment to "{env}"'.format(
-               #               env=self.chef_node.chef_environment))
-
-               # self.chef_node.run_list = self.CHEF_RUNLIST
-
-               # self.log.info('Set Chef run list to {list}'.format(
-               #               list=self.chef_node.run_list))
-
-                #self.chef_node.save()
-
-                self.log.info('Running Chef on instance, leveraging {run_list} '
-                              'and logging all output to {logfile}. This will '
-                              'automatically register the node with the Chef '
-                              'Server.  Environment and node name are now set '
-                              'from within the /etc/chef/client.rb '
-                              'file.'.format(run_list=self.CHEF_RUNLIST,
-                                             logfile='/var/log/chef-client.log')
-                              )
-                self.run('sudo chef-client -r {run_list} -L {logfile}'.format(
-                    run_list=self.CHEF_RUNLIST,
-                    logfile='/var/log/chef-client.log')
-                )
-                self.log.info('Saved the Chef Node configuration')
+                if re.match('.*chef.app.hudl.com.*', self.chef_server_url):
+                    node = chef.Node.create(self.name)
+                    self.chef_node = node
+                    self.chef_node.save()
+                    self.log.info('Saved the Chef Node configuration')
+                else:
+                    self.log.info('Cannot create and save the node object '
+                                  'through pyChef as it causes issues with the '
+                                  'initial Chef12 runs. The initial run and '
+                                  'node save will happen via userdata!'
+                                  )
 
     def baked(self):
         if self.CHEF_RUNLIST:
