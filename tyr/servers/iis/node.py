@@ -89,6 +89,6 @@ class IISNode(Server):
             f = data_file('user_data_base.ps2')
             user_data = f.read()
         except IOError:
-            # Handle error reading file
-            pass
+            self.log.critical('No user info found, exiting!')
+            exit(1)
         return user_data
