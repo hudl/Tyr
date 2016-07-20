@@ -75,7 +75,7 @@ class Server(object):
 
     def get_latest_ami(self, ami=None, platform="linux"):
         if self.ami is not None or self.use_latest_ami is False:
-            self.log.info('No AMI set and use_latest_ami is set to false')
+            self.log.info('AMI has been set and use_latest_ami is set to false')
             return ami
 
         if self.platform is None or self.platform.lower() is "linux":
