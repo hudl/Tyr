@@ -7,9 +7,7 @@ class ASGEvent(object):
                 transition='autoscaling:EC2_INSTANCE_LAUNCHING',
                 role_name=None):
 
-        logging.getLogger('botocore').setLevel(logging.CRITICAL)
         self.log = logging.getLogger('Tyr.Lifecycle.ASGEvent')
-        self.log.setLevel(logging.DEBUG)
 
         self.asg_name = asg_name
         self.hook_name = hook_name

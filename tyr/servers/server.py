@@ -74,8 +74,8 @@ class Server(object):
         self.use_latest_ami = use_latest_ami
 
     def get_latest_ami(self, ami=None, platform="linux"):
-        if self.ami is not None or self.use_latest_ami is False:
-            self.log.info('AMI has been set and use_latest_ami is set to false')
+        if ami is not None or self.use_latest_ami is False:
+            self.log.info('The AMI has already been set or use_latest_ami is False')
             return ami
 
         if self.platform is None or self.platform.lower() is "linux":
@@ -163,9 +163,13 @@ class Server(object):
         self.establish_route53_connection()
 
         if self.ami is None:
-            self.log.warn('No AMI provided, searching for latest one...')
-            self.ami = self.get_latest_ami(self.ami)
-            self.log.info('Found AMI [' + str(self.ami) + ']')
+            if self.use_latest_ami is False:
+                self.log.warn('No AMI provided')
+                self.ami = 'ami-8fcee4e5'
+            else:
+                self.log.warn('No AMI provided, searching for latest one...')
+                self.ami = self.get_latest_ami(self.ami)
+                self.log.info('Found AMI [' + str(self.ami) + ']')
 
         try:
             self.ec2.get_all_images(image_ids=[self.ami])
