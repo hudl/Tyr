@@ -1,0 +1,112 @@
+Content-Type: multipart/mixed; boundary="===============0035287898381899620=="
+MIME-Version: 1.0
+--===============0035287898381899620==
+Content-Type: text/cloud-config; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="cloud-config.txt"
+#cloud-config
+repo_upgrade: none
+repo_releasever: 2015.03
+--===============0035287898381899620==
+Content-Type: text/x-shellscript; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="user-script.txt"
+#!/bin/bash
+
+# Get the instance Id from the instance metadata service
+INSTANCE_ID=`wget -qO- http://instance-data/latest/meta-data/instance-id`
+
+# get the AZ from the instance metadata service, pull out the region and zone letter
+AVAILABILITY_ZONE=`wget -qO- http://instance-data/latest/meta-data/placement/availability-zone`
+# get the local hostname from the instance metadata service`, pull out the region and zone letter
+LOCAL_HOSTNAME=`wget -qO- http://instance-data/latest/meta-data/local-hostname`
+
+REGION="`echo \"$AVAILABILITY_ZONE\" | sed -e 's:\([0-9][0-9]*\)[a-z]*\$:\\1:'`"
+
+AVAILABILITY_ZONE_LETTER="`echo $AVAILABILITY_ZONE | sed 's/.*\(.\)/\1/'`"
+
+# Sleep a bit wait for tags to get set.
+# Get the environment from the tag
+ENVIRONMENT=''
+while [ "$ENVIRONMENT" == '' ]
+do
+    sleep 5
+    ENVIRONMENT=`aws ec2 describe-tags --region $REGION --filter "Name=resource-id,Values=$INSTANCE_ID" "Name=key,Values=Environment" --output=text | sed -r 's/TAGS\t(.*)\t.*\t.*\t(.*)/\2/'`
+done
+
+# Get the role from the tag
+ROLE=`aws ec2 describe-tags --region $REGION --filter "Name=resource-id,Values=$INSTANCE_ID" "Name=key,Values=Role" --output=text | sed -r 's/TAGS\t(.*)\t.*\t.*\t(.*)/\2/'`
+# Get the group from the tag
+GROUP=`aws ec2 describe-tags --region $REGION --filter "Name=resource-id,Values=$INSTANCE_ID" "Name=key,Values=Group" --output=text | sed -r 's/TAGS\t(.*)\t.*\t.*\t(.*)/\2/'`
+# Pull that stupid role prefix out of the role.
+ROLE_MINUS_ROLE="$(echo $ROLE | sed -r 's/[Role]+//g')"
+# Get the uniqueness from the instance id
+UNIQUENESS="$(echo $INSTANCE_ID | sed -r 's/[i-]+//g')"
+# pull the first letter out of the environment
+ENVIRONMENT_PREFIX="$(echo $ENVIRONMENT | head -c 1)"
+# join them all together into a server name
+SERVER_NAME_MIXED_CASE="$ENVIRONMENT_PREFIX-$GROUP-$ROLE_MINUS_ROLE-use1$AVAILABILITY_ZONE_LETTER-$UNIQUENESS"
+
+# Lowercase that shiz
+SERVER_NAME="$(echo $SERVER_NAME_MIXED_CASE | sed 's/./\L&/g')"
+# Create the name tag
+aws ec2 create-tags --resources $INSTANCE_ID --tags "Key=Name,Value=$SERVER_NAME" --region $REGION
+
+sed -i '/requiretty/d' /etc/sudoers
+
+# set the hostname of the server
+
+case $ENVIRONMENT in
+"prod")
+  SUBDOMAIN=".app.hudl.com"
+  HOSTED_ZONE="Z1LKTAOOYM3H8T"
+  ;;
+"stage")
+  SUBDOMAIN=".app.staghudl.com"
+  HOSTED_ZONE="Z3ETV7KVCRERYL"
+  ;;
+*)
+  SUBDOMAIN=".thorhudl.com"
+  HOSTED_ZONE="ZAH3O4H1900GY"
+  ;;
+esac
+
+FULL_HOSTNAME="$SERVER_NAME$SUBDOMAIN"
+
+mkdir /etc/chef
+
+CHANGE="{{\"Comment\": \"Add recordset for $SERVER_NAME\", \"Changes\": [ {{ \"Action\": \"UPSERT\", \"ResourceRecordSet\": {{ \"Name\": \"$FULL_HOSTNAME\", \"Type\": \"CNAME\", \"TTL\": 60, \"ResourceRecords\": [ {{ \"Value\": \"$LOCAL_HOSTNAME\" }} ] }} }} ] }}"
+echo $CHANGE > /etc/chef/route53change.json
+
+aws route53 change-resource-record-sets --hosted-zone-id $HOSTED_ZONE --change-batch file:///etc/chef/route53change.json
+
+hostname $FULL_HOSTNAME
+
+sed -i 's/^releasever=latest/# releasever=latest/' /etc/yum.conf
+
+yum clean all
+
+touch /etc/chef/client.rb
+
+# set the ec2 ohai hints so ohai knows it's in a ec2, VPCs mess it up.
+mkdir -p /etc/chef/ohai/hints
+touch /etc/chef/ohai/hints/ec2.json
+
+# Write first boot json
+echo "{{\"run_list\": [\"role[$ROLE]\"]}}" > /etc/chef/firstrun.json
+
+# Write Validation key to server
+echo '{validation_key}' > /etc/chef/validation.pem
+
+echo 'chef_server_url "http://chef.app.hudl.com/"' > /etc/chef/client.rb
+SERVERNAMELINE="node_name \"$SERVER_NAME\""
+echo $SERVERNAMELINE >> /etc/chef/client.rb
+echo 'validation_client_name "chef-validator"' >> /etc/chef/client.rb
+
+/usr/bin/aws s3 cp s3://hudl-chef-artifacts/chef-client/encrypted_data_bag_secret /etc/chef/encrypted_data_bag_secret
+curl -L https://www.opscode.com/chef/install.sh | bash;
+yum install -y gcc
+chef-client -S 'http://chef.app.hudl.com/' -N $SERVER_NAME -E $ENVIRONMENT -L /var/log/chef-client.log -j /etc/chef/firstrun.json
+--===============0035287898381899620==--

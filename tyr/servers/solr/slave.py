@@ -14,16 +14,19 @@ class SolrSlaveNode(Server):
     def __init__(self, group=None, server_type=None, instance_type=None,
                  environment=None, ami=None, region=None, role=None,
                  keypair=None, availability_zone=None, security_groups=None,
-                 data_volume_size=None, data_volume_iops=None, chef_path=None, 
-								 subnet_id=None, dns_zones=None, master=None):
+                 data_volume_size=None, data_volume_iops=None, chef_path=None,
+                 subnet_id=None, dns_zones=None, platform=None,
+                 use_latest_ami=False, ingress_groups_to_add=None,
+                 ports_to_authorize=None, classic_link=False,
+                 add_route53_dns=True, master=None):
 
         self.master = master
-	self.data_volume_size = data_volume_size
-	self.data_volume_iops = data_volume_iops
+        self.data_volume_size = data_volume_size
+        self.data_volume_iops = data_volume_iops
 
-	if self.data_volume_size is None:
-		self.log.info("No data volume set, defaulting to 200")
-		self.data_volume_size = 200
+        if self.data_volume_size is None:
+            self.log.info("No data volume set, defaulting to 200")
+            self.data_volume_size = 200
 
         if server_type is None:
             server_type = self.SERVER_TYPE
@@ -32,7 +35,10 @@ class SolrSlaveNode(Server):
                                             environment, ami, region, role,
                                             keypair, availability_zone,
                                             security_groups, None,
-                                            chef_path, subnet_id, dns_zones)
+                                            chef_path, subnet_id, dns_zones,
+                                            platform, use_latest_ami, ingress_groups_to_add,
+                                            ports_to_authorize, classic_link,
+                                            add_route53_dns)
 
     def configure(self):
 
@@ -69,16 +75,15 @@ class SolrSlaveNode(Server):
 
             self.chef_node.attributes.set_dotted('solr.group', self.group)
             self.log.info('Set solr.group to {group}'.format(group=self.group))
-	    
-	    self.chef_node.attributes.set_dotted('hudl_ebs.volumes', [
-                {
-                    'user': 'tomcat',
-                    'group': 'tomcat',
-                    'size': self.data_volume_size,
-                    'iops': self.data_volume_iops,
-                    'device': '/dev/xvdg',
-                    'mount': '/volr'
-                }
+
+            self.chef_node.attributes.set_dotted('hudl_ebs.volumes', [{
+                'user': 'tomcat',
+                'group': 'tomcat',
+                'size': self.data_volume_size,
+                'iops': self.data_volume_iops,
+                'device': '/dev/xvdg',
+                'mount': '/volr'
+            }
             ])
 
             self.chef_node.save()

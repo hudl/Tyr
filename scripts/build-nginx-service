@@ -1,0 +1,58 @@
+#!/usr/bin/env python
+
+from tyr.clusters.nginx import NginxCluster
+from tyr.lifecycle.asgevent import ASGEvent
+import logging
+
+log = logging.getLogger('Tyr.Utilities.BuildNginxService')
+if not log.handlers:
+    log.setLevel(logging.DEBUG)
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(
+            '%(asctime)s [%(name)s] %(levelname)s: %(message)s',
+            datefmt='%H:%M:%S')
+    ch.setFormatter(formatter)
+    log.addHandler(ch)
+
+def build_nginx_service(
+        environment=None,
+        group=None,
+        ami='ami-a4827dc9',
+        #availability_zones=['us-east-1c', 'us-east-1d', 'us-east-1e'],
+        availability_zones=['us-east-1c', 'us-east-1d'],
+        instance_type='m3.medium',
+        desired=0,
+        max=9,
+        min=0,
+        health_check_grace_period=900,
+        default_cooldown=900):
+
+    region = 'us-east-1'
+    #prod_subnet_ids=['subnet-e7156e90', 'subnet-f42eb1ad', 'subnet-bfe16094']
+
+    tags = list()
+    tags.append({'name':'Environment', 'value':environment})
+    tags.append({'name':'Group', 'value':group})
+
+    cluster = NginxCluster(ami=ami,
+                            region=region, 
+                            environment=environment,
+                            group=group,
+                            desired_capacity=desired,
+                            instance_type=instance_type,
+                            tags=tags,
+                            #subnet_ids=prod_subnet_ids,
+                            availability_zones=availability_zones,
+                            max_size=max,
+                            min_size=min,
+                            health_check_grace_period=health_check_grace_period,
+                            default_cooldown=default_cooldown)
+    cluster.autorun()
+
+    hook_name='{env}-{group}-nginx-startup'.format(env=environment[0], group=group)
+    role_name='{env}-{group}-nginx'.format(env=environment[0], group=group)
+    ASGEvent(hook_name=hook_name, asg_name=cluster.autoscaling_group, role_name=role_name).create_event()
+
+if __name__ == '__main__':
+    build_nginx_service()    
