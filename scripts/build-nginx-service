@@ -31,7 +31,7 @@ def build_nginx_service(
     region = 'us-east-1'
     #prod_subnet_ids=['subnet-e7156e90', 'subnet-f42eb1ad', 'subnet-bfe16094']
 
-    tags = list()
+    tags = []
     tags.append({'name':'Environment', 'value':environment})
     tags.append({'name':'Group', 'value':group})
 
