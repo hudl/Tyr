@@ -39,8 +39,11 @@ class MongoReplicaSetMember(MongoNode):
 
         tags = super(MongoReplicaSetMember, self).tags
 
-        tags['ReplicaSet'] = self.REPLICA_SET_TEMPLATE.format(
-                                    group=self.group, set_=self.replica_set)
+	if self.group == "monolith":
+            tags['ReplicaSet'] = "rs" + self.replica_set
+	else:
+            tags['ReplicaSet'] = self.REPLICA_SET_TEMPLATE.format(
+                                        group=self.group, set_=self.replica_set)
 
         return tags
 
