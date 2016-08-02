@@ -3,9 +3,9 @@ from node import MongoNode
 
 class MongoConfigNode(MongoNode):
 
-    NAME_TEMPLATE = '{envcl}-cfg-{location}'
+    NAME_TEMPLATE = '{envcl}-cfg-{location}-{index}'
     NAME_SEARCH_PREFIX = '{envcl}-cfg-'
-    NAME_AUTO_INDEX = False
+    NAME_AUTO_INDEX = True
 
     CHEF_RUNLIST = ['role[RoleMongo]']
     CHEF_MONGODB_TYPE = 'config'
