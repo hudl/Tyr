@@ -99,7 +99,6 @@ allow_create_tags = """{
     ]
 }"""
 
-
 allow_web_initialization_prod = """{
   "Version": "2012-10-17",
   "Statement": [
@@ -392,6 +391,38 @@ allow_describe_snapshots = """{
             "Action": [
                 "ec2:DescribeSnapshotAttribute",
                 "ec2:DescribeSnapshots"
+            ],
+            "Resource": [
+                "*"
+            ]
+        }
+    ]
+}"""
+
+allow_lifecycle_nginx_prod = """{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "Stmt1465948914000",
+            "Effect": "Allow",
+            "Action": [
+                "autoscaling:CompleteLifecycleAction"
+            ],
+            "Resource": [
+                "*"
+            ]
+        }
+    ]
+}"""
+
+allow_lifecycle_nginx_stage = """{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "Stmt1465948914000",
+            "Effect": "Allow",
+            "Action": [
+                "autoscaling:CompleteLifecycleAction"
             ],
             "Resource": [
                 "*"

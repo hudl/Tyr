@@ -18,10 +18,13 @@ class RabbitMQServer(Server):
                  environment=None, ami=None, region=None, role=None,
                  keypair=None, availability_zone=None, security_groups=None,
                  block_devices=None, chef_path=None, subnet_id=None,
-                 dns_zones=None, vol_iops=500, vol_size=100,
-                 rabbit_user=None, rabbit_pass=None):
+                 dns_zones=None, platform=None, use_latest_ami=False,
+                 ingress_groups_to_add=None, ports_to_authorize=None,
+                 classic_link=False, add_route53_dns=True, vol_iops=500,
+                 vol_size=100, rabbit_user=None, rabbit_pass=None):
 
-        if server_type is None: server_type = self.SERVER_TYPE
+        if server_type is None:
+            server_type = self.SERVER_TYPE
 
         self.vol_iops = vol_iops
         self.vol_size = vol_size
@@ -42,7 +45,9 @@ class RabbitMQServer(Server):
                                              environment, ami, region, role,
                                              keypair, availability_zone,
                                              security_groups, block_devices,
-                                             chef_path, subnet_id, dns_zones)
+                                             chef_path, subnet_id, dns_zones,
+                                             platform, use_latest_ami, ingress_groups_to_add,
+                                             ports_to_authorize, classic_link, add_route53_dns)
 
     def configure(self):
         """
