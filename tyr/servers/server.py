@@ -165,7 +165,7 @@ class Server(object):
         if self.ami is None:
             if self.use_latest_ami is False:
                 self.log.warn('No AMI provided')
-                self.ami = 'ami-8fcee4e5'
+                self.ami = 'ami-6869aa05'
             else:
                 self.log.warn('No AMI provided, searching for latest one...')
                 self.ami = self.get_latest_ami(self.ami)
@@ -448,7 +448,7 @@ Content-Disposition: attachment; filename="cloud-config.txt"
 
 #cloud-config
 repo_upgrade: none
-repo_releasever: 2015.03
+repo_releasever: 2016.03
 
 --===============0035287898381899620==
 Content-Type: text/x-shellscript; charset="us-ascii"
