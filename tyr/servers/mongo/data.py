@@ -16,10 +16,12 @@ class MongoDataNode(MongoReplicaSetMember):
                  keypair=None, availability_zone=None,
                  security_groups=None, block_devices=None,
                  chef_path=None, subnet_id=None, dns_zones=None,
-                 replica_set=None, data_volume_size=None,
+                 ingress_groups_to_add=None, ports_to_authorize=None,
+                 classic_link=False, add_route53_dns=True, chef_server_url=None,
+                 replica_set=None, mongodb_version=None, data_volume_size=None,
                  data_volume_iops=None, journal_volume_size=None,
                  journal_volume_iops=None, log_volume_size=None,
-                 log_volume_iops=None, mongodb_version=None):
+                 log_volume_iops=None):
 
         super(MongoDataNode, self).__init__(group, server_type, instance_type,
                                             environment, ami, region, role,
