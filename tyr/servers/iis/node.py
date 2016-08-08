@@ -1,5 +1,8 @@
-from tyr.servers.server import Server
+#!/usr/bin/env python
+# -*- coding: utf8 -*-
+
 from tyr.helpers import data_file
+from tyr.servers.server import Server
 
 
 class IISNode(Server):
@@ -16,15 +19,14 @@ class IISNode(Server):
         'ChefAllowAccess'
     ]
 
-    IAM_ROLE_POLICIES = [
-
-    ]
+    IAM_ROLE_POLICIES = []
 
     def __init__(self, group=None, server_type=None, instance_type=None,
                  environment=None, ami=None, region=None, role=None,
-                 block_devices=None, keypair=None, availability_zone=None, security_groups=None,
-                 subnet_id=None, platform="Windows", use_latest_ami=False,
-                 mongos_service="no_mongos", mongo_servers=""):
+                 block_devices=None, keypair=None, availability_zone=None,
+                 security_groups=None, subnet_id=None, platform="Windows",
+                 use_latest_ami=False, mongos_service="no_mongos",
+                 mongo_servers=""):
 
         if server_type is None:
             server_type = self.SERVER_TYPE
@@ -75,7 +77,8 @@ class IISNode(Server):
                         mongo_ops))
 
         self.ports_to_authorize = [9000, 9001, 8095, 8096]
-        self.IAM_MANAGED_POLICIES.append('hudl-webserver-{environment}-multiverse')
+        self.IAM_MANAGED_POLICIES.append(
+            'hudl-webserver-{environment}-multiverse')
 
     def configure(self):
         super(IISNode, self).establish_logger()
