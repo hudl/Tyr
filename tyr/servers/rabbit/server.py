@@ -1,5 +1,8 @@
-from tyr.servers.server import Server
+#!/usr/bin/env python
+# -*- coding: utf8 -*-
+
 import sys
+from tyr.servers.server import Server
 
 
 class RabbitMQServer(Server):
@@ -46,8 +49,10 @@ class RabbitMQServer(Server):
                                              keypair, availability_zone,
                                              security_groups, block_devices,
                                              chef_path, subnet_id, dns_zones,
-                                             platform, use_latest_ami, ingress_groups_to_add,
-                                             ports_to_authorize, classic_link, add_route53_dns)
+                                             platform, use_latest_ami,
+                                             ingress_groups_to_add,
+                                             ports_to_authorize, classic_link,
+                                             add_route53_dns)
 
     def configure(self):
         """
@@ -56,7 +61,7 @@ class RabbitMQServer(Server):
 
         super(RabbitMQServer, self).configure()
 
-        iops_size_ratio = self.vol_iops/self.vol_size
+        iops_size_ratio = self.vol_iops / self.vol_size
         iops_log_template = 'The IOPS to Size ratio is "{ratio}"'
         self.log.info(iops_log_template.format(ratio=iops_size_ratio))
         if iops_size_ratio > 30:
