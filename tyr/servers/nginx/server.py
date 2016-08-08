@@ -1,10 +1,13 @@
-from tyr.servers.server import Server
-from tyr.helpers import data_file
-import re
+#!/usr/bin/env python
+# -*- coding: utf8 -*-
+
 import chef
+import os.path
+import re
 import requests
 import time
-import os.path
+from tyr.helpers import data_file
+from tyr.servers.server import Server
 
 
 class NginxServer(Server):
@@ -42,7 +45,8 @@ class NginxServer(Server):
                                           security_groups, block_devices,
                                           chef_path, subnet_id, dns_zones,
                                           platform, use_latest_ami,
-                                          ingress_groups_to_add, ports_to_authorize,
+                                          ingress_groups_to_add,
+                                          ports_to_authorize,
                                           classic_link, add_route53_dns)
 
     def configure(self):
