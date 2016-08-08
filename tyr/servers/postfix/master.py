@@ -1,5 +1,8 @@
-from tyr.servers.server import Server
+#!/usr/bin/env python
+# -*- coding: utf8 -*-
+
 import re
+from tyr.servers.server import Server
 
 
 class PostfixMaster(Server):
@@ -26,8 +29,10 @@ class PostfixMaster(Server):
                                             keypair, availability_zone,
                                             security_groups, block_devices,
                                             chef_path, subnet_id, dns_zones,
-                                            platform, use_latest_ami, ingress_groups_to_add,
-                                            ports_to_authorize, classic_link, add_route53_dns)
+                                            platform, use_latest_ami,
+                                            ingress_groups_to_add,
+                                            ports_to_authorize, classic_link,
+                                            add_route53_dns)
 
         try:
             if mail_name is not None:
@@ -66,8 +71,9 @@ class PostfixMaster(Server):
             a_record = zone_obj.get_a(self.mail_name)
             if a_record:
                 a_record_str = str(a_record)
-                pattern = '^.+{mail_name}.+A:(([0-9]{{1,3}}\.){{3}}[0-9]{{1,3}}).*?$'.format(
-                          mail_name=self.mail_name)
+                pattern_template = ('^.+{mail_name}.+A:(([0-9]{{1,3}}\.){{3}}'
+                                    '[0-9]{{1,3}}).*?$')
+                pattern = pattern_template.format(mail_name=self.mail_name)
                 m = re.match(pattern, a_record_str)
 
                 if m:
