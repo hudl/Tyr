@@ -1,7 +1,10 @@
-from tyr.servers.server import Server
+#!/usr/bin/env python
+# -*- coding: utf8 -*-
+
 import chef
 import requests
 import time
+from tyr.servers.server import Server
 
 
 class CacheServer(Server):
@@ -34,7 +37,8 @@ class CacheServer(Server):
                                           security_groups, block_devices,
                                           chef_path, subnet_id, dns_zones,
                                           platform, use_latest_ami,
-                                          ingress_groups_to_add, ports_to_authorize,
+                                          ingress_groups_to_add,
+                                          ports_to_authorize,
                                           classic_link, add_route53_dns)
 
     def configure(self):
@@ -82,7 +86,7 @@ class CacheServer(Server):
 
                 self.log.info('Set the couchbase.server.version to'
                               '{version}'.format(
-                                version=self.couchbase_version))
+                                  version=self.couchbase_version))
 
             if self.couchbase_username:
                 self.chef_node.attributes.set_dotted('couchbase.server.'
@@ -91,7 +95,7 @@ class CacheServer(Server):
 
                 self.log.info('Set the couchbase.server.username to'
                               '{username}'.format(
-                                username=self.couchbase_username))
+                                  username=self.couchbase_username))
 
             if self.couchbase_password:
                 self.chef_node.attributes.set_dotted('couchbase.server.'
@@ -100,7 +104,7 @@ class CacheServer(Server):
 
                 self.log.info('Set the couchbase.server.password to'
                               '{password}'.format(
-                                password=self.couchbase_password))
+                                  password=self.couchbase_password))
 
             self.chef_node.save()
             self.log.info('Saved the Chef Node configuration')
@@ -112,20 +116,18 @@ class CacheServer(Server):
             self.chef_node = chef.Node(self.name)
 
             username = self.chef_node.attributes.get_dotted(
-                                                'couchbase.server.username')
+                'couchbase.server.username')
             password = self.chef_node.attributes.get_dotted(
-                                                'couchbase.server.password')
+                'couchbase.server.password')
 
             memory_quota = self.chef_node.attributes.get_dotted(
-                                             'couchbase.server.'
-                                             'memory_quota_mb')
+                'couchbase.server.memory_quota_mb')
 
-            port = self.chef_node.attributes.get_dotted('couchbase.server.'
-                                                        'port')
+            port = self.chef_node.attributes.get_dotted(
+                'couchbase.server.port')
 
             uri = 'http://{hostname}:{port}/pools/default/buckets'.format(
-                                                hostname=self.hostname,
-                                                port=port)
+                hostname=self.hostname, port=port)
 
             payload = {
                 'authType': 'sasl',
@@ -149,17 +151,17 @@ class CacheServer(Server):
             if r.status_code == 202:
 
                 self.log.info('Created memcached bucket {bucket}'.format(
-                                                    bucket=self.bucket_name))
+                    bucket=self.bucket_name))
 
             else:
 
                 self.log.error('Failed to create memcached bucket '
                                '{bucket}'.format(
-                                                    bucket=self.bucket_name))
+                                   bucket=self.bucket_name))
                 self.log.error('Recieved status code {code} for '
                                'Couchbase'.format(code=r.status_code))
                 self.log.error('Recieved response {response}'.format(
-                                                        response=r.json()))
+                    response=r.json()))
 
     def autorun(self):
 
