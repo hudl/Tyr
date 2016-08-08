@@ -1,4 +1,7 @@
-from member import MongoReplicaSetMember
+#!/usr/bin/env python
+# -*- coding: utf8 -*-
+
+from tyr.servers.mongo.member import MongoReplicaSetMember
 
 
 class MongoArbiterNode(MongoReplicaSetMember):

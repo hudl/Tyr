@@ -1,4 +1,8 @@
-from member import MongoReplicaSetMember
+#!/usr/bin/env python
+# -*- coding: utf8 -*-
+
+import sys
+from tyr.servers.mongo.member import MongoReplicaSetMember
 
 
 class MongoDataWarehousingNode(MongoReplicaSetMember):
@@ -26,7 +30,7 @@ class MongoDataWarehousingNode(MongoReplicaSetMember):
 
         super(MongoDataWarehousingNode, self).__init__(group, server_type,
                                                        instance_type,
-                                                       environment,  ami,
+                                                       environment, ami,
                                                        region, role, keypair,
                                                        availability_zone,
                                                        security_groups,
@@ -50,7 +54,7 @@ class MongoDataWarehousingNode(MongoReplicaSetMember):
             sys.exit(1)
 
         self.log.info('Using data volume size "{size}"'.format(
-                                            size=self.data_volume_size))
+            size=self.data_volume_size))
 
     def bake(self):
 

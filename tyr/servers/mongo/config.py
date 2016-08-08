@@ -1,4 +1,7 @@
-from node import MongoNode
+#!/usr/bin/env python
+# -*- coding: utf8 -*-
+
+from tyr.servers.mongo.node import MongoNode
 
 
 class MongoConfigNode(MongoNode):

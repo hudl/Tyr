@@ -31,8 +31,9 @@ class MongoNode(Server):
                                         keypair, availability_zone,
                                         security_groups, block_devices,
                                         chef_path, subnet_id, dns_zones,
-                                        platform, use_latest_ami, 
-                                        ingress_groups_to_add, ports_to_authorize,
+                                        platform, use_latest_ami,
+                                        ingress_groups_to_add,
+                                        ports_to_authorize,
                                         classic_link, add_route53_dns)
 
     def configure(self):
@@ -54,7 +55,7 @@ class MongoNode(Server):
             self.mongodb_version = '2.4.13'
 
         self.log.info('Using version {version} of MongoDB'.format(
-                                                version=self.mongodb_version))
+            version=self.mongodb_version))
 
         # This is just a temporary fix to override the default security
         # groups for MongoDB nodes until the security_groups argument
@@ -85,14 +86,13 @@ class MongoNode(Server):
 
         with self.chef_api:
 
-            self.chef_node.attributes.set_dotted(
-                                            'mongodb.cluster_name', self.group)
+            self.chef_node.attributes.set_dotted('mongodb.cluster_name',
+                                                 self.group)
             self.log.info('Set the cluster name to "{group}"'.format(
-                                        group=self.group))
+                group=self.group))
 
-            self.chef_node.attributes.set_dotted(
-                                'mongodb.package_version',
-                                self.mongodb_version)
+            self.chef_node.attributes.set_dotted('mongodb.package_version',
+                                                 self.mongodb_version)
 
             self.log.info('Set the MongoDB package version to '
                           '{version}'.format(version=self.mongodb_version))
@@ -100,7 +100,7 @@ class MongoNode(Server):
             self.chef_node.attributes.set_dotted('mongodb.node_type',
                                                  self.CHEF_MONGODB_TYPE)
             self.log.info('Set the MongoDB node type to "{type_}"'.format(
-                                            type_=self.CHEF_MONGODB_TYPE))
+                type_=self.CHEF_MONGODB_TYPE))
 
             self.chef_node.save()
             self.log.info('Saved the Chef Node configuration')

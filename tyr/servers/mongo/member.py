@@ -1,4 +1,7 @@
-from node import MongoNode
+#!/usr/bin/env python
+# -*- coding: utf8 -*-
+
+from tyr.servers.mongo.node import MongoNode
 
 
 class MongoReplicaSetMember(MongoNode):
@@ -40,7 +43,7 @@ class MongoReplicaSetMember(MongoNode):
         tags = super(MongoReplicaSetMember, self).tags
 
         tags['ReplicaSet'] = self.REPLICA_SET_TEMPLATE.format(
-                                    group=self.group, set_=self.replica_set)
+            group=self.group, set_=self.replica_set)
 
         return tags
 
@@ -51,12 +54,12 @@ class MongoReplicaSetMember(MongoNode):
         with self.chef_api:
 
             replica_set = self.REPLICA_SET_TEMPLATE.format(
-                                    group=self.group, set_=self.replica_set)
+                group=self.group, set_=self.replica_set)
 
             self.chef_node.attributes.set_dotted(
-                                        'mongodb.replicaset_name', replica_set)
+                'mongodb.replicaset_name', replica_set)
             self.log.info('Set the replica set name to "{name}"'.format(
-                                        name=replica_set))
+                name=replica_set))
 
             self.chef_node.save()
             self.log.info('Saved the Chef Node configuration')

@@ -1,5 +1,8 @@
-from member import MongoReplicaSetMember
+#!/usr/bin/env python
+# -*- coding: utf8 -*-
+
 import sys
+from tyr.servers.mongo.member import MongoReplicaSetMember
 
 
 class MongoDataNode(MongoReplicaSetMember):
@@ -79,7 +82,7 @@ class MongoDataNode(MongoReplicaSetMember):
             volume_type=volume_type, iops=volume_iops)
         self.log.info(msg)
 
-        iops_size_ratio = volume_iops/volume_size
+        iops_size_ratio = volume_iops / volume_size
 
         self.log.info('The IOPS to Size ratio is "{ratio}"'.format(
             ratio=iops_size_ratio))
