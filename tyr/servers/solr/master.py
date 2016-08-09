@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf8 -*-
+
 from tyr.servers.server import Server
 
 
@@ -27,7 +30,8 @@ class SolrMasterNode(Server):
                                              security_groups, block_devices,
                                              chef_path, subnet_id, dns_zones,
                                              platform, use_latest_ami,
-                                             ingress_groups_to_add, ports_to_authorize,
+                                             ingress_groups_to_add,
+                                             ports_to_authorize,
                                              classic_link, add_route53_dns)
 
     def configure(self):
@@ -55,7 +59,7 @@ class SolrMasterNode(Server):
             self.chef_node.attributes.set_dotted('solr.master_host',
                                                  self.hostname)
             self.log.info('Set solr.master_host to {master}'.format(
-                          master=self.hostname))
+                master=self.hostname))
 
             self.chef_node.save()
             self.log.info('Saved the Chef Node configuration')

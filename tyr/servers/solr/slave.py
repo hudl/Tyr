@@ -1,5 +1,8 @@
-from tyr.servers.server import Server
+#!/usr/bin/env python
+# -*- coding: utf8 -*-
+
 import sys
+from tyr.servers.server import Server
 
 
 class SolrSlaveNode(Server):
@@ -36,7 +39,8 @@ class SolrSlaveNode(Server):
                                             keypair, availability_zone,
                                             security_groups, None,
                                             chef_path, subnet_id, dns_zones,
-                                            platform, use_latest_ami, ingress_groups_to_add,
+                                            platform, use_latest_ami,
+                                            ingress_groups_to_add,
                                             ports_to_authorize, classic_link,
                                             add_route53_dns)
 
@@ -71,7 +75,7 @@ class SolrSlaveNode(Server):
             self.chef_node.attributes.set_dotted('solr.master_host',
                                                  self.master)
             self.log.info('Set solr.master_host to {master}'.format(
-                          master=self.master))
+                master=self.master))
 
             self.chef_node.attributes.set_dotted('solr.group', self.group)
             self.log.info('Set solr.group to {group}'.format(group=self.group))
@@ -83,8 +87,7 @@ class SolrSlaveNode(Server):
                 'iops': self.data_volume_iops,
                 'device': '/dev/xvdg',
                 'mount': '/volr'
-            }
-            ])
+            }])
 
             self.chef_node.save()
             self.log.info('Saved the Chef Node configuration')
