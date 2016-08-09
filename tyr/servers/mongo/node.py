@@ -46,7 +46,7 @@ class MongoNode(Server):
             self.IAM_ROLE_POLICIES.append('allow-mongo-backup-snapshot')
         elif self.environment == "stage":
             self.IAM_ROLE_POLICIES.append('allow-mongo-snapshot-cleanup')
-
+            self.IAM_MANAGED_POLICIES.append('allow-mongo-backup-restore')
         self.resolve_iam_role()
 
         if self.mongodb_version is None:
