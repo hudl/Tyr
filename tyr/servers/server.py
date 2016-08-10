@@ -22,7 +22,7 @@ import cloudspecs.aws.ec2
 import re
 import boto3
 import subprocess
-
+import json
 
 class Server(object):
 
@@ -40,6 +40,7 @@ class Server(object):
     STACKDRIVER_ALERTS = []
 
     CHEF_RUNLIST = ['role[RoleBase]']
+    CHEF_ATTRIBUTES = { 'mytest': 'mytestvalue' }
 
     def __init__(self, group=None, server_type=None, instance_type=None,
                  environment=None, ami=None, region=None, role=None,
@@ -473,7 +474,8 @@ ssl_verify_mode :verify_none' > /etc/chef/client.rb
 /usr/bin/aws s3 cp s3://hudl-chef-artifacts/chef-client/encrypted_data_bag_secret /etc/chef/encrypted_data_bag_secret
 curl -L https://www.opscode.com/chef/install.sh | bash;
 yum install -y gcc
-chef-client -r '{run_list}' -L {logfile}
+echo {attributes} > /etc/chef/attributes.json
+chef-client -r '{run_list}' -L {logfile} -j /etc/chef/attributes.json
 --===============0035287898381899620==--
 """
 
@@ -499,6 +501,7 @@ chef-client -r '{run_list}' -L {logfile}
                                chef_server_url=self.chef_server_url,
                                validation_key=validation_key,
                                name=self.name,
+                               attributes=json.dumps(self.CHEF_ATTRIBUTES),
                                run_list=self.CHEF_RUNLIST[0],
                                logfile='/var/log/chef-client.log')
 
@@ -1090,17 +1093,17 @@ named {name}""".format(path=d['path'], name=d['name']))
                     self.log.error(str(e))
                     raise e
 
-                if re.match('.*chef.app.hudl.com.*', self.chef_server_url):
-                    node = chef.Node.create(self.name)
-                    self.chef_node = node
-                    self.chef_node.save()
-                    self.log.info('Saved the Chef Node configuration')
-                else:
-                    self.log.info('Cannot create and save the node object '
-                                  'through pyChef as it causes issues with the '
-                                  'initial Chef12 runs. The initial run and '
-                                  'node save will happen via userdata!'
-                                  )
+                #if re.match('.*chef.app.hudl.com.*', self.chef_server_url):
+                #    node = chef.Node.create(self.name)
+                #    self.chef_node = node
+                #    self.chef_node.save()
+                #    self.log.info('Saved the Chef Node configuration')
+                #else:
+                #    self.log.info('Cannot create and save the node object '
+                #                  'through pyChef as it causes issues with the '
+                #                  'initial Chef12 runs. The initial run and '
+                #                  'node save will happen via userdata!'
+                #                  )
 
     def baked(self):
         if self.CHEF_RUNLIST:
