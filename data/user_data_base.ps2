@@ -95,6 +95,10 @@ function Get-HudlRoleAttributes {
         $environmentPrefix = $roleSplit[0]
         $serverRole = $roleSplit[1]
         $group = "monolith"
+        # special case for queuedservices here
+        if ($serverRole.downcase == "queues") {
+            $serverRole = "Web"
+        }
         
     } elseif ($roleSplit.Length -eq 3) {
         # [0] - Environment Letter, [1] - mvgroupmvgroup, [2] - server role
