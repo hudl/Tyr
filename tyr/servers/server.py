@@ -22,7 +22,7 @@ import cloudspecs.aws.ec2
 import re
 import boto3
 import subprocess
-import json
+
 
 class Server(object):
 
@@ -40,7 +40,7 @@ class Server(object):
     STACKDRIVER_ALERTS = []
 
     CHEF_RUNLIST = ['role[RoleBase]']
-    CHEF_ATTRIBUTES = { 'mytest': 'mytestvalue' }
+    CHEF_ATTRIBUTES = {}
 
     def __init__(self, group=None, server_type=None, instance_type=None,
                  environment=None, ami=None, region=None, role=None,
@@ -448,7 +448,7 @@ Content-Disposition: attachment; filename="cloud-config.txt"
 
 #cloud-config
 repo_upgrade: none
-repo_releasever: 2015.03
+repo_releasever: 2016.03
 
 --===============0035287898381899620==
 Content-Type: text/x-shellscript; charset="us-ascii"
@@ -474,7 +474,8 @@ ssl_verify_mode :verify_none' > /etc/chef/client.rb
 /usr/bin/aws s3 cp s3://hudl-chef-artifacts/chef-client/encrypted_data_bag_secret /etc/chef/encrypted_data_bag_secret
 curl -L https://www.opscode.com/chef/install.sh | bash;
 yum install -y gcc
-echo {attributes} > /etc/chef/attributes.json
+python -c "import json; f = open('/var/tmp/attributes.json', 'w'); json.dump({attributes}, f)"
+cp /var/tmp/attributes.json /etc/chef/attributes.json
 chef-client -r '{run_list}' -L {logfile} -j /etc/chef/attributes.json
 --===============0035287898381899620==--
 """
@@ -501,7 +502,7 @@ chef-client -r '{run_list}' -L {logfile} -j /etc/chef/attributes.json
                                chef_server_url=self.chef_server_url,
                                validation_key=validation_key,
                                name=self.name,
-                               attributes=json.dumps(self.CHEF_ATTRIBUTES),
+                               attributes=self.CHEF_ATTRIBUTES,
                                run_list=self.CHEF_RUNLIST[0],
                                logfile='/var/log/chef-client.log')
 
