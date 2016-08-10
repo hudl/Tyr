@@ -96,7 +96,7 @@ function Get-HudlRoleAttributes {
         $serverRole = $roleSplit[1]
         $group = "monolith"
         # special case for queuedservices here
-        if ($serverRole.downcase -eq "queues") {
+        if ($serverRole -eq "queues") {
             $serverRole = "Web"
         }
         
