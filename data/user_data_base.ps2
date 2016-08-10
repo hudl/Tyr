@@ -199,10 +199,10 @@ function Get-MyName {
     return $nameTag.Value
 }
 
-function Get-AppNames {
+function Get-Apps {
     $instanceId = (New-Object System.Net.WebClient).DownloadString("http://169.254.169.254/latest/meta-data/instance-id")
-    $appNameTag =  Get-EC2Tag | ` Where-Object {$_.ResourceId -eq $instanceId -and $_.Key -eq 'AppNames'}
-    return $appNameTag.Value
+    $appsTag =  Get-EC2Tag | Where-Object {$_.ResourceId -eq $instanceId -and $_.Key -eq 'Apps'}
+    return $apps.Value
 }
 
 $TextInfo = (Get-Culture).TextInfo
@@ -228,7 +228,7 @@ $File = Get-Content "c:\hudl\config\servername.txt"
 New-EC2Tag -Region $region -ResourceId $instanceId -Tag @{key="Name"; value="$servername"}
 
 $roleAttributes = Get-HudlRoleAttributes
-$appNames = Get-AppNames
+$apps = Get-Apps
 
 # Set role tag if not set.
 $chef_tag_role = Get-EC2Tag -Filters @( @{Name="key"; values="Role"}, @{Name="resource-id"; Values=$instanceId})
@@ -376,7 +376,7 @@ try {
         "service": "$($roleAttributes.Group)",
         "eureka_set": "$($eurekaSet)",
         "treat_monolith_as_multiverse": $($roleAttributes.TreatMonolithAsMultiverse | ConvertTo-Json),
-        "appNames": "$($appNames)" 
+        "apps": "$($apps)" 
 "@
 
 $dynamicAttributes | % getEnumerator | % {
