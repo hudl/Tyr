@@ -17,6 +17,7 @@ class NginxServer(Server):
         'allow-describe-instances',
         'allow-describe-tags',
         'allow-create-tags',
+        'allow-update-route53-{environment}',
         'allow-lifecycle-nginx-{environment}',
         'allow-describe-elbs',
         'allow-get-nginx-config',
