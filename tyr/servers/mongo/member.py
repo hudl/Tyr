@@ -35,7 +35,7 @@ class MongoReplicaSetMember(MongoNode):
         super(MongoReplicaSetMember, self).set_chef_attributes()
         replica_set = self.REPLICA_SET_TEMPLATE.format(
             group=self.group, set_=self.replica_set)
-        self.CHEF_ATTRIBUTES['mongodb']['replica_setname'] = replica_set
+        self.CHEF_ATTRIBUTES['mongodb']['replicaset_name'] = replica_set
         self.log.info('Set the replica set name to "{name}"'.format(
             name=replica_set)
         )
