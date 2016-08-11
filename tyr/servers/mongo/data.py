@@ -169,7 +169,7 @@ class MongoDataNode(MongoReplicaSetMember):
 
             self.log.debug('No instance storage; including swap device')
 
-        self.CHEF_ATTRIBUTES['ebs_volumes'] = {'volumes': ebs_volumes}
+        self.CHEF_ATTRIBUTES['hudl_ebs'] = {'volumes': ebs_volumes}
         self.log.info('Configured the hudl_ebs.volumes attribute')
 
     def configure(self):
