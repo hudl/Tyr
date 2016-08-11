@@ -27,14 +27,22 @@ class MongoReplicaSetMember(MongoNode):
                                                     classic_link,
                                                     add_route53_dns,
                                                     chef_server_url,
-                                                    replica_set,
                                                     mongodb_version)
 
         self.replica_set = replica_set
 
-    def configure(self):
+    def set_chef_attributes(self):
+        super(MongoReplicaSetMember, self).set_chef_attributes()
+        replica_set = self.REPLICA_SET_TEMPLATE.format(
+            group=self.group, set_=self.replica_set)
+        self.CHEF_ATTRIBUTES['mongodb']['replica_setname'] = replica_set
+        self.log.info('Set the replica set name to "{name}"'.format(
+            name=replica_set)
+        )
 
+    def configure(self):
         super(MongoReplicaSetMember, self).configure()
+        self.set_chef_attributes()
 
         if self.replica_set is None:
             self.log.warn('No replica set provided')
@@ -48,23 +56,10 @@ class MongoReplicaSetMember(MongoNode):
         tags = super(MongoReplicaSetMember, self).tags
 
         tags['ReplicaSet'] = self.REPLICA_SET_TEMPLATE.format(
-                                    group=self.group, set_=self.replica_set)
+            group=self.group, set_=self.replica_set
+        )
 
         return tags
 
     def bake(self):
-
         super(MongoReplicaSetMember, self).bake()
-
-        with self.chef_api:
-
-            replica_set = self.REPLICA_SET_TEMPLATE.format(
-                                    group=self.group, set_=self.replica_set)
-
-            self.chef_node.attributes.set_dotted(
-                                        'mongodb.replicaset_name', replica_set)
-            self.log.info('Set the replica set name to "{name}"'.format(
-                                        name=replica_set))
-
-            self.chef_node.save()
-            self.log.info('Saved the Chef Node configuration')

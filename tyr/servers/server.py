@@ -94,7 +94,11 @@ class Server(object):
             # Reduce boto logging
             logging.getLogger('boto').setLevel(logging.CRITICAL)
 
+    def set_chef_attributes(self):
+        self.CHEF_ATTRIBUTES['base_server'] = 'base_server_value'
+
     def configure(self):
+        self.set_chef_attributes()
 
         if self.chef_server_url is None:
             if self.environment == 'prod':
@@ -1093,18 +1097,6 @@ named {name}""".format(path=d['path'], name=d['name']))
                 except Exception as e:
                     self.log.error(str(e))
                     raise e
-
-                #if re.match('.*chef.app.hudl.com.*', self.chef_server_url):
-                #    node = chef.Node.create(self.name)
-                #    self.chef_node = node
-                #    self.chef_node.save()
-                #    self.log.info('Saved the Chef Node configuration')
-                #else:
-                #    self.log.info('Cannot create and save the node object '
-                #                  'through pyChef as it causes issues with the '
-                #                  'initial Chef12 runs. The initial run and '
-                #                  'node save will happen via userdata!'
-                #                  )
 
     def baked(self):
         if self.CHEF_RUNLIST:
