@@ -30,57 +30,49 @@ class MongoConfigNode(MongoNode):
                                               ports_to_authorize, classic_link,
                                               add_route53_dns, chef_server_url)
 
+    def set_chef_attributes(self):
+        super(MongoConfigNode, self).set_chef_attributes()
+        ebs_volumes = [
+            {
+                'user': 'mongod',
+                'group': 'mongod',
+                'size': 5,
+                'iops': 0,
+                'device': '/dev/xvdf',
+                'mount': '/volr'
+            },
+            {
+                'user': 'mongod',
+                'group': 'mongod',
+                'size': 5,
+                'iops': 0,
+                'device': '/dev/xvdg',
+                'mount': '/volr/journal'
+            },
+            {
+                'user': 'mongod',
+                'group': 'mongod',
+                'size': 20,
+                'iops': 0,
+                'device': '/dev/xvdh',
+                'mount': '/mongologs',
+            }
+        ]
+
+        if self.ephemeral_storage == []:
+            ebs_volumes.append({
+                'user': 'root',
+                'group': 'root',
+                'size': 8,
+                'iops': 24,
+                'device': '/dev/xvdc',
+                'mount': '/media/ephemeral0'
+            })
+
+            self.log.debug('No instance storage; including swap device')
+
+        self.CHEF_ATTRIBUTES['hudl_ebs'] = {'volumes': ebs_volumes}
+        self.log.info('Configured the hudl_ebs.volumes attribute')
+
     def bake(self):
-
         super(MongoConfigNode, self).bake()
-
-        with self.chef_api:
-            ebs_volumes = [
-                {
-                    'user': 'mongod',
-                    'group': 'mongod',
-                    'size': 5,
-                    'iops': 0,
-                    'device': '/dev/xvdf',
-                    'mount': '/volr'
-                },
-                {
-                    'user': 'mongod',
-                    'group': 'mongod',
-                    'size': 5,
-                    'iops': 0,
-                    'device': '/dev/xvdg',
-                    'mount': '/volr/journal'
-                },
-                {
-                    'user': 'mongod',
-                    'group': 'mongod',
-                    'size': 20,
-                    'iops': 0,
-                    'device': '/dev/xvdh',
-                    'mount': '/mongologs',
-                }
-            ]
-
-            self.chef_node.attributes.set_dotted('hudl_ebs.volumes',
-                                                 ebs_volumes)
-
-            if self.ephemeral_storage == []:
-                ebs_volumes.append({
-                    'user': 'root',
-                    'group': 'root',
-                    'size': 8,
-                    'iops': 24,
-                    'device': '/dev/xvdc',
-                    'mount': '/media/ephemeral0'
-                })
-
-                self.log.debug('No instance storage; including swap device')
-
-            self.log.info('Configured the hudl_ebs.volumes attribute')
-
-            self.chef_node.attributes.set_dotted('mongodb.config.port', 27019)
-            self.log.info('Set the MongoDB port to 27019')
-
-            self.chef_node.save()
-            self.log.info('Saved the Chef Node configuration')

@@ -30,42 +30,37 @@ class MongoArbiterNode(MongoReplicaSetMember):
                                                add_route53_dns, chef_server_url,
                                                replica_set, mongodb_version)
 
+
+    def set_chef_attributes(self):
+        super(MongoArbiterNode, self).set_chef_attributes()
+        ebs_volumes = [
+            {
+                'user': 'mongod',
+                'group': 'mongod',
+                'size': 1,
+                'iops': 0,
+                'device': '/dev/xvdf',
+                'mount': '/volr'
+            }
+        ]
+
+        if self.ephemeral_storage == []:
+            ebs_volumes.append({
+                'user': 'root',
+                'group': 'root',
+                'size': 8,
+                'iops': 24,
+                'device': '/dev/xvdc',
+                'mount': '/media/ephemeral0'
+            })
+
+            self.log.debug('No instance storage; including swap device')
+
+        self.CHEF_ATTRIBUTES['hudl_ebs'] = {'volumes': ebs_volumes}
+        self.log.info('Configured the hudl_ebs.volumes attribute')
+        self.CHEF_ATTRIBUTES['mongodb']['config'] = {}
+        self.CHEF_ATTRIBUTES['mongodb']['config'] = {'smallfiles': True}
+        self.log.info('Configured the mongodb.config.smallfiles attribute')
+
     def bake(self):
-
         super(MongoArbiterNode, self).bake()
-
-        with self.chef_api:
-
-            ebs_volumes = [
-                {
-                    'user': 'mongod',
-                    'group': 'mongod',
-                    'size': 1,
-                    'iops': 0,
-                    'device': '/dev/xvdf',
-                    'mount': '/volr'
-                }
-            ]
-
-            if self.ephemeral_storage == []:
-                ebs_volumes.append({
-                    'user': 'root',
-                    'group': 'root',
-                    'size': 8,
-                    'iops': 24,
-                    'device': '/dev/xvdc',
-                    'mount': '/media/ephemeral0'
-                })
-
-                self.log.debug('No instance storage; including swap device')
-
-            self.chef_node.attributes.set_dotted('hudl_ebs.volumes',
-                                                 ebs_volumes)
-
-            self.log.info('Configured the hudl_ebs.volumes attribute')
-
-            self.chef_node.attributes.set_dotted('mongodb.config.smallfiles',
-                                                 True)
-
-            self.chef_node.save()
-            self.log.info('Saved the Chef Node configuration')
