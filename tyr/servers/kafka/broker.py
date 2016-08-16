@@ -51,12 +51,12 @@ class KafkaBroker(Server):
         self.CHEF_ATTRIBUTES['kafka']['broker'] = {}
         self.CHEF_ATTRIBUTES['kafka']['broker']['zookeeper'] = {}
 
-
         if self.volume_count:
             if isinstance(self.volume_count, int):
                 self.CHEF_ATTRIBUTES['role_kafka']['volume_count'] = self.volume_count
-                self.log.info('Set role_kafka.volume_count to {}'
-                                .format(self.volume_count))
+                self.log.info('Set role_kafka.volume_count to {}'.format(
+                    self.volume_count)
+                )
             else:
                 raise TypeError('volume_count is of type {}. Expected integer'
                                 .format(type(self.volume_count)))
