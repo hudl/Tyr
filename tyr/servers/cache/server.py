@@ -37,9 +37,40 @@ class CacheServer(Server):
                                           ports_to_authorize, classic_link,
                                           add_route53_dns, chef_server_url)
 
-    def configure(self):
+    def set_chef_attributes(self):
+        super(CacheServer, self).set_chef_attributes()
+        self.CHEF_ATTRIBUTES['couchbase'] = {'server': {}}
+        if not any([self.couchbase_version, self.couchbase_username,
+                    self.couchbase_password]):
+            return
 
+        if self.couchbase_version:
+            self.CHEF_ATTRIBUTES['couchbase']['server']['version'] = (
+                self.couchbase_version
+            )
+            self.log.info('Set the couchbase.server.version to'
+                          '{version}'.format(version=self.couchbase_version)
+                          )
+
+        if self.couchbase_username:
+            self.CHEF_ATTRIBUTES['couchbase']['server']['username'] = (
+                self.couchbase_username
+            )
+            self.log.info('Set the couchbase.server.username to'
+                          '{username}'.format(username=self.couchbase_username)
+                          )
+
+        if self.couchbase_password:
+            self.CHEF_ATTRIBUTES['couchbase']['server']['password'] = (
+                self.couchbase_password
+            )
+            self.log.info('Set the couchbase.server.password to'
+                          '{password}'.format(password=self.couchbase_password)
+                          )
+
+    def configure(self):
         super(CacheServer, self).configure()
+        self.set_chef_attributes()
 
         if self.environment == 'prod':
             self.instance_type = 'r3.large'
@@ -66,44 +97,7 @@ class CacheServer(Server):
         self.resolve_security_groups()
 
     def bake(self):
-
         super(CacheServer, self).bake()
-
-        if not any([self.couchbase_version, self.couchbase_username,
-                    self.couchbase_password]):
-            return
-
-        with self.chef_api:
-
-            if self.couchbase_version:
-                self.chef_node.attributes.set_dotted('couchbase.server.'
-                                                     'version',
-                                                     self.couchbase_version)
-
-                self.log.info('Set the couchbase.server.version to'
-                              '{version}'.format(
-                                version=self.couchbase_version))
-
-            if self.couchbase_username:
-                self.chef_node.attributes.set_dotted('couchbase.server.'
-                                                     'username',
-                                                     self.couchbase_username)
-
-                self.log.info('Set the couchbase.server.username to'
-                              '{username}'.format(
-                                username=self.couchbase_username))
-
-            if self.couchbase_password:
-                self.chef_node.attributes.set_dotted('couchbase.server.'
-                                                     'password',
-                                                     self.couchbase_password)
-
-                self.log.info('Set the couchbase.server.password to'
-                              '{password}'.format(
-                                password=self.couchbase_password))
-
-            self.chef_node.save()
-            self.log.info('Saved the Chef Node configuration')
 
     def configure_couchbase(self):
 
