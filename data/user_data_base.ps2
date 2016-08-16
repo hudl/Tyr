@@ -95,9 +95,10 @@ function Get-HudlRoleAttributes {
         $environmentPrefix = $roleSplit[0]
         $serverRole = $roleSplit[1]
         $group = "monolith"
-        # special case for queuedservices here
-        if ($serverRole -eq "queues") {
+        # special case for queuedservices and admin here
+        if ($serverRole -eq "queues" -or $serverRole -eq "admin") {
             $serverRole = "Web"
+            $treatMonolithAsMultiverse = $true
         }
         
     } elseif ($roleSplit.Length -eq 3) {
@@ -206,7 +207,7 @@ function Get-MyName {
 function Get-Apps {
     $instanceId = (New-Object System.Net.WebClient).DownloadString("http://169.254.169.254/latest/meta-data/instance-id")
     $appsTag =  Get-EC2Tag | Where-Object {$_.ResourceId -eq $instanceId -and $_.Key -eq 'Apps'}
-    return $apps.Value
+    return $appsTag.Value
 }
 
 $TextInfo = (Get-Culture).TextInfo
