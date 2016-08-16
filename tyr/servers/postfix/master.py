@@ -41,8 +41,19 @@ class PostfixMaster(Server):
             self.log.critical(str(e))
             raise e
 
+    def set_chef_attributes(self):
+        """
+        Add the myhostname attribute for the main.cf postfix config
+        """
+        super(PostfixMaster, self).set_chef_attributes()
+        self.CHEF_ATTRIBUTES['postfix'] = {}
+        self.CHEF_ATTRIBUTES['postfix']['main'] = {'myhostname': self.mail_name}
+        self.log.info('Set the mail hostname value in main.cf to '
+                      '{mail_name}'.format(mail_name=self.mail_name))
+
     def configure(self):
         super(PostfixMaster, self).configure()
+        self.set_chef_attributes()
 
         if self.mail_name:
             self.ELASTIC_IP = self.check_mail_server()
@@ -148,25 +159,12 @@ class PostfixMaster(Server):
         return alloc_id
 
     def bake(self):
-        """
-        Add the myhostname attribute for the main.cf postfix config
-        """
-
         super(PostfixMaster, self).bake()
-
-        with self.chef_api:
-            self.chef_node.attributes.set_dotted('postfix.main.myhostname',
-                                                 self.mail_name)
-            self.log.info('Set the mail hostname value in main.cf to '
-                          '{mail_name}'.format(mail_name=self.mail_name))
-            self.chef_node.save()
-            self.log.info('Saved the Chef node configuration')
 
     def autorun(self):
         """
         Assign the EIP after the instance is up and configured.
         """
-
         super(PostfixMaster, self).autorun()
 
         if self.baked():

@@ -101,12 +101,8 @@ class Server(object):
         self.set_chef_attributes()
 
         if self.chef_server_url is None:
-            if self.environment == 'prod':
+            if self.subnet_id:
                 self.chef_server_url = ('https://chef12-vpc.app.hudl.com/'
-                                        'organizations/hudl'
-                                        )
-            elif self.environment == 'internal':
-                self.chef_server_url = ('https://chef12.app.hudl.com/'
                                         'organizations/hudl'
                                         )
             else:
