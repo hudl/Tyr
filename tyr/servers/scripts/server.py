@@ -19,9 +19,10 @@ class ScriptsServer(Server):
                  environment=None, ami=None, region=None, role=None,
                  keypair=None, availability_zone=None, security_groups=None,
                  block_devices=None, chef_path=None, subnet_id=None,
-                 dns_zones=None, ingress_groups_to_add=None,
-                 ports_to_authorize=None, classic_link=False,
-                 add_route53_dns=True, chef_server_url=None):
+                 dns_zones=None, platform=None, use_latest_ami=False,
+                 ingress_groups_to_add=None, ports_to_authorize=None,
+                 classic_link=False, add_route53_dns=True,
+                 chef_server_url=None):
 
         if server_type is None:
             server_type = self.SERVER_TYPE
@@ -29,22 +30,15 @@ class ScriptsServer(Server):
         if instance_type is None:
             instance_type = 't2.micro'
 
-        super(ScriptsServer, self).__init__(group=group, server_type=server_type,
-                                            instance_type=instance_type,
-                                            environment=environment,
-                                            ami=ami, region=region,
-                                            role=role, keypair=keypair,
-                                            availability_zone=availability_zone,
-                                            security_groups=security_groups,
-                                            block_devices=block_devices,
-                                            chef_path=chef_path,
-                                            subnet_id=subnet_id,
-                                            dns_zones=dns_zones,
-                                            ingress_groups_to_add=ingress_groups_to_add,
-                                            ports_to_authorize=ports_to_authorize,
-                                            classic_link=classic_link,
-                                            add_route53_dns=add_route53_dns,
-                                            chef_server_url=chef_server_url)
+        super(ScriptsServer, self).__init__(group, server_type, instance_type,
+                                            environment, ami, region, role,
+                                            keypair, availability_zone,
+                                            security_groups, block_devices,
+                                            chef_path, subnet_id, dns_zones,
+                                            platform, use_latest_ami,
+                                            ingress_groups_to_add,
+                                            ports_to_authorize, classic_link,
+                                            add_route53_dns, chef_server_url)
 
     def configure(self):
         super(ScriptsServer, self).configure()

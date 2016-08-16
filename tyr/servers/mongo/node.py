@@ -16,6 +16,7 @@ class MongoNode(Server):
                  keypair=None, availability_zone=None,
                  security_groups=None, block_devices=None,
                  chef_path=None, subnet_id=None, dns_zones=None,
+                 platform=None, use_latest_ami=False,
                  ingress_groups_to_add=None, ports_to_authorize=None,
                  classic_link=False, add_route53_dns=True, chef_server_url=None,
                  mongodb_version=None):
@@ -30,9 +31,10 @@ class MongoNode(Server):
                                         keypair, availability_zone,
                                         security_groups, block_devices,
                                         chef_path, subnet_id, dns_zones,
-                                        ingress_groups_to_add,
-                                        ports_to_authorize, classic_link,
-                                        add_route53_dns, chef_server_url)
+                                        platform, use_latest_ami,
+                                        ingress_groups_to_add, ports_to_authorize,
+                                        classic_link, add_route53_dns,
+                                        chef_server_url)
 
     def set_chef_attributes(self):
         super(MongoNode, self).set_chef_attributes()
@@ -61,7 +63,7 @@ class MongoNode(Server):
             self.IAM_ROLE_POLICIES.append('allow-mongo-backup-snapshot')
         elif self.environment == "stage":
             self.IAM_ROLE_POLICIES.append('allow-mongo-snapshot-cleanup')
-
+            self.IAM_MANAGED_POLICIES.append('allow-mongo-backup-restore')
         self.resolve_iam_role()
 
         if self.mongodb_version is None:

@@ -15,7 +15,8 @@ class SolrSlaveNode(Server):
                  environment=None, ami=None, region=None, role=None,
                  keypair=None, availability_zone=None, security_groups=None,
                  data_volume_size=None, data_volume_iops=None, chef_path=None,
-	     		 subnet_id=None, dns_zones=None, ingress_groups_to_add=None,
+                 subnet_id=None, dns_zones=None, platform=None,
+                 use_latest_ami=False, ingress_groups_to_add=None,
                  ports_to_authorize=None, classic_link=False,
                  add_route53_dns=True, chef_server_url=None, master=None):
 
@@ -23,9 +24,9 @@ class SolrSlaveNode(Server):
         self.data_volume_size = data_volume_size
         self.data_volume_iops = data_volume_iops
 
-    if self.data_volume_size is None:
-        self.log.info("No data volume set, defaulting to 200")
-        self.data_volume_size = 200
+        if self.data_volume_size is None:
+            self.log.info("No data volume set, defaulting to 200")
+            self.data_volume_size = 200
 
         if server_type is None:
             server_type = self.SERVER_TYPE
@@ -35,6 +36,7 @@ class SolrSlaveNode(Server):
                                             keypair, availability_zone,
                                             security_groups, None,
                                             chef_path, subnet_id, dns_zones,
+                                            platform, use_latest_ami,
                                             ingress_groups_to_add,
                                             ports_to_authorize, classic_link,
                                             add_route53_dns, chef_server_url)

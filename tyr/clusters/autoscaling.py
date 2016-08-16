@@ -1,5 +1,7 @@
+from boto.ec2.blockdevicemapping import BlockDeviceType, BlockDeviceMapping
 from boto.ec2.autoscale import LaunchConfiguration
 from boto.ec2.autoscale import AutoScalingGroup
+from boto.ec2.autoscale import Tag
 import boto.ec2
 import logging
 
@@ -15,15 +17,22 @@ class AutoScaler(object):
                  max_size=1,
                  min_size=1,
                  default_cooldown=300,
+                 tags=None,
+                 root_volume_size=None,
                  availability_zones=None,
                  subnet_ids=None,
                  health_check_grace_period=900):
+
         self.log = logging.getLogger('Tyr.Clusters.AutoScaler')
         self.log.setLevel(logging.DEBUG)
 
         self.launch_configuration = launch_configuration
         self.autoscaling_group = autoscaling_group
         self.desired_capacity = desired_capacity
+
+        self.tags = tags
+        self.volumes = None
+        self.root_volume_size = root_volume_size
 
         # You can set a list of availability zones explicitly, else it will
         # just use the one from the node object
@@ -61,6 +70,38 @@ class AutoScaler(object):
         except:
             raise
 
+    def establish_ec2_connection(self):
+
+        self.log.info('Using EC2 Region "{region}"'.format(
+                      region=self.node_obj.region))
+        self.log.info("Attempting to connect to EC2")
+
+        try:
+            self.ec2 = boto.ec2.connect_to_region(self.node_obj.region)
+            self.log.info('Established connection to EC2')
+        except Exception as e:
+            self.log.error(str(e))
+            raise e
+
+    def create_root_block_device(self):
+        # if the root volume size is not the same as the AMI default value:
+        if self.root_volume_size is not None:
+            # sda rather than xvda (for Windows)
+            dev_sda1 = BlockDeviceType()
+            dev_sda1.size = self.root_volume_size
+            dev_sda1.delete_on_termination = True
+            volume = BlockDeviceMapping()
+
+            # Check the OS type, if its windows we use sda, linux: xvda
+            images = self.ec2.get_all_images(image_ids=[self.node_obj.ami])
+            image = images[0]
+
+            if image.platform is None:
+                volume['/dev/xvda'] = dev_sda1
+            else:
+                volume['/dev/sda1'] = dev_sda1
+            self.volumes = volume
+
     def create_launch_configuration(self):
         self.log.info("Getting launch_configuration: {l}"
                       .format(l=self.launch_configuration))
@@ -76,6 +117,8 @@ class AutoScaler(object):
                                      security_groups=self.node_obj.
                                      get_security_group_ids(
                                          self.node_obj.security_groups),
+                                     instance_monitoring=False,
+                                     block_device_mappings=[self.volumes],
                                      user_data=self.node_obj.user_data,
                                      instance_type=self.node_obj.instance_type,
                                      instance_profile_name=self.node_obj.role)
@@ -90,7 +133,14 @@ class AutoScaler(object):
             self.log.info("Creating new autoscaling group: {g}"
                           .format(g=self.autoscaling_group))
 
+            # Convert our tags list into something that AWS can understand:
+            aws_tags = list()
+            for tag in self.tags:
+                self.log.info("Adding tag [" + str(tag['name']) + "] with value [" + str(tag['value']) + "]")
+                aws_tags.append(Tag(resource_id=self.autoscaling_group, key=tag['name'], value=tag['value'], propagate_at_launch=True))
+
             ag = AutoScalingGroup(name=self.autoscaling_group,
+                                  tags=aws_tags,
                                   availability_zones=self.
                                   autoscale_availability_zones,
                                   desired_capacity=self.desired_capacity,
@@ -103,11 +153,14 @@ class AutoScaler(object):
                                   vpc_zone_identifier=self.autoscale_subnets,
                                   connection=self.conn)
             self.conn.create_auto_scaling_group(ag)
+
         else:
             self.log.info('Autoscaling group {g} already exists.'
                           .format(g=self.autoscaling_group))
 
     def autorun(self):
         self.establish_autoscale_connection()
+        self.establish_ec2_connection()
+        self.create_root_block_device()
         self.create_launch_configuration()
         self.create_autoscaling_group()

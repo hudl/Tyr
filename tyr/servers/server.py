@@ -22,6 +22,7 @@ import cloudspecs.aws.ec2
 import re
 import boto3
 import subprocess
+from operator import attrgetter
 
 
 class Server(object):
@@ -35,6 +36,8 @@ class Server(object):
                                 'allow-describe-instances'
                                 ]
 
+    IAM_MANAGED_POLICIES = []
+
     IAM_ROLE_POLICIES = []
 
     STACKDRIVER_ALERTS = []
@@ -46,9 +49,10 @@ class Server(object):
                  environment=None, ami=None, region=None, role=None,
                  keypair=None, availability_zone=None, security_groups=None,
                  block_devices=None, chef_path=None, subnet_id=None,
-                 dns_zones=None, ingress_groups_to_add=None,
-                 ports_to_authorize=None, classic_link=False,
-                 add_route53_dns=True, chef_server_url=None):
+                 dns_zones=None, platform=None, use_latest_ami=False,
+                 ingress_groups_to_add=None, ports_to_authorize=None,
+                 classic_link=False, add_route53_dns=True,
+                 chef_server_url=None):
 
         self.instance_type = instance_type
         self.group = group
@@ -70,8 +74,27 @@ class Server(object):
         self.classic_link = classic_link
         self.add_route53_dns = add_route53_dns
         self.ebs_optimized = False
+        self.platform = platform
         self.create_alerts = False
         self.chef_server_url = chef_server_url
+        self.use_latest_ami = use_latest_ami
+
+    def get_latest_ami(self, ami=None, platform="linux"):
+        if ami is not None or self.use_latest_ami is False:
+            self.log.info('The AMI has already been set or use_latest_ami is False')
+            return ami
+
+        if self.platform is None or self.platform.lower() is "linux":
+            ami_filter = {'architecture': 'x86_64',
+                          'name': 'amzn-ami-hvm-*gp2'}
+        else:
+            ami_filter = {'architecture': 'x86_64',
+                          'name': 'Windows_Server-2012-R2_RTM-English-64Bit-Base-*'}
+
+        images = self.ec2.get_all_images(owners=['amazon'], filters=ami_filter)
+        image = sorted(images, key=attrgetter('creationDate'))[-1]
+
+        return image.id
 
     def establish_logger(self):
 
@@ -160,8 +183,13 @@ class Server(object):
         self.establish_route53_connection()
 
         if self.ami is None:
-            self.log.warn('No AMI provided')
-            self.ami = 'ami-8fcee4e5'
+            if self.use_latest_ami is False:
+                self.log.warn('No AMI provided')
+                self.ami = 'ami-6869aa05'
+            else:
+                self.log.warn('No AMI provided, searching for latest one...')
+                self.ami = self.get_latest_ami(self.ami)
+                self.log.info('Found AMI [' + str(self.ami) + ']')
 
         try:
             self.ec2.get_all_images(image_ids=[self.ami])
@@ -653,6 +681,20 @@ named {name}""".format(path=d['path'], name=d['name']))
 
         self.IAM_ROLE_POLICIES.extend(self.GLOBAL_IAM_ROLE_POLICIES)
         self.IAM_ROLE_POLICIES = list(set(self.IAM_ROLE_POLICIES))
+        for policy_template in self.IAM_ROLE_POLICIES:
+            policy = policy_template.format(environment=self.environment)
+
+        # If managed policies exist, then add them:
+        if (len(self.IAM_MANAGED_POLICIES) > 0):
+            self.log.info("Adding managed policies [" + str(self.IAM_MANAGED_POLICIES).format(environment=self.environment) + "] to role [" + self.role + "]")
+
+            for m_policy in self.IAM_MANAGED_POLICIES:
+                m_policy_id = m_policy.format(environment=self.environment)
+                arn = self.iam.get_user().user.arn
+                account_id = arn[arn.find('::')+2:arn.rfind(':')]
+                m_policy_arn = self.iam.get_policy("arn:aws:iam::{account_id}:policy/{policy}".format(account_id=account_id, policy=m_policy_id))
+                self.iam.attach_role_policy("arn:aws:iam::{account_id}:policy/{policy}".format(account_id=account_id, policy=m_policy_id), self.role)
+
         for policy_template in self.IAM_ROLE_POLICIES:
             policy = policy_template.format(environment=self.environment)
 
