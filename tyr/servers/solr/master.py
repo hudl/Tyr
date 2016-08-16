@@ -30,8 +30,24 @@ class SolrMasterNode(Server):
                                              ports_to_authorize, classic_link,
                                              add_route53_dns, chef_server_url)
 
+    def set_chef_attributes(self):
+        super(SolrMasterNode, self).set_chef_attributes()
+        self.CHEF_ATTRIBUTES['solr'] = {}
+
+        self.CHEF_ATTRIBUTES['solr']['is_master'] = True
+        self.log.info('Set solr.is_master to True')
+
+        self.CHEF_ATTRIBUTES['solr']['group'] = self.group
+        self.log.info('Set solr.group to {group}'.format(group=self.group))
+
+        self.CHEF_ATTRIBUTES['solr']['master_host'] = self.hostname
+        self.log.info('Set solr.master_host to {master}'.format(
+            master=self.hostname)
+        )
+
     def configure(self):
         super(SolrMasterNode, self).configure()
+        self.set_chef_attributes()
 
         self.security_groups = [
             'management',
@@ -44,18 +60,3 @@ class SolrMasterNode(Server):
 
     def bake(self):
         super(SolrMasterNode, self).bake()
-
-        with self.chef_api:
-            self.chef_node.attributes.set_dotted('solr.is_master', True)
-            self.log.info('Set solr.is_master to True')
-
-            self.chef_node.attributes.set_dotted('solr.group', self.group)
-            self.log.info('Set solr.group to {group}'.format(group=self.group))
-
-            self.chef_node.attributes.set_dotted('solr.master_host',
-                                                 self.hostname)
-            self.log.info('Set solr.master_host to {master}'.format(
-                          master=self.hostname))
-
-            self.chef_node.save()
-            self.log.info('Saved the Chef Node configuration')

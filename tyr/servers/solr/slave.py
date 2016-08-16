@@ -39,9 +39,39 @@ class SolrSlaveNode(Server):
                                             ports_to_authorize, classic_link,
                                             add_route53_dns, chef_server_url)
 
-    def configure(self):
+    def set_chef_attributes(self):
+        super(SolrSlaveNode, self).set_chef_attributes()
+        self.CHEF_ATTRIBUTES['solr'] = {}
 
+        self.CHEF_ATTRIBUTES['solr']['is_slave'] = True
+        self.log.info('Set solr.is_slave to True')
+
+        self.CHEF_ATTRIBUTES['solr']['is_master'] = False
+        self.log.info('Set solr.is_master to False')
+
+        self.CHEF_ATTRIBUTES['solr']['master_host'] = self.master
+        self.log.info('Set solr.master_host to {master}'.format(
+            master=self.master)
+        )
+
+        self.CHEF_ATTRIBUTES['solr']['group'] = self.group
+        self.log.info('Set solr.group to {group}'.format(group=self.group))
+
+        ebs_volumes = [
+            {
+                'user': 'tomcat',
+                'group': 'tomcat',
+                'size': self.data_volume_size,
+                'iops': self.data_volume_iops,
+                'device': '/dev/xvdg',
+                'mount': '/volr'
+            }
+        ]
+        self.CHEF_ATTRIBUTES['hudl_ebs'] = {'volumes': ebs_volumes}
+
+    def configure(self):
         super(SolrSlaveNode, self).configure()
+        self.set_chef_attributes()
 
         if self.master is None:
             self.log.critical('The solr master is not defined')
@@ -57,34 +87,4 @@ class SolrSlaveNode(Server):
         self.resolve_security_groups()
 
     def bake(self):
-
         super(SolrSlaveNode, self).bake()
-
-        with self.chef_api:
-            self.chef_node.attributes.set_dotted('solr.is_slave', True)
-            self.log.info('Set solr.is_slave to True')
-
-            self.chef_node.attributes.set_dotted('solr.is_master', False)
-            self.log.info('Set solr.is_master to False')
-
-            self.chef_node.attributes.set_dotted('solr.master_host',
-                                                 self.master)
-            self.log.info('Set solr.master_host to {master}'.format(
-                master=self.master))
-
-            self.chef_node.attributes.set_dotted('solr.group', self.group)
-            self.log.info('Set solr.group to {group}'.format(group=self.group))
-
-        self.chef_node.attributes.set_dotted('hudl_ebs.volumes', [
-            {
-                'user': 'tomcat',
-                'group': 'tomcat',
-                'size': self.data_volume_size,
-                'iops': self.data_volume_iops,
-                'device': '/dev/xvdg',
-                'mount': '/volr'
-            }
-        ])
-
-            self.chef_node.save()
-            self.log.info('Saved the Chef Node configuration')
