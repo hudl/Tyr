@@ -44,66 +44,66 @@ class KafkaBroker(Server):
                                           ports_to_authorize, classic_link,
                                           add_route53_dns, chef_server_url)
 
+    def set_chef_attributes(self):
+        super(KafkaBroker, self).set_chef_attributes()
+        self.CHEF_ATTRIBUTES['role_kafka'] = {}
+        self.CHEF_ATTRIBUTES['kafka'] = {}
+        self.CHEF_ATTRIBUTES['kafka']['broker'] = {}
+        self.CHEF_ATTRIBUTES['kafka']['broker']['zookeeper'] = {}
+
+
+        if self.volume_count:
+            if isinstance(self.volume_count, int):
+                self.CHEF_ATTRIBUTES['role_kafka']['volume_count'] = self.volume_count
+                self.log.info('Set role_kafka.volume_count to {}'
+                                .format(self.volume_count))
+            else:
+                raise TypeError('volume_count is of type {}. Expected integer'
+                                .format(type(self.volume_count)))
+        else:
+            self.log.info('role_kafka.volume_count is not set. Using default.')
+
+        if self.volume_size:
+            if isinstance(self.volume_size, int):
+                self.CHEF_ATTRIBUTES['role_kafka']['volume_size'] = self.volume_size
+                self.log.info('Set role_kafka.volume_size to {}'
+                                .format(self.volume_size))
+            else:
+                raise TypeError('volume_size is of type {}. Expected integer'
+                                .format(type(self.volume_size)))
+        else:
+            self.log.info('role_kafka.volume_size is not set. Using default.')
+
+        if self.volume_type:
+            if self.volume_type in VOLUME_TYPES:
+                self.CHEF_ATTRIBUTES['role_kafka']['volume_type'] = self.volume_type
+                self.log.info('Set role_kafka.volume_type to {}'
+                                .format(self.volume_type))
+            else:
+                raise ValueError('volume_type must be in {}. Received {}.'
+                                    .format(VOLUME_TYPES, self.volume_type))
+        else:
+            self.log.info('role_kafka.volume_type is not set. Using default.')
+
+        if self.logdir_root:
+            self.CHEF_ATTRIBUTES['role_kafka']['logdir_root'] = self.logdir_root
+            self.log.info('Set role_kafka.logdir_root to {}'
+                            .format(self.logdir_root))
+        else:
+            self.log.info('role_kafka.logdir_root not set. Using default.')
+
+        if self.zookeeper_connection:
+            self.CHEF_ATTRIBUTES['kafka']['broker']['zookeeper']['connect'] = self.zookeeper_connection
+            self.log.info('Set kafka.broker.zookeeper.connect to {}'
+                            .format(self.zookeeper_connection))
+        else:
+            self.CHEF_ATTRIBUTES['kafka']['automatic_start'] = False
+            self.log.warn('No zookeeper connection string given.'
+                            'Kafka will not be started on boot.')
+
+    def configure(self):
+        super(KafkaBroker, self).configure()
+        self.set_chef_attributes()
+
     def bake(self):
-
         super(KafkaBroker, self).bake()
-
-        with self.chef_api:
-
-            if self.volume_count:
-                if isinstance(self.volume_count, int):
-                    self.chef_node.attributes.set_dotted('role_kafka.volume_count',
-                                                         self.volume_count)
-                    self.log.info('Set role_kafka.volume_count to {}'
-                                  .format(self.volume_count))
-                else:
-                    raise TypeError('volume_count is of type {}. Expected integer'
-                                    .format(type(self.volume_count)))
-            else:
-                self.log.info('role_kafka.volume_count is not set. Using default.')
-
-            if self.volume_size:
-                if isinstance(self.volume_size, int):
-                    self.chef_node.attributes.set_dotted('role_kafka.volume_size',
-                                                         self.volume_size)
-                    self.log.info('Set role_kafka.volume_size to {}'
-                                  .format(self.volume_size))
-                else:
-                    raise TypeError('volume_size is of type {}. Expected integer'
-                                    .format(type(self.volume_size)))
-            else:
-                self.log.info('role_kafka.volume_size is not set. Using default.')
-
-            if self.volume_type:
-                if self.volume_type in VOLUME_TYPES:
-                    self.chef_node.attributes.set_dotted('role_kafka.volume_type',
-                                                         self.volume_type)
-                    self.log.info('Set role_kafka.volume_type to {}'
-                                  .format(self.volume_type))
-                else:
-                    raise ValueError('volume_type must be in {}. Received {}.'
-                                     .format(VOLUME_TYPES, self.volume_type))
-            else:
-                self.log.info('role_kafka.volume_type is not set. Using default.')
-
-            if self.logdir_root:
-                self.chef_node.attributes.set_dotted('role_kafka.logdir_root',
-                                                     self.logdir_root)
-                self.log.info('Set role_kafka.logdir_root to {}'
-                              .format(self.logdir_root))
-            else:
-                self.log.info('role_kafka.logdir_root not set. Using default.')
-
-            if self.zookeeper_connection:
-                self.chef_node.attributes.set_dotted('kafka.broker.zookeeper.connect',
-                                                     self.zookeeper_connection)
-                self.log.info('Set kafka.broker.zookeeper.connect to {}'
-                              .format(self.zookeeper_connection))
-            else:
-                self.chef_node.attributes.set_dotted('kafka.automatic_start',
-                                                     False)
-                self.log.warn('No zookeeper connection string given.'
-                              'Kafka will not be started on boot.')
-
-            self.chef_node.save()
-            self.log.info('Saved the Chef Node configuration')
