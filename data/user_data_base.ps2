@@ -106,10 +106,16 @@ function Get-HudlRoleAttributes {
         $environmentPrefix = $roleSplit[0]
         $group = $roleSplit[1]
         $serverRole = $roleSplit[2]
-        # special case for monolith here
+
+        # this block is needed until the old monolith is phased out completely,
+        # to make this compatible with old monolith ASG, add TreatAsNonMultiverseMonolith tag
+        # to the ASG and set the value to yes
         if ($group -eq "monolith"){
-            $serverRole = "Web"
-            $treatMonolithAsMultiverse = $true
+            # check the TreatAsNonMultiverseMonolith tag
+            $isNonMultiverseMonolith = Get-TreatAsNonMultiverseMonolith
+            if (-not $isNonMultiverseMonolith) {
+                $treatMonolithAsMultiverse = $true
+            }
         }
     } 
     # Thors should be treated as multiverse servers now
@@ -213,6 +219,15 @@ function Get-Apps {
     $instanceId = (New-Object System.Net.WebClient).DownloadString("http://169.254.169.254/latest/meta-data/instance-id")
     $appsTag =  Get-EC2Tag | Where-Object {$_.ResourceId -eq $instanceId -and $_.Key -eq 'Apps'}
     return $appsTag.Value
+}
+
+function Get-TreatAsNonMultiverseMonolith {
+    $instanceId = (New-Object System.Net.WebClient).DownloadString("http://169.254.169.254/latest/meta-data/instance-id")
+    $tag =  Get-EC2Tag | Where-Object {$_.ResourceId -eq $instanceId -and $_.Key -eq 'TreatAsNonMultiverseMonolith'}
+    if ($tag -and $tag.Value.ToLower() -eq "yes"){
+        return $true
+    }
+    return $false
 }
 
 $TextInfo = (Get-Culture).TextInfo
