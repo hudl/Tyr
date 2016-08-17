@@ -219,9 +219,9 @@ Do {
 } while ((-not (Check-AnyTagExists) ) -and ($sw.elapsed -lt $timeout))
 
 if (Check-AnyTagExists) {
-    Write-Output "Timed out waiting for tags"
-} else {
     Write-Output "Tags added continuing"
+} else {
+    Write-Output "Timed out waiting for tags"
 }
 
 $TextInfo = (Get-Culture).TextInfo
