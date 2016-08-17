@@ -213,7 +213,7 @@ function Get-MyName {
 $timeout = new-timespan -Minutes 5
 $sw = [diagnostics.stopwatch]::StartNew()
 
-### Wait until tags are set or it's longer than 5 minutes
+### Wait until tags are set and it's been waiting for less than 5 minutes
 Do {
     Write-Output "Waiting for tags to be added"
 } while ((-not (Check-AnyTagExists) ) -and ($sw.elapsed -lt $timeout))
