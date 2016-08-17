@@ -218,7 +218,7 @@ Do {
     Write-Output "Waiting for tags to be added"
 } while ((-not (Check-AnyTagExists) ) -and ($sw.elapsed -lt $timeout))
 
-if ($sw.elapsed -ge $timeout) {
+if (Check-AnyTagExists) {
     Write-Output "Timed out waiting for tags"
 } else {
     Write-Output "Tags added continuing"
