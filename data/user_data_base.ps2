@@ -415,11 +415,11 @@ $attributesContent = $attributesContent + @"
     Write-Output "Beginning write to file"
     [System.IO.File]::WriteAllLines($attributeFile, $attributesContent)
     Write-Output "Chef attributes saved"
-    $env:Path += ";C:\opscode\chef\bin"
     Write-Output "Starting Chef run."
 
     # Create a script for starting chef on disk then run it.
-    $runCommand = "Start-Process -FilePath ""chef-client"" -ArgumentList ""-c ``""c:\chef\client.rb``"" -r ``""role[$chef_role]``"" -L ``""c:\chef\chef-client-initial-run.log``"" -j ``""c:\chef\attributes.json``"" "" -Wait -NoNewWindow"
+    $runCommand = "`$env:Path += `";C:\opscode\chef\bin`"; Start-Process -FilePath `"chef-client`" -ArgumentList `"-c ``""c:\chef\client.rb``"" -r ``""role[$chef_role]``"" -L ``""c:\chef\chef-client-initial-run.log``"" -j ``""c:\chef\attributes.json``"" `" -Wait -NoNewWindow"
+    Write-Output $runCommand
     Write-Output $runCommand | Out-File $RUN_CHEF_SCRIPT
 
     Invoke-Expression $RUN_CHEF_SCRIPT
