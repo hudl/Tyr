@@ -8,6 +8,7 @@ Add-Type -Path "C:\Program Files (x86)\AWS Tools\PowerShell\AWSPowerShell\AWSSDK
 
 $AwsTools = Get-Module "AWSPowerShell"
 
+$RUN_CHEF_SCRIPT = "c:\\hudl\\run-chef.ps1"
 $BASE_DIR="C:\hudl"
 $CONFIG="$BASE_DIR\config"
 $LOG_DIR="$BASE_DIR\script-logs"
@@ -146,6 +147,16 @@ function New-ServerName {
     return $myName
 }
 
+function Check-AnyTagExists {
+    $tags = Get-EC2Tag -Filters @(@{Name="resource-id"; Values=$instanceId})
+    if ($tags) {
+        return $true
+    } else {
+        return $false
+    }
+}
+
+
 function GetNewId
 {
     $ticks = [System.DateTime]::Now.Ticks;
@@ -199,6 +210,20 @@ function Get-MyName {
     return $nameTag.Value
 }
 
+$timeout = new-timespan -Minutes 5
+$sw = [diagnostics.stopwatch]::StartNew()
+
+### Wait until tags are set and it's been waiting for less than 5 minutes
+Do {
+    Write-Output "Waiting for tags to be added"
+} while ((-not (Check-AnyTagExists) ) -and ($sw.elapsed -lt $timeout))
+
+if (Check-AnyTagExists) {
+    Write-Output "Tags added continuing"
+} else {
+    Write-Output "Timed out waiting for tags"
+}
+
 $TextInfo = (Get-Culture).TextInfo
 
 ### Determine server name and set it
@@ -206,6 +231,7 @@ $TextInfo = (Get-Culture).TextInfo
 ### Install chef
 $role = Get-MyRole
 Write-Host "Server IAM role is: $role"
+
 if ($role -eq "thor") {
     $servername = Get-MyName
     Write-Host "Not changing servername, as is thor - servername is: $serverName"
@@ -389,9 +415,15 @@ $attributesContent = $attributesContent + @"
     Write-Output "Beginning write to file"
     [System.IO.File]::WriteAllLines($attributeFile, $attributesContent)
     Write-Output "Chef attributes saved"
-    $env:Path += ";C:\opscode\chef\bin"
     Write-Output "Starting Chef run."
-    Start-Process -FilePath "chef-client" -ArgumentList "-c `"c:\chef\client.rb`" -r `"role[$chef_role]`" -L `"c:\chef\chef-client-initial-run.log`" -j `"c:\chef\attributes.json`"" -Wait -NoNewWindow
+
+    # Create a script for starting chef on disk then run it.
+    $runCommand = "`$env:Path += `";C:\opscode\chef\bin`"; Start-Process -FilePath `"chef-client`" -ArgumentList `"-c ``""c:\chef\client.rb``"" -r ``""role[$chef_role]``"" -L ``""c:\chef\chef-client-initial-run.log``"" -j ``""c:\chef\attributes.json``"" `" -Wait -NoNewWindow"
+    Write-Output $runCommand
+    Write-Output $runCommand | Out-File $RUN_CHEF_SCRIPT
+
+    Invoke-Expression $RUN_CHEF_SCRIPT
+
     Write-Output "Chef run started."
     }
 catch [Exception]{
