@@ -118,7 +118,7 @@ class Server(object):
             logging.getLogger('boto').setLevel(logging.CRITICAL)
 
     def set_chef_attributes(self):
-        self.CHEF_ATTRIBUTES['base_server'] = 'base_server_value'
+        pass
 
     def configure(self):
 
