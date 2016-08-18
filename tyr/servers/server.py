@@ -121,7 +121,6 @@ class Server(object):
         self.CHEF_ATTRIBUTES['base_server'] = 'base_server_value'
 
     def configure(self):
-        self.set_chef_attributes()
 
         if self.chef_server_url is None:
             if self.subnet_id:
@@ -340,6 +339,9 @@ class Server(object):
         if 'p' in self.environment[0] and self.create_alerts:
             self.apply_alerts()
 
+        self.set_chef_attributes()
+
+
     @property
     def location(self):
 
@@ -502,7 +504,7 @@ ssl_verify_mode :verify_none' > /etc/chef/client.rb
 /usr/bin/aws s3 cp s3://hudl-chef-artifacts/chef-client/encrypted_data_bag_secret /etc/chef/encrypted_data_bag_secret
 curl -L https://www.opscode.com/chef/install.sh | bash;
 yum install -y gcc
-python -c "import json; f = open('/var/tmp/attributes.json', 'w'); json.dump({attributes}, f)"
+printf "%s" "{attributes}" > /etc/chef/attributes.json
 cp /var/tmp/attributes.json /etc/chef/attributes.json
 chef-client -r '{run_list}' -L {logfile} -j /etc/chef/attributes.json
 --===============0035287898381899620==--
@@ -530,7 +532,8 @@ chef-client -r '{run_list}' -L {logfile} -j /etc/chef/attributes.json
                                chef_server_url=self.chef_server_url,
                                validation_key=validation_key,
                                name=self.name,
-                               attributes=self.CHEF_ATTRIBUTES,
+                               attributes=json.dumps(self.CHEF_ATTRIBUTES)
+                               .replace('"', '\\"'),
                                run_list=self.CHEF_RUNLIST[0],
                                logfile='/var/log/chef-client.log')
 

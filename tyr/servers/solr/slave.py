@@ -24,10 +24,6 @@ class SolrSlaveNode(Server):
         self.data_volume_size = data_volume_size
         self.data_volume_iops = data_volume_iops
 
-        if self.data_volume_size is None:
-            self.log.info("No data volume set, defaulting to 200")
-            self.data_volume_size = 200
-
         if server_type is None:
             server_type = self.SERVER_TYPE
 
@@ -45,10 +41,10 @@ class SolrSlaveNode(Server):
         super(SolrSlaveNode, self).set_chef_attributes()
         self.CHEF_ATTRIBUTES['solr'] = {}
 
-        self.CHEF_ATTRIBUTES['solr']['is_slave'] = True
+        self.CHEF_ATTRIBUTES['solr']['is_slave'] = 'true'
         self.log.info('Set solr.is_slave to True')
 
-        self.CHEF_ATTRIBUTES['solr']['is_master'] = False
+        self.CHEF_ATTRIBUTES['solr']['is_master'] = 'false'
         self.log.info('Set solr.is_master to False')
 
         self.CHEF_ATTRIBUTES['solr']['master_host'] = self.master
@@ -74,6 +70,10 @@ class SolrSlaveNode(Server):
     def configure(self):
         super(SolrSlaveNode, self).configure()
         self.set_chef_attributes()
+
+        if self.data_volume_size is None:
+            self.log.info("No data volume set, defaulting to 200")
+            self.data_volume_size = 200
 
         if self.master is None:
             self.log.critical('The solr master is not defined')

@@ -36,7 +36,7 @@ class SolrMasterNode(Server):
         super(SolrMasterNode, self).set_chef_attributes()
         self.CHEF_ATTRIBUTES['solr'] = {}
 
-        self.CHEF_ATTRIBUTES['solr']['is_master'] = True
+        self.CHEF_ATTRIBUTES['solr']['is_master'] = 'true'
         self.log.info('Set solr.is_master to True')
 
         self.CHEF_ATTRIBUTES['solr']['group'] = self.group
