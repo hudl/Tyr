@@ -30,7 +30,6 @@ class MongoArbiterNode(MongoReplicaSetMember):
                                                add_route53_dns, chef_server_url,
                                                replica_set, mongodb_version)
 
-
     def set_chef_attributes(self):
         super(MongoArbiterNode, self).set_chef_attributes()
         ebs_volumes = [
@@ -61,6 +60,3 @@ class MongoArbiterNode(MongoReplicaSetMember):
         self.CHEF_ATTRIBUTES['mongodb']['config'] = {}
         self.CHEF_ATTRIBUTES['mongodb']['config'] = {'smallfiles': True}
         self.log.info('Configured the mongodb.config.smallfiles attribute')
-
-    def bake(self):
-        super(MongoArbiterNode, self).bake()

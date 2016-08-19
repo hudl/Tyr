@@ -107,5 +107,3 @@ class KafkaBroker(Server):
         super(KafkaBroker, self).configure()
         self.set_chef_attributes()
 
-    def bake(self):
-        super(KafkaBroker, self).bake()

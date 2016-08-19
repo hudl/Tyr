@@ -52,6 +52,3 @@ class ZookeeperServer(Server):
     def configure(self):
         super(ZookeeperServer, self).configure()
         self.set_chef_attributes()
-
-    def bake(self):
-        super(ZookeeperServer, self).bake()

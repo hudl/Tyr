@@ -1078,21 +1078,6 @@ named {name}""".format(path=d['path'], name=d['name']))
             self.log.info('Failed to terminate {instance}'.format(
                 instance=instance_id))
 
-    def ami_type(self):
-        ami_type = ''
-        try:
-            ec2_client = boto3.client('ec2')
-            image_details = ec2_client.describe_images(ImageIds=[self.ami])
-            ami_type = image_details['Images'][0]['Platform']
-        except KeyError:
-            ami_type = None
-            pass
-        except Exception as e:
-            self.log.error('Unable to get AMI info: {err}'.format(err=e))
-            raise e
-
-        return ami_type
-
     def bake(self):
         if self.CHEF_RUNLIST:
             chef_path = os.path.expanduser(self.chef_path)

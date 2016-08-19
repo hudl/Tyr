@@ -96,6 +96,3 @@ class MongoNode(Server):
         r = self.run(command)
 
         return json.loads(r['out'].split('\n')[2])
-
-    def bake(self):
-        super(MongoNode, self).bake()

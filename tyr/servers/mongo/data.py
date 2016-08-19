@@ -185,6 +185,3 @@ class MongoDataNode(MongoReplicaSetMember):
         self.validate_ebs_volume('data')
         self.validate_ebs_volume('journal')
         self.validate_ebs_volume('log')
-
-    def bake(self):
-        super(MongoDataNode, self).bake()

@@ -73,6 +73,3 @@ class MongoConfigNode(MongoNode):
 
         self.CHEF_ATTRIBUTES['hudl_ebs'] = {'volumes': ebs_volumes}
         self.log.info('Configured the hudl_ebs.volumes attribute')
-
-    def bake(self):
-        super(MongoConfigNode, self).bake()

@@ -60,6 +60,3 @@ class MongoReplicaSetMember(MongoNode):
         )
 
         return tags
-
-    def bake(self):
-        super(MongoReplicaSetMember, self).bake()

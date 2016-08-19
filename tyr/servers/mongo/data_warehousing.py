@@ -1,4 +1,5 @@
 from member import MongoReplicaSetMember
+import sys
 
 
 class MongoDataWarehousingNode(MongoReplicaSetMember):
@@ -57,7 +58,8 @@ class MongoDataWarehousingNode(MongoReplicaSetMember):
             sys.exit(1)
 
         self.log.info('Using data volume size "{size}"'.format(
-                                            size=self.data_volume_size))
+            size=self.data_volume_size)
+        )
 
     def bake(self):
 

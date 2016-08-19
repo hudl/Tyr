@@ -87,6 +87,3 @@ class SolrSlaveNode(Server):
         ]
 
         self.resolve_security_groups()
-
-    def bake(self):
-        super(SolrSlaveNode, self).bake()

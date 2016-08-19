@@ -160,14 +160,11 @@ class PostfixMaster(Server):
 
         return alloc_id
 
-    def bake(self):
-        super(PostfixMaster, self).bake()
-
     def autorun(self):
         """
         Assign the EIP after the instance is up and configured.
         """
         super(PostfixMaster, self).autorun()
 
-        if self.baked():
+        if super(PostfixMaster, self).bake():
             self.assign_eip()
