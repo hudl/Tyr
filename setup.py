@@ -29,7 +29,8 @@ setup(
         'PyYAML',
         'requests',
         'nose',
-        'cloudspecs'
+        'cloudspecs',
+        'boto3'
     ],
     scripts=[
         'scripts/replace-mongodb-servers',

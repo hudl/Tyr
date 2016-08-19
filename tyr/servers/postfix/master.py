@@ -15,7 +15,7 @@ class PostfixMaster(Server):
                  chef_path=None, subnet_id=None, dns_zones=None,
                  platform=None, use_latest_ami=False,
                  ingress_groups_to_add=None, ports_to_authorize=None,
-                 classic_link=False, add_route53_dns=True,
+                 classic_link=False, add_route53_dns=True, chef_server_url=None,
                  mail_name=None):
 
         if server_type is None:
@@ -26,8 +26,10 @@ class PostfixMaster(Server):
                                             keypair, availability_zone,
                                             security_groups, block_devices,
                                             chef_path, subnet_id, dns_zones,
-                                            platform, use_latest_ami, ingress_groups_to_add,
-                                            ports_to_authorize, classic_link, add_route53_dns)
+                                            platform, use_latest_ami,
+                                            ingress_groups_to_add,
+                                            ports_to_authorize, classic_link,
+                                            add_route53_dns, chef_server_url)
 
         try:
             if mail_name is not None:
@@ -41,8 +43,19 @@ class PostfixMaster(Server):
             self.log.critical(str(e))
             raise e
 
+    def set_chef_attributes(self):
+        """
+        Add the myhostname attribute for the main.cf postfix config
+        """
+        super(PostfixMaster, self).set_chef_attributes()
+        self.CHEF_ATTRIBUTES['postfix'] = {}
+        self.CHEF_ATTRIBUTES['postfix']['main'] = {'myhostname': self.mail_name}
+        self.log.info('Set the mail hostname value in main.cf to '
+                      '{mail_name}'.format(mail_name=self.mail_name))
+
     def configure(self):
         super(PostfixMaster, self).configure()
+        self.set_chef_attributes()
 
         if self.mail_name:
             self.ELASTIC_IP = self.check_mail_server()
@@ -147,27 +160,11 @@ class PostfixMaster(Server):
 
         return alloc_id
 
-    def bake(self):
-        """
-        Add the myhostname attribute for the main.cf postfix config
-        """
-
-        super(PostfixMaster, self).bake()
-
-        with self.chef_api:
-            self.chef_node.attributes.set_dotted('postfix.main.myhostname',
-                                                 self.mail_name)
-            self.log.info('Set the mail hostname value in main.cf to '
-                          '{mail_name}'.format(mail_name=self.mail_name))
-            self.chef_node.save()
-            self.log.info('Saved the Chef node configuration')
-
     def autorun(self):
         """
         Assign the EIP after the instance is up and configured.
         """
-
         super(PostfixMaster, self).autorun()
 
-        if self.baked():
+        if super(PostfixMaster, self).bake():
             self.assign_eip()

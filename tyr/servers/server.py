@@ -19,6 +19,9 @@ from tyr.policies import policies
 from tyr.utilities.stackdriver import set_maintenance_mode
 from tyr.alerts.stackdriver import StackDriver
 import cloudspecs.aws.ec2
+import re
+import boto3
+import subprocess
 from operator import attrgetter
 
 
@@ -40,14 +43,16 @@ class Server(object):
     STACKDRIVER_ALERTS = []
 
     CHEF_RUNLIST = ['role[RoleBase]']
+    CHEF_ATTRIBUTES = {}
 
     def __init__(self, group=None, server_type=None, instance_type=None,
                  environment=None, ami=None, region=None, role=None,
                  keypair=None, availability_zone=None, security_groups=None,
                  block_devices=None, chef_path=None, subnet_id=None,
-                 dns_zones=None, platform=None, use_latest_ami=False, 
+                 dns_zones=None, platform=None, use_latest_ami=False,
                  ingress_groups_to_add=None, ports_to_authorize=None,
-                 classic_link=False, add_route53_dns=True):
+                 classic_link=False, add_route53_dns=True,
+                 chef_server_url=None):
 
         self.instance_type = instance_type
         self.group = group
@@ -71,6 +76,7 @@ class Server(object):
         self.ebs_optimized = False
         self.platform = platform
         self.create_alerts = False
+        self.chef_server_url = chef_server_url
         self.use_latest_ami = use_latest_ami
 
     def get_latest_ami(self, ami=None, platform="linux"):
@@ -111,7 +117,20 @@ class Server(object):
             # Reduce boto logging
             logging.getLogger('boto').setLevel(logging.CRITICAL)
 
+    def set_chef_attributes(self):
+        pass
+
     def configure(self):
+
+        if self.chef_server_url is None:
+            if self.subnet_id:
+                self.chef_server_url = ('https://chef12-vpc.app.hudl.com/'
+                                        'organizations/hudl'
+                                        )
+            else:
+                self.chef_server_url = ('https://chef12-ec2.app.hudl.com/'
+                                        'organizations/hudl'
+                                        )
 
         if self.instance_type is None:
             self.log.warn('No Instance Type provided')
@@ -225,7 +244,7 @@ class Server(object):
                               availability_zone=self.availability_zone))
 
         if len(self.availability_zone) == 1:
-            self.availability_zone = self.region+self.availability_zone
+            self.availability_zone = self.region + self.availability_zone
 
         valid = lambda z: z in [zone.name for zone in self.ec2.get_all_zones()]
 
@@ -320,6 +339,9 @@ class Server(object):
         if 'p' in self.environment[0] and self.create_alerts:
             self.apply_alerts()
 
+        self.set_chef_attributes()
+
+
     @property
     def location(self):
 
@@ -345,7 +367,7 @@ class Server(object):
         except Exception:
             pass
 
-        template = self.NAME_SEARCH_PREFIX+'*'
+        template = self.NAME_SEARCH_PREFIX + '*'
 
         name_filter = template.format(**supplemental)
 
@@ -369,8 +391,8 @@ class Server(object):
         index = -1
 
         for i in range(99):
-            if (i+1) not in indexes:
-                index = i+1
+            if (i + 1) not in indexes:
+                index = i + 1
                 break
 
         self.index = str(index)
@@ -436,6 +458,14 @@ class Server(object):
 
     @property
     def user_data(self):
+        # Cannot use CamelCase for roles on the Chef12 Server convert to lower.
+        if re.match('.+chef12.+', self.chef_server_url):
+            self.CHEF_RUNLIST = map(lambda l: l.lower(), self.CHEF_RUNLIST)
+            msg = """
+            Chef 12 Server Detected - all Roles must be in lower case!
+            Double-check that you have the corresponding Role(s) on Chef 12.
+            """
+            self.log.warn(msg)
 
         template = """Content-Type: multipart/mixed; boundary="===============0035287898381899620=="
 MIME-Version: 1.0
@@ -466,23 +496,45 @@ touch /etc/chef/client.rb
 mkdir -p /etc/chef/ohai/hints
 touch /etc/chef/ohai/hints/ec2.json
 echo '{validation_key}' > /etc/chef/validation.pem
-echo 'chef_server_url "http://chef.app.hudl.com/"
+echo 'chef_server_url "{chef_server_url}"
 node_name "{name}"
-validation_client_name "chef-validator"' > /etc/chef/client.rb
+environment "{chef_env}"
+validation_client_name "{validation_client_name}"
+ssl_verify_mode :verify_none' > /etc/chef/client.rb
 /usr/bin/aws s3 cp s3://hudl-chef-artifacts/chef-client/encrypted_data_bag_secret /etc/chef/encrypted_data_bag_secret
 curl -L https://www.opscode.com/chef/install.sh | bash;
 yum install -y gcc
-chef-client -S 'http://chef.app.hudl.com/' -N {name} -L {logfile}
+printf "%s" "{attributes}" > /etc/chef/attributes.json
+cp /var/tmp/attributes.json /etc/chef/attributes.json
+chef-client -r '{run_list}' -L {logfile} -j /etc/chef/attributes.json
 --===============0035287898381899620==--
 """
 
-        validation_key_path = os.path.expanduser('~/.chef/chef-validator.pem')
-        validation_key_file = open(validation_key_path, 'r')
+        try:
+            validation_key_path = os.path.join(self.chef_path,
+                                               'hudl-validator.pem')
+            validation_key_file = open(validation_key_path, 'r')
+        except IOError:
+            validation_key_path = os.path.join(self.chef_path,
+                                               'chef-validator.pem')
+            validation_key_file = open(validation_key_path, 'r')
+
         validation_key = validation_key_file.read()
 
+        validation_client = 'hudl-validator'
+
+        if re.match('.*chef\.app\.hudl\.com.*', self.chef_server_url):
+            validation_client = 'chef-validator'
+
         return template.format(hostname=self.hostname,
+                               chef_env=self.environment,
+                               validation_client_name=validation_client,
+                               chef_server_url=self.chef_server_url,
                                validation_key=validation_key,
                                name=self.name,
+                               attributes=json.dumps(self.CHEF_ATTRIBUTES)
+                               .replace('"', '\\"'),
+                               run_list=self.CHEF_RUNLIST[0],
                                logfile='/var/log/chef-client.log')
 
     @property
@@ -1021,10 +1073,10 @@ named {name}""".format(path=d['path'], name=d['name']))
 
         if instance_id in terminated:
             self.log.info('Successfully terminated {instance}'.format(
-                            instance=instance_id))
+                instance=instance_id))
         else:
             self.log.info('Failed to terminate {instance}'.format(
-                            instance=instance_id))
+                instance=instance_id))
 
     def bake(self):
         if self.CHEF_RUNLIST:
@@ -1040,6 +1092,14 @@ named {name}""".format(path=d['path'], name=d['name']))
                                   node=self.name))
                 except chef.exceptions.ChefServerNotFoundError:
                     pass
+                except chef.exceptions.ChefServerError as e:
+                    # This gets thrown on chef12 when the client/node does not
+                    # exist.
+                    if str(e) == 'Forbidden':
+                        pass
+                    else:
+                        self.log.error(str(e))
+                        raise e
                 except Exception as e:
                     self.log.error(str(e))
                     raise e
@@ -1052,29 +1112,17 @@ named {name}""".format(path=d['path'], name=d['name']))
                                   .format(client=self.name))
                 except chef.exceptions.ChefServerNotFoundError:
                     pass
+                except chef.exceptions.ChefServerError as e:
+                    # This gets thrown on chef12 when the client/node does not
+                    # exist.
+                    if str(e) == 'Forbidden':
+                        pass
+                    else:
+                        self.log.error(str(e))
+                        raise e
                 except Exception as e:
                     self.log.error(str(e))
                     raise e
-
-                node = chef.Node.create(self.name)
-
-                self.chef_node = node
-
-                self.log.info('Created new Chef Node "{node}"'.format(
-                              node=self.name))
-
-                self.chef_node.chef_environment = self.environment
-
-                self.log.info('Set the Chef Environment to "{env}"'.format(
-                              env=self.chef_node.chef_environment))
-
-                self.chef_node.run_list = self.CHEF_RUNLIST
-
-                self.log.info('Set Chef run list to {list}'.format(
-                              list=self.chef_node.run_list))
-
-                self.chef_node.save()
-                self.log.info('Saved the Chef Node configuration')
 
     def baked(self):
         if self.CHEF_RUNLIST:

@@ -19,7 +19,7 @@ class ZookeeperServer(Server):
                  block_devices=None, chef_path=None, subnet_id=None,
                  dns_zones=None, platform=None, use_latest_ami=False,
                  ingress_groups_to_add=None, ports_to_authorize=None,
-                 classic_link=False, add_route53_dns=True,
+                 classic_link=False, add_route53_dns=True, chef_server_url=None,
                  exhibitor_s3config=None):
 
         if server_type is None:
@@ -32,22 +32,23 @@ class ZookeeperServer(Server):
                                               keypair, availability_zone,
                                               security_groups, block_devices,
                                               chef_path, subnet_id, dns_zones,
-                                              platform, use_latest_ami, ingress_groups_to_add,
-                                              ports_to_authorize, classic_link, add_route53_dns)
+                                              platform, use_latest_ami,
+                                              ingress_groups_to_add,
+                                              ports_to_authorize, classic_link,
+                                              add_route53_dns, chef_server_url)
 
-    def bake(self):
+    def set_chef_attributes(self):
+        super(ZookeeperServer, self).set_chef_attributes()
+        if self.exhibitor_s3config:
+            self.CHEF_ATTRIBUTES['exhibitor'] = {
+                'cli': {'s3config': self.exhibitor_s3config}
+            }
+            self.log.info('Set exhibitor.cli.s3config to {}'.format(
+                self.exhibitor_s3config)
+            )
+        else:
+            self.log.info('exhibitor.cli.s3config not set. Using default.')
 
-        super(ZookeeperServer, self).bake()
-
-        with self.chef_api:
-
-            if self.exhibitor_s3config:
-                        self.chef_node.attributes.set_dotted('exhibitor.cli.s3config',
-                                                             self.exhibitor_s3config)
-                        self.log.info('Set exhibitor.cli.s3config to {}'
-                                      .format(self.exhibitor_s3config))
-            else:
-                self.log.info('exhibitor.cli.s3config not set. Using default.')
-
-            self.chef_node.save()
-            self.log.info('Saved the Chef Node configuration')
+    def configure(self):
+        super(ZookeeperServer, self).configure()
+        self.set_chef_attributes()

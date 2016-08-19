@@ -1,4 +1,5 @@
 from member import MongoReplicaSetMember
+import sys
 
 
 class MongoDataWarehousingNode(MongoReplicaSetMember):
@@ -21,18 +22,25 @@ class MongoDataWarehousingNode(MongoReplicaSetMember):
                  keypair=None, availability_zone=None,
                  security_groups=None, block_devices=None,
                  chef_path=None, subnet_id=None, dns_zones=None,
+                 ingress_groups_to_add=None, ports_to_authorize=None,
+                 classic_link=False, add_route53_dns=True, chef_server_url=None,
                  replica_set=None, data_volume_size=None,
                  mongodb_version=None):
 
         super(MongoDataWarehousingNode, self).__init__(group, server_type,
                                                        instance_type,
-                                                       environment,  ami,
+                                                       environment, ami,
                                                        region, role, keypair,
                                                        availability_zone,
                                                        security_groups,
                                                        block_devices,
                                                        chef_path, subnet_id,
                                                        dns_zones,
+                                                       ingress_groups_to_add,
+                                                       ports_to_authorize,
+                                                       classic_link,
+                                                       add_route53_dns,
+                                                       chef_server_url,
                                                        replica_set,
                                                        mongodb_version)
 
@@ -50,7 +58,8 @@ class MongoDataWarehousingNode(MongoReplicaSetMember):
             sys.exit(1)
 
         self.log.info('Using data volume size "{size}"'.format(
-                                            size=self.data_volume_size))
+            size=self.data_volume_size)
+        )
 
     def bake(self):
 
