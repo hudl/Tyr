@@ -1,8 +1,13 @@
 <powershell>
 # Fetch Windows User Data from GitHub
 
+$HUDL_DIRECTORY = "c:\\hudl"
 $USER_DATA_URI = "https://s3.amazonaws.com/hudl-chef-artifacts/windows/user_data_base.ps2"
 $USER_DATA_FILE_PATH = "c:\\hudl\\user_data_base.ps1"
+
+if(!(Test-Path -Path $HUDL_DIRECTORY )){
+    New-Item -ItemType directory -Path $HUDL_DIRECTORY
+}
 
 Write-Output "Fetching user data from GitHub"
 Invoke-WebRequest $USER_DATA_URI -OutFile $USER_DATA_FILE_PATH
