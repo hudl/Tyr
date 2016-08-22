@@ -1,0 +1,12 @@
+<powershell>
+# Fetch Windows User Data from GitHub
+
+$USER_DATA_URI = "https://github.com/hudl/Tyr/raw/master/data/user_data_base.ps2"
+$USER_DATA_FILE_PATH = "c:\\hudl\\user_data_base.ps1"
+
+Write-Output "Fetching user data from GitHub"
+Invoke-WebRequest $USER_DATA_URI -OutFile $USER_DATA_FILE_PATH
+
+Write-Output "Executing user data"
+Invoke-Expression $USER_DATA_FILE_PATH
+</powershell>
