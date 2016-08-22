@@ -86,7 +86,7 @@ class IISNode(Server):
         # read in userdata file
         user_data = None
         try:
-            f = data_file('user_data_base_fetch_github.ps2')
+            f = data_file('user_data_base_fetch_s3.ps2')
             user_data = f.read()
         except IOError:
             self.log.critical('No user info found, exiting!')
