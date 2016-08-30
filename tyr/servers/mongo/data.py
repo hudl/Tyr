@@ -21,17 +21,31 @@ class MongoDataNode(MongoReplicaSetMember):
                  replica_set=None, mongodb_version=None, data_volume_size=None,
                  data_volume_iops=None, journal_volume_size=None,
                  journal_volume_iops=None, log_volume_size=None,
-                 log_volume_iops=None):
+                 log_volume_iops=None, install_automation_agent=None, mongo_cm_group=None):
 
-        super(MongoDataNode, self).__init__(group, server_type, instance_type,
-                                            environment, ami, region, role,
-                                            keypair, availability_zone,
-                                            security_groups, block_devices,
-                                            chef_path, subnet_id, dns_zones,
-                                            ingress_groups_to_add,
-                                            ports_to_authorize, classic_link,
-                                            add_route53_dns, chef_server_url,
-                                            replica_set, mongodb_version)
+        super(MongoDataNode, self).__init__(group=group, 
+                                            server_type=server_type, 
+                                            instance_type=instance_type,
+                                            environment=environment, 
+                                            ami=ami, 
+                                            region=region, 
+                                            role=role,
+                                            keypair=keypair,
+                                            availability_zone=availability_zone,
+                                            security_groups=security_groups, 
+                                            block_devices=block_devices,
+                                            chef_path=chef_path,
+                                            subnet_id=subnet_id,
+                                            dns_zones=dns_zones,
+                                            ingress_groups_to_add=ingress_groups_to_add,
+                                            ports_to_authorize=ports_to_authorize,
+                                            classic_link=classic_link,
+                                            add_route53_dns=add_route53_dns,
+                                            chef_server_url=chef_server_url,
+                                            replica_set=replica_set,
+                                            mongodb_version=mongodb_version,
+                                            install_automation_agent=install_automation_agent,
+                                            mongo_cm_group=mongo_cm_group)
 
         self.data_volume_size = data_volume_size
         self.data_volume_iops = data_volume_iops
@@ -39,6 +53,7 @@ class MongoDataNode(MongoReplicaSetMember):
         self.journal_volume_iops = journal_volume_iops
         self.log_volume_size = log_volume_size
         self.log_volume_iops = log_volume_iops
+
 
     def validate_ebs_volume(self, volume_type):
         volume_size = 0

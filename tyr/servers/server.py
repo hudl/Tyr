@@ -124,13 +124,9 @@ class Server(object):
 
         if self.chef_server_url is None:
             if self.subnet_id:
-                self.chef_server_url = ('https://chef12-vpc.app.hudl.com/'
-                                        'organizations/hudl'
-                                        )
+                self.chef_server_url = 'https://chef12-vpc.app.hudl.com/organizations/hudl'
             else:
-                self.chef_server_url = ('https://chef12-ec2.app.hudl.com/'
-                                        'organizations/hudl'
-                                        )
+                self.chef_server_url = 'https://chef12-ec2.app.hudl.com/organizations/hudl'
 
         if self.instance_type is None:
             self.log.warn('No Instance Type provided')
@@ -459,6 +455,7 @@ class Server(object):
     @property
     def user_data(self):
         # Cannot use CamelCase for roles on the Chef12 Server convert to lower.
+        self.log.info("comparing chef12. to " + self.chef_server_url)
         if re.match('.+chef12.+', self.chef_server_url):
             self.CHEF_RUNLIST = map(lambda l: l.lower(), self.CHEF_RUNLIST)
             msg = """
@@ -505,7 +502,6 @@ ssl_verify_mode :verify_none' > /etc/chef/client.rb
 curl -L https://www.opscode.com/chef/install.sh | bash;
 yum install -y gcc
 printf "%s" "{attributes}" > /etc/chef/attributes.json
-cp /var/tmp/attributes.json /etc/chef/attributes.json
 chef-client -r '{run_list}' -L {logfile} -j /etc/chef/attributes.json
 --===============0035287898381899620==--
 """
