@@ -31,7 +31,7 @@ $REGIONS = @{'ap-northeast-1' = 'apne1';
 
 Set-DefaultAWSRegion -Region $region
 
-function Create-DirIfNotPresent {
+function New-DirIfNotPresent {
 Param (
     [Parameter(Mandatory=$True )] [string]$DirPath
 )
@@ -40,9 +40,9 @@ Param (
     }
 }
 
-Create-DirIfNotPresent $BASE_DIR
-Create-DirIfNotPresent $CONFIG
-Create-DirIfNotPresent $LOG_DIR
+New-DirIfNotPresent $BASE_DIR
+New-DirIfNotPresent $CONFIG
+New-DirIfNotPresent $LOG_DIR
 
 # ----------------------------------------------------------------------------------------------
 # download a file
