@@ -502,7 +502,7 @@ environment "{chef_env}"
 validation_client_name "{validation_client_name}"
 ssl_verify_mode :verify_none' > /etc/chef/client.rb
 /usr/bin/aws s3 cp s3://hudl-chef-artifacts/chef-client/encrypted_data_bag_secret /etc/chef/encrypted_data_bag_secret
-curl -L https://www.opscode.com/chef/install.sh | bash;
+curl -L https://omnitruck.chef.io/install.sh | sudo bash -s -- -v 12.13.37
 yum install -y gcc
 printf "%s" "{attributes}" > /etc/chef/attributes.json
 cp /var/tmp/attributes.json /etc/chef/attributes.json

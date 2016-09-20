@@ -30,11 +30,19 @@ $REGIONS = @{'ap-northeast-1' = 'apne1';
              'us-west-2'= 'usw2'}
 
 Set-DefaultAWSRegion -Region $region
-try {
-  New-Item $BASE_DIR -type directory
-  New-Item $CONFIG -type directory
-  New-Item $LOG_DIR -type directory
-} catch {}
+
+function New-DirIfNotPresent {
+Param (
+    [Parameter(Mandatory=$True )] [string]$DirPath
+)
+    if(!(Test-Path -Path $DirPath )){
+        New-Item -ItemType directory -Path $DirPath
+    }
+}
+
+New-DirIfNotPresent $BASE_DIR
+New-DirIfNotPresent $CONFIG
+New-DirIfNotPresent $LOG_DIR
 
 # ----------------------------------------------------------------------------------------------
 # download a file
