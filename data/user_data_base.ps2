@@ -87,7 +87,6 @@ function Get-HudlRoleAttributes {
     $role = Get-MyRole
 
     #reset values
-    $treatMonolithAsMultiverse = $false
     $environment = $environmentPrefix = $serverRole = $group = ""
 
     $roleSplit = $role -Split '-'
@@ -96,28 +95,11 @@ function Get-HudlRoleAttributes {
         $environmentPrefix = $roleSplit[0]
         $serverRole = $roleSplit[1]
         $group = "monolith"
-        # special case for queuedservices and admin here
-        if ($serverRole -eq "queues" -or $serverRole -eq "admin") {
-            $serverRole = "Web"
-            $treatMonolithAsMultiverse = $true
-        }
-        
     } elseif ($roleSplit.Length -eq 3) {
         # [0] - Environment Letter, [1] - mvgroupmvgroup, [2] - server role
         $environmentPrefix = $roleSplit[0]
         $group = $roleSplit[1]
         $serverRole = $roleSplit[2]
-
-        # this block is needed until the old monolith is phased out completely,
-        # to make this compatible with old monolith ASG, add TreatAsNonMultiverseMonolith tag
-        # to the ASG and set the value to yes
-        if ($group -eq "monolith"){
-            # check the TreatAsNonMultiverseMonolith tag
-            $isNonMultiverseMonolith = Get-TreatAsNonMultiverseMonolith
-            if (-not $isNonMultiverseMonolith) {
-                $treatMonolithAsMultiverse = $true
-            }
-        }
     } 
     # Thors should be treated as multiverse servers now
     elseif ($role -eq "thor") {
@@ -125,7 +107,6 @@ function Get-HudlRoleAttributes {
         $environmentPrefix = "t"
         $group = "thor"
         $serverRole = "thor"
-        $treatMonolithAsMultiverse = $true
     }
     # Special case for monolith web servers, they have a different format role name
     if ($serverRole -eq "role" -and $group -eq "web") {
@@ -146,11 +127,9 @@ function Get-HudlRoleAttributes {
         ServerRole = $serverRole
         Group = $group
         IamRole = $role
-        TreatMonolithAsMultiverse = $treatMonolithAsMultiverse
     }
     return $result
 }
-
 
 function New-ServerName {
     $serverId=GetNewId
@@ -230,15 +209,6 @@ function Get-Apps {
     $instanceId = (New-Object System.Net.WebClient).DownloadString("http://169.254.169.254/latest/meta-data/instance-id")
     $appsTag =  Get-EC2Tag | Where-Object {$_.ResourceId -eq $instanceId -and $_.Key -eq 'Apps'}
     return $appsTag.Value
-}
-
-function Get-TreatAsNonMultiverseMonolith {
-    $instanceId = (New-Object System.Net.WebClient).DownloadString("http://169.254.169.254/latest/meta-data/instance-id")
-    $tag =  Get-EC2Tag | Where-Object {$_.ResourceId -eq $instanceId -and $_.Key -eq 'TreatAsNonMultiverseMonolith'}
-    if ($tag -and $tag.Value.ToLower() -eq "yes"){
-        return $true
-    }
-    return $false
 }
 
 $timeout = new-timespan -Minutes 5
@@ -416,8 +386,7 @@ try {
     {
       "seven_zip": {
          "syspath":""
-      }, 
-
+      },
       "hudl": {
         "environment": "$($roleAttributes.Environment)",
         "environmentPrefix": "$($roleAttributes.EnvironmentPrefix)",
@@ -426,7 +395,6 @@ try {
         "group": "$($roleAttributes.Group)",
         "service": "$($roleAttributes.Group)",
         "eureka_set": "$($eurekaSet)",
-        "treat_monolith_as_multiverse": $($roleAttributes.TreatMonolithAsMultiverse | ConvertTo-Json),
         "apps": "$($apps)" 
 "@
 
