@@ -98,12 +98,7 @@ function Get-HudlRoleAttributes {
     $environment = $environmentPrefix = $serverRole = $group = ""
 
     $roleSplit = $role -Split '-'
-    if ($roleSplit.Length -eq 2) {
-        # [0] - Environment Letter, [1] - server role
-        $environmentPrefix = $roleSplit[0]
-        $serverRole = $roleSplit[1]
-        $group = "monolith"
-    } elseif ($roleSplit.Length -eq 3) {
+    if ($roleSplit.Length -eq 3) {
         # [0] - Environment Letter, [1] - mvgroupmvgroup, [2] - server role
         $environmentPrefix = $roleSplit[0]
         $group = $roleSplit[1]
@@ -115,11 +110,6 @@ function Get-HudlRoleAttributes {
         $environmentPrefix = "t"
         $group = "thor"
         $serverRole = "thor"
-    }
-    # Special case for monolith web servers, they have a different format role name
-    if ($serverRole -eq "role" -and $group -eq "web") {
-        $serverRole = "Web"
-        $group = "monolith"
     }
 
     switch ($environmentPrefix) 
