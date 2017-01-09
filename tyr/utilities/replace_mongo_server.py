@@ -9,9 +9,6 @@ import requests
 import boto.ec2
 import boto.route53
 import logging
-from tyr.utilities.stackdriver import (set_maintenance_mode,
-                                       unset_maintenance_mode)
-
 
 def timeit(method):
 
@@ -398,8 +395,6 @@ def stop_decommissioned_node(address, terminate=False):
 
     log.debug('The instance ID is {id_}'.format(id_=instance_id))
 
-    set_maintenance_mode(instance_id)
-
     log.debug('Establishing a connection to AWS EC2 us-east-1')
     conn = boto.ec2.connect_to_region('us-east-1')
 
@@ -571,9 +566,6 @@ def replace_server(environment=None, group=None, subnet_id=None,
                          mongodb_package_version, node_type,
                          replica_set_template=replica_set_name)
 
-    log.info('Placing the new node in maintenance mode')
-    set_maintenance_mode(node.instance.id)
-
     log.info('Adding the new node to the replica set')
 
     if node_type == 'datawarehousing':
@@ -595,9 +587,6 @@ def replace_server(environment=None, group=None, subnet_id=None,
 
     log.info('Waiting for the node to finish syncing')
     wait_for_sync(node)
-
-    log.info('Removing the node from maintenance mode')
-    unset_maintenance_mode(node.instance.id)
 
     if arbiter is not None:
         log.info('Adding the arbiter back into the replica set')
