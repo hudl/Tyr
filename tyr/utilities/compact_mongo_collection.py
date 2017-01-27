@@ -1,8 +1,6 @@
 from tyr.utilities.replace_mongo_server import (ReplicaSet, run_command,
                                                 run_mongo_command, timeit)
 
-from tyr.utilities.stackdriver import (set_maintenance_mode,
-                                       unset_maintenance_mode)
 import time
 import logging
 import os
@@ -167,9 +165,6 @@ def compact_mongodb_server(host, version, prompt_before_failover=True):
         log.debug('Retrieving compact.js on {host}'.format(host=address))
         fetch_script(address, version)
 
-        log.debug('Setting maintenance mode for {host}'.format(host=address))
-        set_maintenance_mode(id_for_host(address))
-
         log.info('Compacting {host}'.format(host=address))
         compact(address)
 
@@ -178,10 +173,6 @@ def compact_mongodb_server(host, version, prompt_before_failover=True):
             log.warning('{host} is still recovering.'.format(host=address))
             log.debug('Sleeping for 30 seconds.')
             time.sleep(30)
-
-        log.debug('Unsetting maintenance mode for {host}'.format(
-            host=address))
-        unset_maintenance_mode(id_for_host(address))
 
     log.debug('Retrieving current primary')
     secondaries = [node for node in replica_set.status['members']
@@ -212,9 +203,6 @@ def compact_mongodb_server(host, version, prompt_before_failover=True):
         log.debug('Retrieving compact.js on {host}'.format(host=address))
         fetch_script(address, version)
 
-        log.debug('Setting maintenance mode for {host}'.format(host=address))
-        set_maintenance_mode(id_for_host(address))
-
         log.info('Compacting {host}'.format(host=address))
         compact(address)
 
@@ -223,7 +211,3 @@ def compact_mongodb_server(host, version, prompt_before_failover=True):
             log.warning('{host} is still recovering.'.format(host=address))
             log.debug('Sleeping for 30 seconds.')
             time.sleep(30)
-
-        log.debug('Unsetting maintenance mode for {host}'.format(
-            host=address))
-        unset_maintenance_mode(id_for_host(address))

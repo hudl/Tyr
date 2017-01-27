@@ -1,7 +1,6 @@
 import ec2
 import s3
 import elb
-import stackdriver
 import route53
 
 
