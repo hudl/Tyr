@@ -295,6 +295,20 @@ class Server(object):
         if self.ingress_groups_to_add:
             self.ingress_rules()
 
+        if self.environment == 'thor' and self.dns_zones is None:
+            self.log.warn('No DNS zones specified')
+            self.dns_zones = [{
+                'id': {
+                    'thor': 'Z26GYRZS578A4'
+                },
+                'records': [{
+                    'type': 'A',
+                    'name': '{hostname}.',
+                    'value': '{private_ip_address}',
+                    'ttl': 60
+                }]
+            }]
+
         if self.dns_zones is None:
             self.log.warn('No DNS zones specified')
             self.dns_zones = [
@@ -449,6 +463,8 @@ class Server(object):
             template = '{name}.app.staghudl.com'
         elif self.environment == 'prod':
             template = '{name}.app.hudl.com'
+        elif self.environment == 'thor':
+            template = '{name}.vpc.thorhudl.com'
 
         hostname = template.format(name=self.name)
 
@@ -730,7 +746,11 @@ named {name}""".format(path=d['path'], name=d['name']))
                 self.log.info('Policy "{policy}" already exists'.format(
                               policy=policy))
 
-                tyr_copy = json.loads(policies[policy])
+                try:
+                    tyr_copy = json.loads(policies[policy])
+                except:
+                    self.log.error('Could not load policy [{policy}]'.format(policy=policies[policy]))
+                    continue
 
                 aws_copy = self.iam.get_role_policy(self.role, policy)
                 aws_copy = aws_copy['get_role_policy_response']

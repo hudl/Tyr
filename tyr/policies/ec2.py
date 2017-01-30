@@ -430,3 +430,19 @@ allow_lifecycle_nginx_stage = """{
         }
     ]
 }"""
+
+allow_lifecycle_nginx_test = """{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "Stmt1465948914000",
+            "Effect": "Allow",
+            "Action": [
+                "autoscaling:CompleteLifecycleAction"
+            ],
+            "Resource": [
+                "*"
+            ]
+        }
+    ]
+}"""

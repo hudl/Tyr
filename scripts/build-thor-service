@@ -1,0 +1,53 @@
+#!/usr/bin/env python
+
+from tyr.clusters.iis import IISCluster
+from tyr.helpers import data_file
+import logging
+
+log = logging.getLogger('Tyr.Utilities.BuildThorService')
+if not log.handlers:
+    log.setLevel(logging.DEBUG)
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(
+            '%(asctime)s [%(name)s] %(levelname)s: %(message)s',
+            datefmt='%H:%M:%S')
+    ch.setFormatter(formatter)
+    log.addHandler(ch)
+
+def build_thor_service(
+        ami='ami-21414f36',
+        environment='thor',
+        group='thor',
+        instance_type='t2.large',
+        desired=0,
+        max=5,
+        min=0,
+        health_check_grace_period=900,
+        default_cooldown=900):
+
+    region = 'us-east-1'
+    subnets=['subnet-90c178ac', 'subnet-b55372fc', 'subnet-d0335a8b', 'subnet-c5f686e8']
+
+    tags = []
+    tags.append({'name':'Environment', 'value':environment})
+    tags.append({'name':'Group', 'value':group})
+
+    cluster = IISCluster(ami=ami,
+                            region=region, 
+                            environment=environment,
+                            group=group,
+                            desired_capacity=desired,
+                            instance_type=instance_type,
+                            tags=tags,
+                            subnet_ids=subnets,
+                            availability_zones=availability_zones,
+                            max_size=max,
+                            min_size=min,
+                            health_check_grace_period=health_check_grace_period,
+                            default_cooldown=default_cooldown)
+    cluster.autorun()
+
+
+if __name__ == '__main__':
+    build_thor_service()

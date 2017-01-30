@@ -15,6 +15,9 @@ allow_describe_elbs = """{
      ]
 }"""
 
+allow_modify_nginx_elbs_test = """{
+}"""
+
 allow_modify_nginx_elbs_stage = """{
     "Statement": [
         {
@@ -48,6 +51,22 @@ allow_modify_nginx_elbs_prod = """{
                 "arn:aws:elasticloadbalancing:us-east-1:761584570493:loadbalancer/hudl-primary",
                 "arn:aws:elasticloadbalancing:us-east-1:761584570493:loadbalancer/recruit-prod-vpc",
                 "arn:aws:elasticloadbalancing:us-east-1:761584570493:loadbalancer/hudl-primary-vpc"
+             ]
+        }
+     ]
+}"""
+
+allow_modify_nginx_elbs_thor = """{
+    "Statement": [
+        {
+            "Sid": "Stmt1367531520501",
+            "Action": [
+                "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
+                "elasticloadbalancing:RegisterInstancesWithLoadBalancer"
+             ],
+             "Effect": "Allow",
+             "Resource": [
+                "arn:aws:elasticloadbalancing:us-east-1:761584570493:loadbalancer/hudl-thor",
              ]
         }
      ]
