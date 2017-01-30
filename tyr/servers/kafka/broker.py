@@ -8,7 +8,7 @@ class KafkaBroker(Server):
 
     SERVER_TYPE = 'kafka'
 
-    CHEF_RUNLIST = ['role[RoleKafka]']
+    CHEF_RUNLIST = ['role[rolekafka]']
 
     IAM_ROLE_POLICIES = [
         'allow-describe-instances',
@@ -23,9 +23,7 @@ class KafkaBroker(Server):
                  dns_zones=None, platform=None, use_latest_ami=False,
                  ingress_groups_to_add=None, ports_to_authorize=None,
                  classic_link=False, add_route53_dns=True, chef_server_url=None,
-                 volume_count=None, volume_size=None,
-                 volume_type=None, logdir_root=None,
-                 zookeeper_connection=None):
+                 volume_count=None, volume_size=None, volume_type=None):
 
         if server_type is None:
             server_type = self.SERVER_TYPE
@@ -33,8 +31,6 @@ class KafkaBroker(Server):
         self.volume_count = volume_count
         self.volume_size = volume_size
         self.volume_type = volume_type
-        self.logdir_root = logdir_root
-        self.zookeeper_connection = zookeeper_connection
 
         super(KafkaBroker, self).__init__(group, server_type, instance_type,
                                           environment, ami, region, role,
@@ -49,9 +45,6 @@ class KafkaBroker(Server):
     def set_chef_attributes(self):
         super(KafkaBroker, self).set_chef_attributes()
         self.CHEF_ATTRIBUTES['role_kafka'] = {}
-        self.CHEF_ATTRIBUTES['kafka'] = {}
-        self.CHEF_ATTRIBUTES['kafka']['broker'] = {}
-        self.CHEF_ATTRIBUTES['kafka']['broker']['zookeeper'] = {}
 
         if self.volume_count:
             if isinstance(self.volume_count, int):
@@ -87,23 +80,5 @@ class KafkaBroker(Server):
         else:
             self.log.info('role_kafka.volume_type is not set. Using default.')
 
-        if self.logdir_root:
-            self.CHEF_ATTRIBUTES['role_kafka']['logdir_root'] = self.logdir_root
-            self.log.info('Set role_kafka.logdir_root to {}'
-                          .format(self.logdir_root))
-        else:
-            self.log.info('role_kafka.logdir_root not set. Using default.')
-
-        if self.zookeeper_connection:
-            self.CHEF_ATTRIBUTES['kafka']['broker']['zookeeper']['connect'] = self.zookeeper_connection
-            self.log.info('Set kafka.broker.zookeeper.connect to {}'
-                          .format(self.zookeeper_connection))
-        else:
-            self.CHEF_ATTRIBUTES['kafka']['automatic_start'] = False
-            self.log.warn('No zookeeper connection string given.'
-                          'Kafka will not be started on boot.')
-
     def configure(self):
         super(KafkaBroker, self).configure()
-        self.set_chef_attributes()
-

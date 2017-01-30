@@ -5,7 +5,7 @@ class ZookeeperServer(Server):
 
     SERVER_TYPE = 'zookeeper'
 
-    CHEF_RUNLIST = ['role[RoleZookeeper]']
+    CHEF_RUNLIST = ['role[rolezookeeper]']
 
     IAM_ROLE_POLICIES = [
         'allow-describe-instances',
@@ -19,13 +19,10 @@ class ZookeeperServer(Server):
                  block_devices=None, chef_path=None, subnet_id=None,
                  dns_zones=None, platform=None, use_latest_ami=False,
                  ingress_groups_to_add=None, ports_to_authorize=None,
-                 classic_link=False, add_route53_dns=True, chef_server_url=None,
-                 exhibitor_s3config=None):
+                 classic_link=False, add_route53_dns=True, chef_server_url=None):
 
         if server_type is None:
             server_type = self.SERVER_TYPE
-
-        self.exhibitor_s3config = exhibitor_s3config
 
         super(ZookeeperServer, self).__init__(group, server_type, instance_type,
                                               environment, ami, region, role,
@@ -36,19 +33,3 @@ class ZookeeperServer(Server):
                                               ingress_groups_to_add,
                                               ports_to_authorize, classic_link,
                                               add_route53_dns, chef_server_url)
-
-    def set_chef_attributes(self):
-        super(ZookeeperServer, self).set_chef_attributes()
-        if self.exhibitor_s3config:
-            self.CHEF_ATTRIBUTES['exhibitor'] = {
-                'cli': {'s3config': self.exhibitor_s3config}
-            }
-            self.log.info('Set exhibitor.cli.s3config to {}'.format(
-                self.exhibitor_s3config)
-            )
-        else:
-            self.log.info('exhibitor.cli.s3config not set. Using default.')
-
-    def configure(self):
-        super(ZookeeperServer, self).configure()
-        self.set_chef_attributes()

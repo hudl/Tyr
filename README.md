@@ -35,9 +35,6 @@ These are specified in the `setup.py` file and will automatically be installed.
 
 In order to use Tyr, you'll need the following:
 
-- (Administrator) Stackdriver credentials
-  - Export the environment variables `STACKDRIVER_USERNAME` and `STACKDRIVER_API_KEY`
-
 - (Administrator) Chef credentials
   - If your Chef credentials are not in `~/.chef`, set the `chef_path` argument when provisioning infrastructure
 

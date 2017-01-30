@@ -16,8 +16,6 @@ import urllib
 from boto.vpc import VPCConnection
 from paramiko.client import AutoAddPolicy, SSHClient
 from tyr.policies import policies
-from tyr.utilities.stackdriver import set_maintenance_mode
-from tyr.alerts.stackdriver import StackDriver
 import cloudspecs.aws.ec2
 import re
 import boto3
@@ -39,8 +37,6 @@ class Server(object):
     IAM_MANAGED_POLICIES = []
 
     IAM_ROLE_POLICIES = []
-
-    STACKDRIVER_ALERTS = []
 
     CHEF_RUNLIST = ['role[RoleBase]']
     CHEF_ATTRIBUTES = {}
@@ -349,9 +345,6 @@ class Server(object):
                     ]
                 }
             ]
-
-        if 'p' in self.environment[0] and self.create_alerts:
-            self.apply_alerts()
 
         self.set_chef_attributes()
 
@@ -1082,8 +1075,6 @@ named {name}""".format(path=d['path'], name=d['name']))
 
         self.log.info('The instance ID is {id_}'.format(id_=instance_id))
 
-        set_maintenance_mode(instance_id)
-
         self.log.info('Terminating node at {address}'.format(address=address))
         response = self.ec2.terminate_instances(instance_ids=[instance_id])
 
@@ -1184,47 +1175,6 @@ named {name}""".format(path=d['path'], name=d['name']))
                 self.log.info('Chef Client was not successful')
                 self.log.debug(r['out'])
                 return False
-
-    def apply_alerts(self):
-        """
-        Add stackdriver alerts if required
-        """
-        # Check to see if the defaults have been overriden
-        if self.STACKDRIVER_ALERTS:
-            alerts = self.STACKDRIVER_ALERTS
-        else:
-            alerts = [{
-                      "group_name": "{e}-{g}/{t}".format(e=self.environment[0],
-                                    g=self.group, t=self.server_type),
-                      "notification_group_name": "hudl-{g}".format(g=self.group)
-                      }
-            ]
-
-        s = StackDriver()
-        for entry in alerts:
-            group_name = entry['group_name']
-            notification_group_name = entry['notification_group_name']
-
-            regex_template = "{e}-{g}"
-
-            # Check groups are present and create if not
-            grp_id = s.get_group_id_by_name(name="{e}-{g}".format(e=self.environment[0], g=self.group),
-                                            create_if_missing=True,
-                                            contains_name="{e}-{g}".format(e=self.environment[0],
-                                                                          g=self.group))
-            if '/' in group_name:
-                grp_id = s.get_group_id_by_name(name=group_name, create_if_missing=True,
-                                                contains_name="{e}-{g}-{t}".format(e=self.environment[0],
-                                                                                  g=self.group,
-                                                                                  t=self.server_type))
-            try:
-                # For each group name try to find a conditions list and apply any missing alerts
-                c = s.apply_missing_conditions(group_name,
-                                               notification_group_name,
-                                               ignore_options=['threshold', 'window'])
-            except:
-                raise
-                self.log.error("Unable to add stackdriver alerts.")
 
     def autorun(self):
 
