@@ -6,7 +6,7 @@ import os.path
 
 class ThorServer(Server):
 
-    SERVER_TYPE='thor'
+    SERVER_TYPE='web'
 
     CHEF_RUNLIST = ['role[RoleWeb]']
     
