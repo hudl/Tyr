@@ -1,7 +1,3 @@
-/thor-*.py
-/t-*.py
-/s-*.py
-/p-*.py
 *.egg-info
 /build
 /dist
