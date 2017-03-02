@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from tyr.clusters.iis import IISCluster
+from tyr.clusters.iis import IISThorCluster
 from tyr.helpers import data_file
 import logging
 
@@ -35,7 +35,7 @@ def build_thor_service(
     tags.append({'name':'Environment', 'value':environment})
     tags.append({'name':'Group', 'value':group})
 
-    cluster = IISCluster(ami=ami,
+    cluster = IISThorCluster(ami=ami,
                             region=region, 
                             environment=environment,
                             group=group,
