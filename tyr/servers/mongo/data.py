@@ -33,6 +33,7 @@ class MongoDataNode(MongoReplicaSetMember):
                                             add_route53_dns, chef_server_url,
                                             replica_set, mongodb_version)
 
+        self.chef_server_url = chef_server_url
         self.data_volume_size = data_volume_size
         self.data_volume_iops = data_volume_iops
         self.journal_volume_size = journal_volume_size
