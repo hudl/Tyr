@@ -456,8 +456,10 @@ class Server(object):
             template = '{name}.app.staghudl.com'
         elif self.environment == 'prod':
             template = '{name}.app.hudl.com'
-        elif self.environment == 'thor':
-            template = '{name}.vpc.thorhudl.com'
+        else:
+            self.log.info('Getting route53 information:')
+            response = self.route53.get_hosted_zone(hosted_zone_id=self.dns_zones[0]['id'].values()[0])
+            template = '{name}.' + response['GetHostedZoneResponse']['HostedZone']['Name']
 
         hostname = template.format(name=self.name)
 
@@ -913,7 +915,6 @@ named {name}""".format(path=d['path'], name=d['name']))
         return cloudspecs.aws.ec2.instances[self.instance_type]['instance_storage']
 
     def route(self, wait=False):
-
         for dns_zone in self.dns_zones:
 
             self.log.info('Routing Hosted Zone {zone}'.format(zone=dns_zone))
@@ -1177,7 +1178,6 @@ named {name}""".format(path=d['path'], name=d['name']))
                 return False
 
     def autorun(self):
-
         self.establish_logger()
         self.configure()
         self.launch(wait=True)
