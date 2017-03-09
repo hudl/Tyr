@@ -49,6 +49,24 @@ class MongoNode(Server):
             type_=self.CHEF_MONGODB_TYPE)
         )
 
+        self.CHEF_ATTRIBUTES['zuun'] = {}
+
+        self.CHEF_ATTRIBUTES['zuun']['deployment'] = '{env}-{group}'.format(
+            env=self.environment[0],
+            group=self.group
+        )
+        self.log.info('Set the Zuun deployment to "{env}-{group}"'.format(
+            env=self.environment[0],
+            group=self.group
+        ))
+
+        self.CHEF_ATTRIBUTES['zuun']['role'] = self.CHEF_MONGODB_TYPE
+        self.log.info('Set the Zuun role to "{type_}"'.format(
+            type_=self.CHEF_MONGODB_TYPE)
+        )
+
+
+
     def configure(self):
         super(MongoNode, self).configure()
         self.set_chef_attributes()
