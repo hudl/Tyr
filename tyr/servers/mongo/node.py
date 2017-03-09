@@ -18,10 +18,8 @@ class MongoNode(Server):
                  chef_path=None, subnet_id=None, dns_zones=None,
                  platform=None, use_latest_ami=False,
                  ingress_groups_to_add=None, ports_to_authorize=None,
-                 classic_link=False, add_route53_dns=True, chef_server_url=None,
-                 mongodb_version=None):
-
-        self.mongodb_version = mongodb_version
+                 classic_link=False, add_route53_dns=True,
+                 chef_server_url=None):
 
         if server_type is None:
             server_type = self.SERVER_TYPE
@@ -38,15 +36,14 @@ class MongoNode(Server):
 
     def set_chef_attributes(self):
         super(MongoNode, self).set_chef_attributes()
+
         self.CHEF_ATTRIBUTES['mongodb'] = {}
+
         self.CHEF_ATTRIBUTES['mongodb']['cluster_name'] = self.group
         self.log.info('Set the cluster name to "{group}"'.format(
             group=self.group)
         )
-        self.CHEF_ATTRIBUTES['mongodb']['package_version'] = self.mongodb_version
-        self.log.info('Set the MongoDB package version to {version}'.format(
-            version=self.mongodb_version)
-        )
+
         self.CHEF_ATTRIBUTES['mongodb']['node_type'] = self.CHEF_MONGODB_TYPE
         self.log.info('Set the MongoDB node type to "{type_}"'.format(
             type_=self.CHEF_MONGODB_TYPE)
