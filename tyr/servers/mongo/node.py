@@ -10,6 +10,7 @@ class MongoNode(Server):
     CHEF_MONGODB_TYPE = 'generic'
 
     IAM_ROLE_POLICIES = ['allow-volume-control']
+    IAM_MANAGED_POLICIES = ['zuun-managed']
 
     def __init__(self, group=None, server_type=None, instance_type=None,
                  environment=None, ami=None, region=None, role=None,
