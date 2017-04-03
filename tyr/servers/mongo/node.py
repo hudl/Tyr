@@ -82,14 +82,6 @@ class MongoNode(Server):
             self.IAM_MANAGED_POLICIES.append('allow-mongo-backup-restore')
         self.resolve_iam_role()
 
-        if self.mongodb_version is None:
-            self.log.warn('MongoDB version not set')
-            self.mongodb_version = '2.4.13'
-
-        self.log.info('Using version {version} of MongoDB'.format(
-            version=self.mongodb_version)
-        )
-
         # This is just a temporary fix to override the default security
         # groups for MongoDB nodes until the security_groups argument
         # is removed.
