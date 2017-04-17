@@ -15,6 +15,8 @@ Content-Transfer-Encoding: 7bit
 Content-Disposition: attachment; filename="user-script.txt"
 #!/bin/bash
 
+CHEF_SERVER="https://chef12-ec2.app.hudl.com/organizations/hudl"
+
 # Get the instance Id from the instance metadata service
 INSTANCE_ID=`wget -qO- http://instance-data/latest/meta-data/instance-id`
 
@@ -27,8 +29,7 @@ REGION="`echo \"$AVAILABILITY_ZONE\" | sed -e 's:\([0-9][0-9]*\)[a-z]*\$:\\1:'`"
 
 AVAILABILITY_ZONE_LETTER="`echo $AVAILABILITY_ZONE | sed 's/.*\(.\)/\1/'`"
 
-# Sleep a bit wait for tags to get set.
-# Get the environment from the tag
+# Get the environment from the tag, waiting until it exists.
 ENVIRONMENT=''
 while [ "$ENVIRONMENT" == '' ]
 do
@@ -38,12 +39,16 @@ done
 
 # Get the role from the tag
 ROLE=`aws ec2 describe-tags --region $REGION --filter "Name=resource-id,Values=$INSTANCE_ID" "Name=key,Values=Role" --output=text | sed -r 's/TAGS\t(.*)\t.*\t.*\t(.*)/\2/'`
+
+# lowercase the role
+ROLE="${ROLE,,}"
+
 # Get the group from the tag
 GROUP=`aws ec2 describe-tags --region $REGION --filter "Name=resource-id,Values=$INSTANCE_ID" "Name=key,Values=Group" --output=text | sed -r 's/TAGS\t(.*)\t.*\t.*\t(.*)/\2/'`
 # Pull that stupid role prefix out of the role.
-ROLE_MINUS_ROLE="$(echo $ROLE | sed -r 's/[Role]+//g')"
+ROLE_MINUS_ROLE="$(echo $ROLE | sed -r 's/role//')"
 # Get the uniqueness from the instance id
-UNIQUENESS="$(echo $INSTANCE_ID | sed -r 's/[i-]+//g')"
+UNIQUENESS="$(echo $INSTANCE_ID | sed -r 's/i-//')"
 # pull the first letter out of the environment
 ENVIRONMENT_PREFIX="$(echo $ENVIRONMENT | head -c 1)"
 # join them all together into a server name
@@ -62,10 +67,12 @@ case $ENVIRONMENT in
 "prod")
   SUBDOMAIN=".app.hudl.com"
   HOSTED_ZONE="Z1LKTAOOYM3H8T"
+  CHEF_SERVER="https://chef12-vpc.app.hudl.com/organizations/hudl"
   ;;
 "stage")
   SUBDOMAIN=".app.staghudl.com"
   HOSTED_ZONE="Z3ETV7KVCRERYL"
+  CHEF_SERVER="https://chef12-ec2.app.hudl.com/organizations/hudl"
   ;;
 *)
   SUBDOMAIN=".thorhudl.com"
@@ -98,15 +105,18 @@ touch /etc/chef/ohai/hints/ec2.json
 echo "{{\"run_list\": [\"role[$ROLE]\"]}}" > /etc/chef/firstrun.json
 
 # Write Validation key to server
-echo '{validation_key}' > /etc/chef/validation.pem
 
-echo 'chef_server_url "http://chef.app.hudl.com/"' > /etc/chef/client.rb
+/usr/bin/aws s3 cp s3://hudl-chef-artifacts/chef-client/validation.pem /etc/chef/validation.pem
+
+CHEFSERVERLINE="chef_server_url \"$CHEF_SERVER\""
+echo $CHEFSERVERLINE > /etc/chef/client.rb
 SERVERNAMELINE="node_name \"$SERVER_NAME\""
 echo $SERVERNAMELINE >> /etc/chef/client.rb
-echo 'validation_client_name "chef-validator"' >> /etc/chef/client.rb
+echo 'validation_client_name "hudl-validator"' >> /etc/chef/client.rb
+echo 'ssl_verify_mode    :verify_none' >> /etc/chef/client.rb
 
 /usr/bin/aws s3 cp s3://hudl-chef-artifacts/chef-client/encrypted_data_bag_secret /etc/chef/encrypted_data_bag_secret
-curl -L https://omnitruck.chef.io/install.sh | sudo bash -s -- -v 12.13.37
+curl -L https://omnitruck.chef.io/install.sh | sudo bash -s -- -v 12.19.36
 yum install -y gcc
-chef-client -S 'http://chef.app.hudl.com/' -N $SERVER_NAME -E $ENVIRONMENT -L /var/log/chef-client.log -j /etc/chef/firstrun.json
+chef-client -S $CHEF_SERVER -N $SERVER_NAME -E $ENVIRONMENT -L /var/log/chef-client.log -j /etc/chef/firstrun.json
 --===============0035287898381899620==--
