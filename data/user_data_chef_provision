@@ -154,7 +154,7 @@ echo 'validation_client_name "hudl-validator"' >> /etc/chef/client.rb
 echo 'ssl_verify_mode    :verify_none' >> /etc/chef/client.rb
 
 /usr/bin/aws s3 cp s3://hudl-chef-artifacts/chef-client/encrypted_data_bag_secret /etc/chef/encrypted_data_bag_secret
-curl -L https://omnitruck.chef.io/install.sh | sudo bash -s -- -v 12.13.37
+curl -L https://omnitruck.chef.io/install.sh | sudo bash -s -- -v 12.19.36
 yum install -y gcc
 chef-client -S $CHEF_SERVER -N $SERVER_NAME -E $ENVIRONMENT -L /var/log/chef-client.log -j /etc/chef/firstrun.json
 --===============0035287898381899620==--
