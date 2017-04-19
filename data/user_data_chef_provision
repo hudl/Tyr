@@ -84,7 +84,7 @@ FULL_HOSTNAME="$SERVER_NAME$SUBDOMAIN"
 
 mkdir /etc/chef
 
-CHANGE="{{\"Comment\": \"Add recordset for $SERVER_NAME\", \"Changes\": [ {{ \"Action\": \"UPSERT\", \"ResourceRecordSet\": {{ \"Name\": \"$FULL_HOSTNAME\", \"Type\": \"CNAME\", \"TTL\": 60, \"ResourceRecords\": [ {{ \"Value\": \"$LOCAL_HOSTNAME\" }} ] }} }} ] }}"
+CHANGE="{\"Comment\": \"Add recordset for $SERVER_NAME\", \"Changes\": [ { \"Action\": \"UPSERT\", \"ResourceRecordSet\": { \"Name\": \"$FULL_HOSTNAME\", \"Type\": \"CNAME\", \"TTL\": 60, \"ResourceRecords\": [ { \"Value\": \"$LOCAL_HOSTNAME\" } ] } } ] }"
 echo $CHANGE > /etc/chef/route53change.json
 
 aws route53 change-resource-record-sets --hosted-zone-id $HOSTED_ZONE --change-batch file:///etc/chef/route53change.json
@@ -101,8 +101,46 @@ touch /etc/chef/client.rb
 mkdir -p /etc/chef/ohai/hints
 touch /etc/chef/ohai/hints/ec2.json
 
+# install boto3
+sudo pip install boto3==1.4.4
+
 # Write first boot json
-echo "{{\"run_list\": [\"role[$ROLE]\"]}}" > /etc/chef/firstrun.json
+echo "{\"run_list\": [\"role[$ROLE]\"]}" > /etc/chef/firstrun.json
+
+SCRIPTPATH="/etc/chef/read-tags.py"
+# write python script file to write the tags to the firstrun.json file.
+cat > $SCRIPTPATH <<- EOM
+import json,sys,boto3,requests;
+
+file_path_input = "/etc/chef/firstrun.json"
+file_path_output = file_path_input
+client = boto3.client('ec2', region_name='us-east-1')
+tag_prefix = 'chef:hudl:'
+# Get my instance id
+response = requests.get('http://169.254.169.254/latest/meta-data/instance-id')
+instance_id = response.text
+# Get chef:hudl tags
+tags = client.describe_tags(Filters=[{'Name':'resource-id','Values':[instance_id]}, {'Name': 'key','Values': [tag_prefix + "*"]}])
+tag_dict = tags['Tags']
+# check if we have any chef:hudl tags
+if len(tag_dict) > 0:
+    # Read current first run json.
+    with open(file_path_input, mode='r') as input_file:
+        contents = json.load(input_file)
+        contents['hudl'] = {}
+        # Write new first run json, with data from tags
+        with open(file_path_output, mode='w') as output_file:
+            for tag in tag_dict:
+                key = tag['Key'].replace(tag_prefix,"")
+                value = tag['Value']
+                contents['hudl'][key] = value
+                print "Added config from tag: %s" % key
+            json.dump(contents, output_file)
+else:
+    print "No chef:hudl tags, not modifying %s" % file_path_input
+EOM
+
+python $SCRIPTPATH
 
 # Write Validation key to server
 
