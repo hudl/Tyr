@@ -61,6 +61,7 @@ class AutoScaler(object):
         self.min_size = min_size
         self.default_cooldown = default_cooldown
         self.health_check_grace_period = health_check_grace_period
+        self.termination_policies = ['OldestInstance']
 
     def establish_autoscale_connection(self):
         try:
@@ -151,6 +152,7 @@ class AutoScaler(object):
                                   max_size=self.max_size,
                                   default_cooldown=self.default_cooldown,
                                   vpc_zone_identifier=self.autoscale_subnets,
+                                  termination_policies=self.termination_policies,
                                   connection=self.conn)
             self.conn.create_auto_scaling_group(ag)
 
