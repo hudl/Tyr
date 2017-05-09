@@ -83,6 +83,12 @@ i = IISCluster(group='features', environment='stage', ami='ami-xxxxx', instance_
 i.autorun()
 ```
 
+### Mongo
+``` python
+from tyr.servers.mongo import MongoDataNode
+node = MongoDataNode(group='leroy', environment='prod', install_automation_agent=False, mongo_cm_group="teamsports", replica_set=1, instance_type="r4.xlarge", subnet_id="subnet-9e64cba2", data_volume_size=900, journal_volume_size=50, log_volume_size=10, chef_server_url='http://chef.app.hudl.com', mongo_version='3.2.8')
+node.autorun()
+```
 ### Nginx server
 ``` python
 from tyr.servers.nginx import NginxServer
