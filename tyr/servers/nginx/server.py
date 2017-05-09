@@ -59,12 +59,7 @@ class NginxServer(Server):
             f = data_file('user_data_chef_provision')
             user_data = f.read()
 
-            chef_path = os.path.expanduser(self.chef_path)
-            validation_key_path = os.path.join(chef_path, 'chef-validator.pem')
-            validation_key_file = open(validation_key_path, 'r')
-            validation_key = validation_key_file.read()
-
-            return user_data.format(validation_key=validation_key)
+            return user_data
 
         except IOError:
             self.log.critical('chef-validator key not found!')
