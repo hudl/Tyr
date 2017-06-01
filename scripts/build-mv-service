@@ -126,8 +126,7 @@ def build_mv_service(
                       instance_type=stage_mongo_instance_type,
                       availability_zone='c',
                       data_volume_size=mongo_data_volume_size,
-                      data_volume_iops=stage_mongo_data_piops,
-                      mongodb_version=mongo_version).autorun()
+                      data_volume_iops=stage_mongo_data_piops).autorun()
 
     # Build Production Mongo Servers
     if build_mongo_cluster & build_production:
@@ -137,8 +136,7 @@ def build_mv_service(
                           instance_type=prod_mongo_instance_type,
                           subnet_id=prod_subnet,
                           data_volume_size=mongo_data_volume_size,
-                          data_volume_iops=prod_mongo_data_piops,
-                          mongodb_version=mongo_version).autorun()
+                          data_volume_iops=prod_mongo_data_piops).autorun()
 
 
 if __name__ == '__main__':
