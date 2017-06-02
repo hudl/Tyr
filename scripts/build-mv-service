@@ -126,27 +126,31 @@ def build_mv_service(
 
     # Build Stage Mongo Servers
     if build_mongo_cluster & build_stage:
+        dn = MongoDataNode(group=service,
+                environment=stage_environment,
+                instance_type=stage_mongo_instance_type,
+                availability_zone='c',
+                data_volume_size=mongo_data_volume_size,
+                data_volume_iops=stage_mongo_data_piops)
         if mongo_configure_zuun:
-            ZuunConfig.write_databag(stage_environment, service, mongo_replicaset, mongo_version)
-        MongoDataNode(group=service,
-                      environment=stage_environment,
-                      instance_type=stage_mongo_instance_type,
-                      availability_zone='c',
-                      data_volume_size=mongo_data_volume_size,
-                      data_volume_iops=stage_mongo_data_piops).autorun()
+            ZuunConfig.write_databag(stage_environment[0], service, mongo_replicaset, mongo_version)
+            dn.CHEF_RUNLIST = ['role[RoleMongo]', 'recipe[zuun::configure]']
+        dn.autorun()
 
     # Build Production Mongo Servers
     if build_mongo_cluster & build_production:
         if mongo_configure_zuun:
-            ZuunConfig.write_databag(prod_environment, service, mongo_replicaset, mongo_version)
+            ZuunConfig.write_databag(prod_environment[0], service, mongo_replicaset, mongo_version)
         for prod_subnet in prod_subnet_ids:
-            MongoDataNode(group=service,
+            dn = MongoDataNode(group=service,
                           environment=prod_environment,
                           instance_type=prod_mongo_instance_type,
                           subnet_id=prod_subnet,
                           data_volume_size=mongo_data_volume_size,
-                          data_volume_iops=prod_mongo_data_piops).autorun()
-
+                          data_volume_iops=prod_mongo_data_piops)
+            if mongo_configure_zuun:
+                dn.CHEF_RUNLIST = ['role[RoleMongo]', 'recipe[zuun::configure]']
+            dn.autorun()
 
 if __name__ == '__main__':
     build_mv_service()
