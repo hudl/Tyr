@@ -175,13 +175,14 @@ class MongoDataNode(MongoReplicaSetMember):
     def configure(self):
 
         super(MongoDataNode, self).configure()
+        
+        self.validate_ebs_volume('data')
+        self.validate_ebs_volume('journal')
+        self.validate_ebs_volume('log')
+
         self.set_chef_attributes()
 
         if self.environment == 'stage':
             self.IAM_ROLE_POLICIES.append('allow-download-script'
                                           '-s3-stage-updater')
             self.resolve_iam_role()
-
-        self.validate_ebs_volume('data')
-        self.validate_ebs_volume('journal')
-        self.validate_ebs_volume('log')
