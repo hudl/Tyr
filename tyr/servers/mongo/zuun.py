@@ -4,7 +4,7 @@ import chef
 import base64
 
 class ZuunConfig():
-  
+
   @staticmethod
   def write_databag(environment, service, rs, version):
 
@@ -34,7 +34,7 @@ class ZuunConfig():
           "replica-sets": {}
       }
 
-      print("Zuun template contains: " + conf_template.format(service, rs))
+      #print("Zuun template contains: " + conf_template.format(service, rs))
       data_bag_item['replica-sets'][rs] = {
           'data': {
               'version': version,
@@ -43,8 +43,20 @@ class ZuunConfig():
       }
 
       api = chef.autoconfigure()
+      with api:
+        bag = chef.DataBag('zuun')
+        item_name = 'deployment_{}-{}'.format(environment, service)
 
-      print('Creating ' + 'deployment_{}-{}'.format(environment, service) + " data bag.")
-      chef.DataBagItem.create('zuun',
-                              'deployment_{}-{}'.format(environment, service),
-                              **data_bag_item)
+        print('Creating ' + item_name + " data bag.")
+        try:
+          if item_name not in bag:
+            chef.DataBagItem.create('zuun',item_name, **data_bag_item)
+          else:
+            print("Replica set configuration databag already exists on chef-server.  Updating.")
+            dbi = chef.DataBagItem(bag, item_name)
+            dbi['replica-sets'][rs] = data_bag_item['replica-sets'][rs]
+            dbi.save()
+        except Exception as e:
+          raise e
+
+    

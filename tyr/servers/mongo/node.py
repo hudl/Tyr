@@ -6,7 +6,7 @@ class MongoNode(Server):
 
     SERVER_TYPE = 'mongo'
 
-    CHEF_RUNLIST = ['role[RoleMongo]']
+    CHEF_RUNLIST = ['role[rolemongo]']
     CHEF_MONGODB_TYPE = 'generic'
 
     IAM_ROLE_POLICIES = ['allow-volume-control']
