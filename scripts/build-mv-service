@@ -2,6 +2,7 @@
 
 from tyr.servers.mongo import MongoDataNode
 from tyr.clusters.iis import IISCluster
+from tyr.servers.mongo import ZuunConfig
 import logging
 import sys
 import click
@@ -45,7 +46,9 @@ if not log.handlers:
 @click.option('--mongo_data_volume_size', type=click.INT, default=100)
 @click.option('--prod_mongo_data_piops', type=click.INT, default=1000)
 @click.option('--stage_mongo_data_piops', type=click.INT, default=500)
-@click.option('--mongo_version', type=click.STRING, default=None)
+@click.option('--mongo_version', type=click.STRING, default="3.2.9")
+@click.option('--mongo_replicaset', type=click.STRING, default="1")
+@click.option('--mongo_configure_zuun', type=click.BOOL, default=True)
 def build_mv_service(
     service=None,
     build_production=False,
@@ -72,7 +75,9 @@ def build_mv_service(
     mongo_data_volume_size=100,
     prod_mongo_data_piops=1000,
     stage_mongo_data_piops=500,
-    mongo_version=None
+    mongo_version=None,
+    mongo_replicaset=None,
+    mongo_configure_zuun=True,
 ):
 
     if service is None:
@@ -121,25 +126,28 @@ def build_mv_service(
 
     # Build Stage Mongo Servers
     if build_mongo_cluster & build_stage:
-        MongoDataNode(group=service,
-                      environment=stage_environment,
-                      instance_type=stage_mongo_instance_type,
-                      availability_zone='c',
-                      data_volume_size=mongo_data_volume_size,
-                      data_volume_iops=stage_mongo_data_piops,
-                      mongodb_version=mongo_version).autorun()
+        dn = MongoDataNode(group=service,
+                environment=stage_environment,
+                instance_type=stage_mongo_instance_type,
+                availability_zone='c',
+                replica_set=mongo_replicaset,
+                mongodb_version=mongo_version,
+                data_volume_size=mongo_data_volume_size,
+                data_volume_iops=stage_mongo_data_piops)
+        dn.autorun()
 
     # Build Production Mongo Servers
     if build_mongo_cluster & build_production:
         for prod_subnet in prod_subnet_ids:
-            MongoDataNode(group=service,
+            dn = MongoDataNode(group=service,
                           environment=prod_environment,
                           instance_type=prod_mongo_instance_type,
                           subnet_id=prod_subnet,
+                          replica_set=mongo_replicaset,
+                          mongodb_version=mongo_version,
                           data_volume_size=mongo_data_volume_size,
-                          data_volume_iops=prod_mongo_data_piops,
-                          mongodb_version=mongo_version).autorun()
-
+                          data_volume_iops=prod_mongo_data_piops)
+            dn.autorun()
 
 if __name__ == '__main__':
     build_mv_service()

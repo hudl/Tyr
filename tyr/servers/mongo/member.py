@@ -1,5 +1,6 @@
 from node import MongoNode
-
+from zuun import ZuunConfig
+from chef.exceptions import ChefServerError
 
 class MongoReplicaSetMember(MongoNode):
 
@@ -11,8 +12,8 @@ class MongoReplicaSetMember(MongoNode):
                  security_groups=None, block_devices=None,
                  chef_path=None, subnet_id=None, dns_zones=None,
                  ingress_groups_to_add=None, ports_to_authorize=None,
-                 classic_link=False, add_route53_dns=True, chef_server_url=None,
-                 replica_set=None, mongodb_version=None):
+                 classic_link=False, add_route53_dns=True,
+                 chef_server_url=None, replica_set=None, mongodb_version=None):
 
         super(MongoReplicaSetMember, self).__init__(group, server_type,
                                                     instance_type,
@@ -26,19 +27,36 @@ class MongoReplicaSetMember(MongoNode):
                                                     ports_to_authorize,
                                                     classic_link,
                                                     add_route53_dns,
-                                                    chef_server_url,
-                                                    mongodb_version)
-
+                                                    chef_server_url)
+        if replica_set is None:
+            replica_set = "1"
+        if mongodb_version is None:
+            mongodb_version="3.2.9"
         self.replica_set = replica_set
+        self.mongodb_version = mongodb_version
 
     def set_chef_attributes(self):
         super(MongoReplicaSetMember, self).set_chef_attributes()
+
         replica_set = self.REPLICA_SET_TEMPLATE.format(
             group=self.group, set_=self.replica_set)
+
         self.CHEF_ATTRIBUTES['mongodb']['replicaset_name'] = replica_set
         self.log.info('Set the replica set name to "{name}"'.format(
             name=replica_set)
         )
+
+        self.CHEF_ATTRIBUTES['zuun']['replica_set'] = replica_set
+        self.log.info('Set the Zuun replica set to "{name}"'.format(
+            name=replica_set
+        ))
+        try:
+            self.log.warning('Creating ' + 'deployment_{}-{}'.format(self.environment[0], self.group) + " data bag.")
+            ZuunConfig.write_databag(self.environment[0], self.group, replica_set, self.mongodb_version)
+        except Exception as e:
+            self.log.error("Failed to create zuun databag config!")
+            raise e
+
 
     def configure(self):
         super(MongoReplicaSetMember, self).configure()

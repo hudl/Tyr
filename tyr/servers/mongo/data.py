@@ -1,14 +1,13 @@
 from member import MongoReplicaSetMember
 import sys
 
-
 class MongoDataNode(MongoReplicaSetMember):
 
     NAME_TEMPLATE = '{envcl}-rs{replica_set}-{location}-{index}'
     NAME_SEARCH_PREFIX = '{envcl}-rs{replica_set}-{location}-'
     NAME_AUTO_INDEX = True
 
-    CHEF_RUNLIST = ['role[RoleMongo]']
+    CHEF_RUNLIST = ['role[rolemongo]', 'recipe[zuun::configure]']
     CHEF_MONGODB_TYPE = 'data'
 
     def __init__(self, group=None, server_type=None, instance_type=None,
@@ -175,13 +174,14 @@ class MongoDataNode(MongoReplicaSetMember):
     def configure(self):
 
         super(MongoDataNode, self).configure()
+        
+        self.validate_ebs_volume('data')
+        self.validate_ebs_volume('journal')
+        self.validate_ebs_volume('log')
+
         self.set_chef_attributes()
 
         if self.environment == 'stage':
             self.IAM_ROLE_POLICIES.append('allow-download-script'
                                           '-s3-stage-updater')
             self.resolve_iam_role()
-
-        self.validate_ebs_volume('data')
-        self.validate_ebs_volume('journal')
-        self.validate_ebs_volume('log')
