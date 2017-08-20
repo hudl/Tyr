@@ -129,47 +129,68 @@ class MongoDataNode(MongoReplicaSetMember):
 
     def set_chef_attributes(self):
         super(MongoDataNode, self).set_chef_attributes()
-        ebs_volumes = [
+        volumes = [
             {
-                'user': 'mongod',
-                'group': 'mongod',
-                'size': self.data_volume_size,
-                'iops': self.data_volume_iops,
-                'device': '/dev/xvdf',
-                'mount': '/volr'
+                'device': {
+                    'path': '/dev/xvdf',
+                    'size': self.data_volume_size,
+                    'iops': self.data_volume_iops,
+                    'name': 'mongodb-data'
+                },
+                'mount': {
+                    'path': '/volr',
+                    'user': 'mongod',
+                    'group': 'mongod',
+                    'chown': True                    
+                }
             },
             {
-                'user': 'mongod',
-                'group': 'mongod',
-                'size': self.journal_volume_size,
-                'iops': self.journal_volume_iops,
-                'device': '/dev/xvdg',
-                'mount': '/volr/journal'
+                'device': {
+                    'path': '/dev/xvdg',
+                    'size': self.journal_volume_size,
+                    'iops': self.journal_volume_iops,
+                    'name': 'mongodb-journal'
+                },
+                'mount': {
+                    'path': '/volr/journal',
+                    'user': 'mongod',
+                    'group': 'mongod'                    
+                }
             },
             {
-                'user': 'mongod',
-                'group': 'mongod',
-                'size': self.log_volume_size,
-                'iops': self.log_volume_iops,
-                'device': '/dev/xvdh',
-                'mount': '/mongologs',
+                'device': {
+                    'path': '/dev/xvdh',
+                    'size': self.log_volume_size,
+                    'iops': self.log_volume_iops,
+                    'name': 'mongodb-logs'
+                },
+                'mount': {
+                    'path': '/mongologs',
+                    'user': 'mongod',
+                    'group': 'mongod'                    
+                }
             }
         ]
 
         if self.ephemeral_storage == []:
-            ebs_volumes.append({
-                'user': 'root',
-                'group': 'root',
-                'size': 8,
-                'iops': 24,
-                'device': '/dev/xvdc',
-                'mount': '/media/ephemeral0'
-            })
+            volumes.append({
+                'device': {
+                    'path': '/dev/xvdc',
+                    'size': 8,
+                    'iops': 24,
+                    'name': 'mongodb-swap'
+                },
+                'mount': {
+                    'path': '/media/ephemeral0',
+                    'user': 'root',
+                    'group': 'root'                    
+                }
+            })            
 
             self.log.debug('No instance storage; including swap device')
 
-        self.CHEF_ATTRIBUTES['hudl_ebs'] = {'volumes': ebs_volumes}
-        self.log.info('Configured the hudl_ebs.volumes attribute')
+        self.CHEF_ATTRIBUTES['volumes'] = volumes
+        self.log.info('Configured the volumes attribute')
 
     def configure(self):
 

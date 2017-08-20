@@ -32,31 +32,42 @@ class MongoArbiterNode(MongoReplicaSetMember):
 
     def set_chef_attributes(self):
         super(MongoArbiterNode, self).set_chef_attributes()
-        ebs_volumes = [
+        volumes = [
             {
-                'user': 'mongod',
-                'group': 'mongod',
-                'size': 1,
-                'iops': 0,
-                'device': '/dev/xvdf',
-                'mount': '/volr'
+                'device': {
+                    'path': '/dev/xvdf',
+                    'size': 1,
+                    'iops': 0,
+                    'name': 'mongodb-data'
+                },
+                'mount': {
+                    'path': '/volr',
+                    'user': 'mongod',
+                    'group': 'mongod',
+                    'chown': True                    
+                }
             }
         ]
 
         if self.ephemeral_storage == []:
-            ebs_volumes.append({
-                'user': 'root',
-                'group': 'root',
-                'size': 8,
-                'iops': 24,
-                'device': '/dev/xvdc',
-                'mount': '/media/ephemeral0'
+            volumes.append({
+                'device': {
+                    'path': '/dev/xvdc',
+                    'size': 8,
+                    'iops': 24,
+                    'name': 'mongodb-swap'
+                },
+                'mount': {
+                    'path': '/media/ephemeral0',
+                    'user': 'root',
+                    'group': 'root'                    
+                }
             })
 
             self.log.debug('No instance storage; including swap device')
 
-        self.CHEF_ATTRIBUTES['hudl_ebs'] = {'volumes': ebs_volumes}
-        self.log.info('Configured the hudl_ebs.volumes attribute')
+        self.CHEF_ATTRIBUTES['volumes'] = volumes
+        self.log.info('Configured the volumes attribute')
         self.CHEF_ATTRIBUTES['mongodb']['config'] = {}
         self.CHEF_ATTRIBUTES['mongodb']['config'] = {'smallfiles': True}
         self.log.info('Configured the mongodb.config.smallfiles attribute')

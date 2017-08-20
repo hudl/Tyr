@@ -55,17 +55,22 @@ class SolrSlaveNode(Server):
         self.CHEF_ATTRIBUTES['solr']['group'] = self.group
         self.log.info('Set solr.group to {group}'.format(group=self.group))
 
-        ebs_volumes = [
+        self.CHEF_ATTRIBUTES['volumes'] = [
             {
-                'user': 'tomcat',
-                'group': 'tomcat',
-                'size': self.data_volume_size,
-                'iops': self.data_volume_iops,
-                'device': '/dev/xvdg',
-                'mount': '/volr'
+                'device': {
+                    'path': '/dev/xvdg',
+                    'size': self.data_volume_size,
+                    'iops': self.data_volume_iops,
+                    'name': 'solr-data'
+                },
+                'mounth': {
+                    'path': '/volr',
+                    'user': 'tomcat',
+                    'group': 'tomcat',
+                    'chown': True
+                }
             }
         ]
-        self.CHEF_ATTRIBUTES['hudl_ebs'] = {'volumes': ebs_volumes}
 
     def configure(self):
         super(SolrSlaveNode, self).configure()
