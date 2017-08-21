@@ -17,7 +17,7 @@ class MongoConfigNode(MongoNode):
                  chef_path=None, subnet_id=None, dns_zones=None,
                  ingress_groups_to_add=None, ports_to_authorize=None,
                  classic_link=False, add_route53_dns=True,
-                 chef_server_url=None):
+                 chef_server_url=None, data_volume_snapshot_id=None):
 
         super(MongoConfigNode, self).__init__(group, server_type,
                                               instance_type,
@@ -30,6 +30,9 @@ class MongoConfigNode(MongoNode):
                                               ports_to_authorize, classic_link,
                                               add_route53_dns, chef_server_url)
 
+        self.data_volume_snapshot_id = data_volume_snapshot_id
+                                              
+
     def set_chef_attributes(self):
         super(MongoConfigNode, self).set_chef_attributes()
 
@@ -38,7 +41,8 @@ class MongoConfigNode(MongoNode):
                 'device': {
                     'path': '/dev/xvdf',
                     'size': 5,
-                    'name': 'mongodb-data'
+                    'name': 'mongodb-data',
+                    'snapshot_id': self.data_volume_snapshot_id
                 },
                 'mount': {
                     'path': '/volr',
