@@ -52,7 +52,9 @@ class MongoReplicaSetMember(MongoNode):
         ))
         try:
             self.log.warning('Creating ' + 'deployment_{}-{}'.format(self.environment[0], self.group) + " data bag.")
-            ZuunConfig.write_databag(self.environment[0], self.group, replica_set, self.mongodb_version)
+            ZuunConfig.write_databag(self.chef_path, self.environment[0],
+                                     self.group, replica_set,
+                                     self.mongodb_version)
         except Exception as e:
             self.log.error("Failed to create zuun databag config!")
             raise e

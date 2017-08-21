@@ -6,7 +6,7 @@ import base64
 class ZuunConfig():
 
   @staticmethod
-  def write_databag(environment, service, rs, version):
+  def write_databag(chef_path, environment, service, rs, version):
 
       conf_template = """
       net:
@@ -42,7 +42,7 @@ class ZuunConfig():
           }
       }
 
-      api = chef.autoconfigure()
+      api = chef.autoconfigure(chef_path)
       with api:
         bag = chef.DataBag('zuun')
         item_name = 'deployment_{}-{}'.format(environment, service)
