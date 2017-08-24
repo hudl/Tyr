@@ -34,8 +34,7 @@ class Server(object):
                                 'allow-describe-instances'
                                 ]
 
-    IAM_MANAGED_POLICIES = []
-
+    IAM_MANAGED_POLICIES = ['allow-upsert-route53-records']
     IAM_ROLE_POLICIES = []
 
     CHEF_RUNLIST = ['role[RoleBase]']
