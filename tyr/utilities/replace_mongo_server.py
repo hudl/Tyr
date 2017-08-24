@@ -1,7 +1,6 @@
 import os
 import sys
-from tyr.servers.mongo import MongoDataNode, MongoDataWarehousingNode, \
-    MongoArbiterNode
+from tyr.servers.mongo import MongoDataNode, MongoArbiterNode
 import json
 import time
 from paramiko.client import AutoAddPolicy, SSHClient
@@ -309,16 +308,6 @@ def launch_server(environment, group, subnet_id, instance_type,
                              log_volume_iops=log_volume_iops,
                              mongodb_version=mongodb_package_version)
 
-    elif node_type == 'datawarehousing':
-        node = MongoDataWarehousingNode(group=group,
-                                        instance_type=instance_type,
-                                        environment=environment,
-                                        subnet_id=subnet_id,
-                                        availability_zone=availability_zone,
-                                        replica_set=replica_set,
-                                        data_volume_size=data_volume_size,
-                                        mongodb_version=mongodb_package_version
-                                        )
     elif node_type == 'arbiter':
         node = MongoArbiterNode(group=group, instance_type=instance_type,
                                 environment=environment,
