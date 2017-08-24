@@ -198,6 +198,14 @@ class Server(object):
 
         self.log.info('Using IAM Role "{role}"'.format(role=self.role))
 
+        if self.environment == 'prod':
+            self.IAM_MANAGED_POLICIES.append('allow-upsert-route53-records-app-hudl-com')
+        elif self.environment == 'stage':
+            self.IAM_MANAGED_POLICIES.append('allow-upsert-route53-records-app-staghudl-com')
+        elif self.environment == 'test' or self.environment == 'thor':
+            self.IAM_MANAGED_POLICIES.append('allow-upsert-route53-records-thorhudl-com')
+            self.IAM_MANAGED_POLICIES.append('allow-upsert-route53-records-app-thorhudl-com')        
+
         self.resolve_iam_role()
 
         if self.keypair is None:
