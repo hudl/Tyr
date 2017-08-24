@@ -35,7 +35,8 @@ setup(
     scripts=[
         'scripts/replace-mongodb-servers',
         'scripts/compact-mongodb-servers',
-        'scripts/build-mv-service'
+        'scripts/build-mv-service',
+        'scripts/provision-mongo-data-node'
     ],
     data_files=load_data_files()
 )

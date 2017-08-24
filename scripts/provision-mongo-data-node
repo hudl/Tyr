@@ -1,0 +1,32 @@
+#!/usr/bin/env python
+# -*- coding: utf8 -*-
+
+from tyr.servers.mongo import MongoDataNode
+import click
+
+
+@click.command()
+@click.option('--group', type=click.STRING, required=True, help='Hudl service')
+@click.option('--instance_type',  type=click.STRING, help='AWS EC2 instance type')
+@click.option('--environment', type=click.STRING, help='Hudl environment')
+@click.option('--ami', type=click.STRING, help='AWS EC2 AMI ID')
+@click.option('--region', type=click.STRING, help='AWS EC2 Region')
+@click.option('--role', type=click.STRING, help='Server role')
+@click.option('--keypair', type=click.STRING, help='AWS EC2 Keypair Name')
+@click.option('--availability_zone', type=click.STRING, help='AWS EC2 availability zone')
+@click.option('--chef_path', type=click.STRING, help='Path to local Chef configuration')
+@click.option('--subnet_id', type=click.STRING, help='AWS VPC Subnet ID')
+@click.option('--replica_set', type=click.STRING, help='MongoDB Replica Set Name')
+@click.option('--data_volume_size', type=click.INT, help='MongoDB data volume size')
+@click.option('--data_volume_iops', type=click.INT, help='MongoDB data volume IOPS')
+@click.option('--data_volume_snapshot_id', type=click.STRING, help='AWS EBS Snapshot ID source for data volume')
+@click.option('--journal_volume_size', type=click.INT, help='MongoDB journal volume size')
+@click.option('--journal_volume_iops', type=click.INT, help='MongoDB journal volume IOPS')
+@click.option('--log_volume_size', type=click.INT, help='MongoDB log volume size')
+@click.option('--log_volume_iops', type=click.INT, help='MongoDB log volume IOPS')
+def provision_mongo_data_node(**kwargs):
+    MongoDataNode(**kwargs).autorun()
+
+
+if __name__ == '__main__':
+    provision_mongo_data_node()
