@@ -34,7 +34,7 @@ class Server(object):
                                 'allow-describe-instances'
                                 ]
 
-    IAM_MANAGED_POLICIES = ['allow-upsert-route53-records']
+    IAM_MANAGED_POLICIES = []
     IAM_ROLE_POLICIES = []
 
     CHEF_RUNLIST = ['role[RoleBase]']
@@ -44,10 +44,9 @@ class Server(object):
                  environment=None, ami=None, region=None, role=None,
                  keypair=None, availability_zone=None, security_groups=None,
                  block_devices=None, chef_path=None, subnet_id=None,
-                 dns_zones=None, platform=None, use_latest_ami=False,
+                 platform=None, use_latest_ami=False,
                  ingress_groups_to_add=None, ports_to_authorize=None,
-                 classic_link=False, add_route53_dns=True,
-                 chef_server_url=None):
+                 classic_link=False, chef_server_url=None):
 
         self.instance_type = instance_type
         self.group = group
@@ -61,13 +60,11 @@ class Server(object):
         self.security_groups = security_groups
         self.block_devices = block_devices
         self.chef_path = chef_path
-        self.dns_zones = dns_zones
         self.subnet_id = subnet_id
         self.vpc_id = None
         self.ingress_groups_to_add = ingress_groups_to_add
         self.ports_to_authorize = ports_to_authorize
         self.classic_link = classic_link
-        self.add_route53_dns = add_route53_dns
         self.ebs_optimized = False
         self.platform = platform
         self.create_alerts = False
@@ -289,47 +286,6 @@ class Server(object):
 
         if self.ingress_groups_to_add:
             self.ingress_rules()
-
-        if self.dns_zones is None:
-            self.log.warn('No DNS zones specified')
-            self.dns_zones = [
-                {
-                    'id': {
-                        'prod': 'ZDQ066NWSBGCZ',
-                        'stage': 'Z3ETV7KVCRERYL',
-                        'test': 'ZAH3O4H1900GY'
-                    },
-                    'records': [
-                        {
-                            'type': 'CNAME',
-                            'name': '{name}.external.{dns_zone}.',
-                            'value': '{dns_name}',
-                            'ttl': 60
-                        },
-                        {
-                            'type': 'A',
-                            'name': '{hostname}.',
-                            'value': '{private_ip_address}',
-                            'ttl': 60
-                        }
-                    ]
-                },
-                {
-                    'id': {
-                        'prod': 'Z1LKTAOOYM3H8T',
-                        'stage': 'Z24UEMQ8K6Z50Z',
-                        'test': 'ZXXFTW7F1WFIS'
-                    },
-                    'records': [
-                        {
-                            'type': 'A',
-                            'name': '{hostname}.',
-                            'value': '{private_ip_address}',
-                            'ttl': 60
-                        }
-                    ]
-                }
-            ]
 
         self.set_chef_attributes()
 
@@ -891,65 +847,6 @@ named {name}""".format(path=d['path'], name=d['name']))
     def ephemeral_storage(self):
         return cloudspecs.aws.ec2.instances[self.instance_type]['instance_storage']
 
-    def route(self, wait=False):
-
-        for dns_zone in self.dns_zones:
-
-            self.log.info('Routing Hosted Zone {zone}'.format(zone=dns_zone))
-
-            for z in self.route53.get_zones():
-                if z.id == dns_zone['id'][self.environment]:
-                    zone = z
-                    break
-
-            self.log.info('Using Zone Address {zone}'.format(zone=zone.name))
-
-            for record in dns_zone['records']:
-
-                self.log.info('Processing DNS record {record}'.format(
-                              record=record))
-
-                formatting_params = {
-                    'hostname': self.hostname,
-                    'name': self.name,
-                    'instance_id': self.instance.id,
-                    'vpc_id': self.instance.vpc_id,
-                    'ip_address': self.instance.ip_address,
-                    'dns_name': self.instance.dns_name,
-                    'private_ip_address': self.instance.private_ip_address,
-                    'private_dns_name': self.instance.private_dns_name,
-                    'dns_zone': self.hostname[len(self.name)+1:]
-                }
-
-                record['name'] = record['name'].format(**formatting_params)
-                record['value'] = record['value'].format(**formatting_params)
-
-                self.log.info('Adding DNS record {record}'.format(
-                              record=record))
-
-                existing_records = zone.find_records(name=record['name'],
-                                                     type=record['type'])
-
-                if existing_records:
-                    self.log.info('The DNS record already exists')
-                    zone.delete_record(existing_records)
-                    self.log.info('The existing DNS record was deleted')
-
-                try:
-                    status = zone.add_record(record['type'], record['name'],
-                                             record['value'],
-                                             ttl=record['ttl'])
-
-                    if wait:
-                        while status.update() != 'INSYNC':
-                            self.log.debug('Waiting for DNS '
-                                           'change to propagate')
-                            time.sleep(10)
-
-                    self.log.info('Added new DNS record')
-                except Exception, e:
-                    self.log.error(str(e))
-                    raise e
 
     def ingress_rules(self):
         grp_id = self.get_security_group_ids([self.envcl], vpc_id=self.vpc_id)
@@ -1161,6 +1058,4 @@ named {name}""".format(path=d['path'], name=d['name']))
         self.configure()
         self.launch(wait=True)
         self.tag()
-        if self.add_route53_dns:
-            self.route()
         self.bake()

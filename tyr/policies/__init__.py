@@ -1,8 +1,6 @@
 import ec2
 import s3
 import elb
-import route53
-
 
 policies = {
     'allow-volume-control': ec2.allow_volume_control,
@@ -34,8 +32,5 @@ policies = {
     'allow-describe-snapshots': ec2.allow_describe_snapshots,
     'allow-get-hudl-config': s3.allow_get_hudl_config,
     'allow-get-chef-artifacts-chef-client':
-    s3.allow_get_chef_artifacts_chef_client,
-    'allow-update-route53-test': None,
-    'allow-update-route53-prod': route53.allow_update_route53_prod,
-    'allow-update-route53-stage': route53.allow_update_route53_stage
+    s3.allow_get_chef_artifacts_chef_client
 }

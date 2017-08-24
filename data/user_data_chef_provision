@@ -84,11 +84,6 @@ FULL_HOSTNAME="$SERVER_NAME$SUBDOMAIN"
 
 mkdir /etc/chef
 
-CHANGE="{\"Comment\": \"Add recordset for $SERVER_NAME\", \"Changes\": [ { \"Action\": \"UPSERT\", \"ResourceRecordSet\": { \"Name\": \"$FULL_HOSTNAME\", \"Type\": \"CNAME\", \"TTL\": 60, \"ResourceRecords\": [ { \"Value\": \"$LOCAL_HOSTNAME\" } ] } } ] }"
-echo $CHANGE > /etc/chef/route53change.json
-
-aws route53 change-resource-record-sets --hosted-zone-id $HOSTED_ZONE --change-batch file:///etc/chef/route53change.json
-
 hostname $FULL_HOSTNAME
 
 sed -i 's/^releasever=latest/# releasever=latest/' /etc/yum.conf

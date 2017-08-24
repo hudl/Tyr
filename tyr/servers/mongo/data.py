@@ -14,10 +14,10 @@ class MongoDataNode(MongoReplicaSetMember):
                  environment=None, ami=None, region=None, role=None,
                  keypair=None, availability_zone=None,
                  security_groups=None, block_devices=None,
-                 chef_path=None, subnet_id=None, dns_zones=None,
+                 chef_path=None, subnet_id=None,
                  ingress_groups_to_add=None, ports_to_authorize=None,
-                 classic_link=False, add_route53_dns=True, chef_server_url=None,
-                 replica_set=None, mongodb_version=None, data_volume_size=None,
+                 classic_link=False, chef_server_url=None, replica_set=None,
+                 mongodb_version=None, data_volume_size=None,
                  data_volume_iops=None, data_volume_snapshot_id=None,
                  journal_volume_size=None, journal_volume_iops=None,
                  log_volume_size=None, log_volume_iops=None):
@@ -26,11 +26,11 @@ class MongoDataNode(MongoReplicaSetMember):
                                             environment, ami, region, role,
                                             keypair, availability_zone,
                                             security_groups, block_devices,
-                                            chef_path, subnet_id, dns_zones,
+                                            chef_path, subnet_id,
                                             ingress_groups_to_add,
                                             ports_to_authorize, classic_link,
-                                            add_route53_dns, chef_server_url,
-                                            replica_set, mongodb_version)
+                                            chef_server_url, replica_set,
+                                            mongodb_version)
 
         self.data_volume_size = data_volume_size
         self.data_volume_iops = data_volume_iops

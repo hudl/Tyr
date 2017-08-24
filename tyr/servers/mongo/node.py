@@ -10,17 +10,16 @@ class MongoNode(Server):
     CHEF_MONGODB_TYPE = 'generic'
 
     IAM_ROLE_POLICIES = ['allow-volume-control']
-    IAM_MANAGED_POLICIES = ['allow-upsert-route53-records', 'zuun-managed']
+    IAM_MANAGED_POLICIES = ['zuun-managed']
 
     def __init__(self, group=None, server_type=None, instance_type=None,
                  environment=None, ami=None, region=None, role=None,
                  keypair=None, availability_zone=None,
                  security_groups=None, block_devices=None,
-                 chef_path=None, subnet_id=None, dns_zones=None,
+                 chef_path=None, subnet_id=None,
                  platform=None, use_latest_ami=False,
                  ingress_groups_to_add=None, ports_to_authorize=None,
-                 classic_link=False, add_route53_dns=True,
-                 chef_server_url=None):
+                 classic_link=False, chef_server_url=None):
 
         if server_type is None:
             server_type = self.SERVER_TYPE
@@ -29,11 +28,10 @@ class MongoNode(Server):
                                         environment, ami, region, role,
                                         keypair, availability_zone,
                                         security_groups, block_devices,
-                                        chef_path, subnet_id, dns_zones,
+                                        chef_path, subnet_id,
                                         platform, use_latest_ami,
                                         ingress_groups_to_add, ports_to_authorize,
-                                        classic_link, add_route53_dns,
-                                        chef_server_url)
+                                        classic_link, chef_server_url)
 
     def set_chef_attributes(self):
         super(MongoNode, self).set_chef_attributes()

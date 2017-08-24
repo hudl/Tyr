@@ -44,9 +44,7 @@ class IISNode(Server):
                                       security_groups=security_groups,
                                       subnet_id=subnet_id,
                                       platform=platform,
-                                      use_latest_ami=use_latest_ami,
-                                      dns_zones=None,
-                                      add_route53_dns=False)
+                                      use_latest_ami=use_latest_ami)                                      
 
         env_prefix = self.environment[0]
 

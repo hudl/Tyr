@@ -10,17 +10,16 @@ class RabbitMQServer(Server):
 
     IAM_ROLE_POLICIES = [
         'allow-describe-tags',
-        'allow-volume-control',
-        'allow-update-route53-{environment}'
+        'allow-volume-control'
     ]
 
     def __init__(self, group=None, server_type=None, instance_type=None,
                  environment=None, ami=None, region=None, role=None,
                  keypair=None, availability_zone=None, security_groups=None,
                  block_devices=None, chef_path=None, subnet_id=None,
-                 dns_zones=None, platform=None, use_latest_ami=False,
+                 platform=None, use_latest_ami=False,
                  ingress_groups_to_add=None, ports_to_authorize=None,
-                 classic_link=False, add_route53_dns=True, chef_server_url=None,
+                 classic_link=False, chef_server_url=None,
                  vol_iops=500, vol_size=100, rabbit_user=None,
                  rabbit_pass=None):
 
@@ -46,11 +45,11 @@ class RabbitMQServer(Server):
                                              environment, ami, region, role,
                                              keypair, availability_zone,
                                              security_groups, block_devices,
-                                             chef_path, subnet_id, dns_zones,
+                                             chef_path, subnet_id,
                                              platform, use_latest_ami,
                                              ingress_groups_to_add,
                                              ports_to_authorize, classic_link,
-                                             add_route53_dns, chef_server_url)
+                                             chef_server_url)
 
     def set_chef_attributes(self):
         super(RabbitMQServer, self).set_chef_attributes()

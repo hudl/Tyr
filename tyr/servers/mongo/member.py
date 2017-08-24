@@ -10,10 +10,10 @@ class MongoReplicaSetMember(MongoNode):
                  environment=None, ami=None, region=None, role=None,
                  keypair=None, availability_zone=None,
                  security_groups=None, block_devices=None,
-                 chef_path=None, subnet_id=None, dns_zones=None,
+                 chef_path=None, subnet_id=None,
                  ingress_groups_to_add=None, ports_to_authorize=None,
-                 classic_link=False, add_route53_dns=True,
-                 chef_server_url=None, replica_set=None, mongodb_version=None):
+                 classic_link=False, chef_server_url=None,
+                 replica_set=None, mongodb_version=None):
 
         super(MongoReplicaSetMember, self).__init__(group, server_type,
                                                     instance_type,
@@ -22,11 +22,10 @@ class MongoReplicaSetMember(MongoNode):
                                                     availability_zone,
                                                     security_groups,
                                                     block_devices, chef_path,
-                                                    subnet_id, dns_zones,
+                                                    subnet_id,
                                                     ingress_groups_to_add,
                                                     ports_to_authorize,
                                                     classic_link,
-                                                    add_route53_dns,
                                                     chef_server_url)
         if replica_set is None:
             replica_set = "1"
