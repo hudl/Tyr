@@ -3,7 +3,6 @@ from tyr.servers.mongo import MongoDataNode, MongoArbiterNode
 import time
 import json
 
-
 class MongoCluster(object):
 
     log = logging.getLogger('Clusters.Mongo')
@@ -22,7 +21,7 @@ class MongoCluster(object):
                  replica_set=None, security_groups=None,
                  block_devices=None, data_volume_size=None,
                  data_volume_iops=None, data_nodes=None,
-                 mongodb_version=None):
+                 mongodb_version=None, subnet_ids=[None]):
 
         self.nodes = []
 
@@ -43,6 +42,7 @@ class MongoCluster(object):
         self.data_nodes = data_nodes
         self.mongodb_version = mongodb_version
         self.dns_zones = dns_zones
+        self.subnet_ids = subnet_ids
 
     def provision(self):
 
@@ -53,6 +53,14 @@ class MongoCluster(object):
         while len(zones) < (self.data_nodes+1):
 
             zones += zones
+
+        if len(self.subnet_ids) == 0:
+
+            self.subnet_ids = [None]
+
+        while len(self.subnet_ids) < (self.data_nodes+1):
+
+            self.subnet_ids += self.subnet_ids
 
         self.log.info('Provisioning MongoDB Data Nodes')
 
@@ -74,7 +82,8 @@ class MongoCluster(object):
                                  availability_zone=zones[i],
                                  data_volume_size=self.data_volume_size,
                                  data_volume_iops=self.data_volume_iops,
-                                 mongodb_version=self.mongodb_version)
+                                 mongodb_version=self.mongodb_version,
+                                 subnet_id=self.subnet_ids[i])
 
             node.autorun()
 
@@ -96,7 +105,8 @@ class MongoCluster(object):
                                     security_groups=self.security_groups,
                                     block_devices=self.block_devices,
                                     availability_zone=zones[i+1],
-                                    mongodb_version=self.mongodb_version)
+                                    mongodb_version=self.mongodb_version,
+                                    subnet_id=self.subnet_ids[i+1])
 
             node.autorun()
 
