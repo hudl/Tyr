@@ -18,7 +18,7 @@ class MongoCluster(object):
 
     def __init__(self, group=None, server_type=None, instance_type=None,
                  environment=None, ami=None, region=None, role=None,
-                 keypair=None, chef_path=None, dns_zones=None,
+                 keypair=None, chef_path=None,
                  replica_set=None, security_groups=None,
                  block_devices=None, data_volume_size=None,
                  data_volume_iops=None, data_nodes=None,
@@ -42,7 +42,6 @@ class MongoCluster(object):
         self.data_volume_iops = data_volume_iops
         self.data_nodes = data_nodes
         self.mongodb_version = mongodb_version
-        self.dns_zones = dns_zones
 
     def provision(self):
 
@@ -67,7 +66,6 @@ class MongoCluster(object):
                                  ami=self.ami, region=self.region,
                                  role=self.role, keypair=self.keypair,
                                  chef_path=self.chef_path,
-                                 dns_zones=self.dns_zones,
                                  replica_set=self.replica_set,
                                  security_groups=self.security_groups,
                                  block_devices=self.block_devices,
@@ -91,7 +89,6 @@ class MongoCluster(object):
                                     ami=self.ami, region=self.region,
                                     role=self.role, keypair=self.keypair,
                                     chef_path=self.chef_path,
-                                    dns_zones=self.dns_zones,
                                     replica_set=self.replica_set,
                                     security_groups=self.security_groups,
                                     block_devices=self.block_devices,

@@ -135,8 +135,7 @@ allow_web_initialization_prod = """{
         "cloudwatch:ListMetrics",
         "cloudwatch:PutMetricAlarm",
         "cloudwatch:PutMetricData",
-        "cloudwatch:SetAlarmState",
-        "route53:ChangeResourceRecordSets"
+        "cloudwatch:SetAlarmState"
       ],
       "Sid": "Stmt1370290134000",
       "Resource": [
@@ -184,8 +183,7 @@ allow_web_initialization_stage = """{
         "cloudwatch:ListMetrics",
         "cloudwatch:PutMetricAlarm",
         "cloudwatch:PutMetricData",
-        "cloudwatch:SetAlarmState",
-        "route53:ChangeResourceRecordSets"
+        "cloudwatch:SetAlarmState"
       ],
       "Sid": "Stmt1370290134000",
       "Resource": [
