@@ -31,7 +31,7 @@ class SolrSlaveNode(Server):
                                             environment, ami, region, role,
                                             keypair, availability_zone,
                                             security_groups, None,
-                                            chef_path, subnet_id, dns_zones,
+                                            chef_path, subnet_id,
                                             platform, use_latest_ami,
                                             ingress_groups_to_add,
                                             ports_to_authorize, classic_link,
