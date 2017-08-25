@@ -78,7 +78,6 @@ class MongoNode(Server):
         elif self.environment == "stage":
             self.IAM_ROLE_POLICIES.append('allow-mongo-snapshot-cleanup')
             self.IAM_MANAGED_POLICIES.append('allow-mongo-backup-restore')
-        self.resolve_iam_role()
 
         # This is just a temporary fix to override the default security
         # groups for MongoDB nodes until the security_groups argument

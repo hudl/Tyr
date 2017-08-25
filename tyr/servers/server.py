@@ -206,8 +206,6 @@ class Server(object):
             self.IAM_MANAGED_POLICIES.append('allow-upsert-route53-records-thorhudl-com')
             self.IAM_MANAGED_POLICIES.append('allow-upsert-route53-records-app-thorhudl-com')        
 
-        self.resolve_iam_role()
-
         if self.keypair is None:
             self.log.warn('No EC2 Keypair provided')
             self.keypair = 'stage-key'
@@ -875,6 +873,22 @@ named {name}""".format(path=d['path'], name=d['name']))
                 except boto.exception.EC2ResponseError as e:
                     self.log.warning(
                         "Unable to add ingress rule. May already exist. ")
+
+
+    def resolve_dependencies(self):
+        params = {
+            'environment': self.environment,
+            'env': self.environment[0],
+            'group': self.group,
+            'type': self.server_type,
+        }
+        params['envcl'] = '{env}-{group}-{type}'.format(**params)
+
+        self.IAM_MANAGED_POLICIES = [p.format(**params) for p in self.IAM_MANAGED_POLICIES]
+        self.IAM_ROLE_POLICIES = [p.format(**params) for p in self.IAM_ROLE_POLICIES]
+
+        self.resolve_iam_role()
+
 
     @property
     def connection(self):

@@ -132,4 +132,3 @@ class MongoDataNode(MongoReplicaSetMember):
         if self.environment == 'stage':
             self.IAM_ROLE_POLICIES.append('allow-download-script'
                                           '-s3-stage-updater')
-            self.resolve_iam_role()
