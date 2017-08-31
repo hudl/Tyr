@@ -1,5 +1,6 @@
 from node import MongoNode
 from zuun import ZuunConfig
+from helpers import REPLICA_SET_MOD
 from chef.exceptions import ChefServerError
 
 class MongoReplicaSetMember(MongoNode):
@@ -37,8 +38,11 @@ class MongoReplicaSetMember(MongoNode):
     def set_chef_attributes(self):
         super(MongoReplicaSetMember, self).set_chef_attributes()
 
-        replica_set = self.REPLICA_SET_TEMPLATE.format(
-            group=self.group, set_=self.replica_set)
+        try:
+            replica_set = REPLICA_SET_MOD[self.group](self.replica_set)
+        except KeyError:
+            replica_set = self.REPLICA_SET_TEMPLATE.format(
+                group=self.group, set_=self.replica_set)
 
         self.CHEF_ATTRIBUTES['mongodb']['replicaset_name'] = replica_set
         self.log.info('Set the replica set name to "{name}"'.format(
@@ -74,8 +78,11 @@ class MongoReplicaSetMember(MongoNode):
 
         tags = super(MongoReplicaSetMember, self).tags
 
-        tags['ReplicaSet'] = self.REPLICA_SET_TEMPLATE.format(
-            group=self.group, set_=self.replica_set
-        )
+        try:
+            tags['ReplicaSet'] = REPLICA_SET_MOD[self.group](self.replica_set)
+        except KeyError:
+            tags['ReplicaSet'] = self.REPLICA_SET_TEMPLATE.format(
+                group=self.group, set_=self.replica_set
+            )
 
         return tags

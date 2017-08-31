@@ -1,5 +1,5 @@
 from node import MongoNode
-
+from helpers import CONFIG_MOD
 
 class MongoConfigNode(MongoNode):
 
@@ -96,3 +96,8 @@ class MongoConfigNode(MongoNode):
 
         self.CHEF_ATTRIBUTES['volumes'] = volumes
         self.log.info('Configured the volumes attribute')
+
+        try:
+            self.CHEF_ATTRIBUTES['zuun']['replica_set'] = CONFIG_MOD[self.group]
+        except KeyError:
+            pass
