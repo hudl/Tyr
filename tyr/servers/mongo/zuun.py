@@ -52,9 +52,13 @@ class ZuunConfig():
           if item_name not in bag:
             chef.DataBagItem.create('zuun',item_name, **data_bag_item)
           else:
-            print("Replica set configuration databag already exists on chef-server.  Updating.")
+            print("Data bag item already exists on chef-server.")
             dbi = chef.DataBagItem(bag, item_name)
-            dbi['replica-sets'][rs] = data_bag_item['replica-sets'][rs]
+            if rs not in dbi['replica-sets']:
+              print("Replica set not configured in data bag item; updating.")
+              dbi['replica-sets'][rs] = data_bag_item['replica-sets'][rs]
+            else:
+              print("Replica set already configured; skipping")
             dbi.save()
         except Exception as e:
           raise e
