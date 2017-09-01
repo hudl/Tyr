@@ -53,8 +53,6 @@ class SolrMasterNode(Server):
         self.security_groups = [
             'management',
             'chef-nodes',
-            self.envcl,
-            '{env}-solr-management'.format(env=self.environment[0])
+            '{envcl}',
+            '{env}-solr-management'
         ]
-
-        self.resolve_security_groups()

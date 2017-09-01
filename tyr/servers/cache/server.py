@@ -91,11 +91,10 @@ class CacheServer(Server):
         self.security_groups = [
             'management',
             'chef-nodes',
-            self.envcl,
-            '{env}-cache-management'.format(env=self.environment[0])
+            '{envcl}',
+            '{env}-cache-management'
         ]
 
-        self.resolve_security_groups()
 
     def bake(self):
         super(CacheServer, self).bake()

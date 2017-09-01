@@ -46,14 +46,12 @@ class IISNode(Server):
                                       platform=platform,
                                       use_latest_ami=use_latest_ami)                                      
 
-        env_prefix = self.environment[0]
-
         self.security_groups = [
-            "management",
-            "{env}-mv-web".format(env=env_prefix),
-            "{env}-{grp}-web".format(env=env_prefix, grp=self.group),
-            "{env}-hudl-{grp}".format(env=env_prefix, grp=self.group),
+            "management",            
             "chef-nodes",
+            "{envcl}",
+            "{env}-hudl-{group}",            
+            "{env}-mv-web"
         ]
 
         self.classic_link_vpc_security_groups = [

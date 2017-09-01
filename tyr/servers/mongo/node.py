@@ -86,11 +86,9 @@ class MongoNode(Server):
         self.security_groups = [
             'management',
             'chef-nodes',
-            self.envcl,
-            '{env}-mongo-management'.format(env=self.environment[0])
+            '{envcl}',
+            '{env}-mongo-management'
         ]
-
-        self.resolve_security_groups()
 
     def run_mongo(self, command):
 

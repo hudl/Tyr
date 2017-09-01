@@ -256,14 +256,10 @@ class Server(object):
 
         if self.security_groups is None:
             self.log.warn('No EC2 security groups provided')
-
-            self.security_groups = ['management', 'chef-nodes']
-            self.security_groups.append(self.envcl)
+            self.security_groups = ['management', 'chef-nodes', '{envcl}']            
 
         self.log.info('Using security groups {groups}'.format(
                       groups=', '.join(self.security_groups)))
-
-        self.resolve_security_groups()
 
         if self.block_devices is None:
             self.log.warn('No block devices provided')
@@ -886,8 +882,10 @@ named {name}""".format(path=d['path'], name=d['name']))
 
         self.IAM_MANAGED_POLICIES = [p.format(**params) for p in self.IAM_MANAGED_POLICIES]
         self.IAM_ROLE_POLICIES = [p.format(**params) for p in self.IAM_ROLE_POLICIES]
+        self.security_groups = [g.format(**params) for g in self.security_groups]
 
         self.resolve_iam_role()
+        self.resolve_security_groups()
 
 
     @property
