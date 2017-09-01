@@ -97,35 +97,35 @@ def generate_mongo_conf(node):
 
 
 def update_data_bag_item(node):
-  data_bag_item_name = 'deployment_{}'.format(
-    node.CHEF_ATTRIBUTES['zuun']['deployment'])
-  search_key = node.replica_set or node.CHEF_MONGODB_TYPE
-  data_bag_item_node_data = {
-    'version': node.mongodb_version,
-    'conf': base64.b64encode(generate_mongo_conf(node))
-  }
+    data_bag_item_name = 'deployment_{}'.format(
+        node.CHEF_ATTRIBUTES['zuun']['deployment'])
+    search_key = node.replica_set or node.CHEF_MONGODB_TYPE
+    data_bag_item_node_data = {
+        'version': node.mongodb_version,
+        'conf': base64.b64encode(generate_mongo_conf(node))
+    }
 
-  data_bag_item = {'replica-sets': {}}
+    data_bag_item = {'replica-sets': {}}
   
-  with chef.autoconfigure(node.chef_path):
-    data_bag = chef.DataBag('zuun')
+    with chef.autoconfigure(node.chef_path):
+        data_bag = chef.DataBag('zuun')
   
-    if data_bag_item_name in data_bag.keys():
-      node.log.info('Data bag item {} already exists; updating (but not overwriting) if required'.format(data_bag_item_name))
-      data_bag_item = chef.DataBagItem(data_bag, data_bag_item_name)
+        if data_bag_item_name in data_bag.keys():
+            node.log.info('Data bag item {} already exists; updating (but not overwriting) if required'.format(data_bag_item_name))
+            data_bag_item = chef.DataBagItem(data_bag, data_bag_item_name)
 
-      source = data_bag_item['replica-sets'] if node.replica_set else data_bag_item
+            source = data_bag_item['replica-sets'] if node.replica_set else data_bag_item
 
-      if search_key not in source:
-        source[key] = data_bag_item_node_data
-        data_bag_item.save()
-    else:
-      node.log.info('Data bag item {} does not exist; creating'.format(data_bag_item_name))
+            if search_key not in source:
+                source[key] = data_bag_item_node_data
+                data_bag_item.save()
+        else:
+            node.log.info('Data bag item {} does not exist; creating'.format(data_bag_item_name))
 
-      source = data_bag_item['replica-sets'] if node.replica_set else data_bag_item      
-      source[search_key] = data_bag_item_node_data
+            source = data_bag_item['replica-sets'] if node.replica_set else data_bag_item      
+            source[search_key] = data_bag_item_node_data
 
-      chef.DataBagItem.create('zuun', data_bag_item_name, **data_bag_item)
+            chef.DataBagItem.create('zuun', data_bag_item_name, **data_bag_item)
 
 
     

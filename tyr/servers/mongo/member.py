@@ -1,6 +1,44 @@
 from node import MongoNode
 from chef.exceptions import ChefServerError
 
+REPLICA_SET_MODS = {
+    'monolith': {
+        'data': lambda n: 'RS{}'.format(n.replica_set)
+    },        
+    'exchanges': {
+        'data': lambda n: 'RS{}'.format(n.replica_set)
+    },
+    'clips': {
+        'data': lambda n: 'CLIPS'
+    },
+    'feed': {
+        'data': lambda n: 'FEED-RS{}'.format(n.replica_set)
+    },
+    'highlights': {
+        'data': lambda n: {1: 'highlights_0-backup', 2: 'highlights_1-backup', 3: 'highlights-rs3-backup'}[n.replica_set],
+        'config': lambda n: 'configHighlights'
+    },
+    'hudlrd': {
+        'data': lambda n: 'predator-rs{}'.format(n.replica_set)
+    },
+    'leroy': {
+        'data': lambda n: 'LEROY'
+    },
+    'overwatch': {
+        'data': lambda n: '{}-overwatch'.format(n.environment[0])
+    },
+    'push': {
+        'data': lambda n: 'PUSH'
+    },
+    'recruit': {
+        'data': lambda n: 'REC'
+    },
+    'statistics': {
+        'data': lambda n: 'STATS'
+    }
+}
+
+
 class MongoReplicaSetMember(MongoNode):
 
     REPLICA_SET_TEMPLATE = '{group}-rs{set_}'
@@ -28,37 +66,33 @@ class MongoReplicaSetMember(MongoNode):
                                                     chef_server_url,
                                                     mongodb_version)
 
-        self.replica_set = replica_set or '1'
+        self.replica_set = replica_set
+
 
     def set_chef_attributes(self):
         super(MongoReplicaSetMember, self).set_chef_attributes()
-
-        replica_set = self.REPLICA_SET_TEMPLATE.format(
-            group=self.group, set_=self.replica_set)
-
-        self.CHEF_ATTRIBUTES['mongodb']['replicaset_name'] = replica_set
-        self.log.info('Set the replica set name to "{name}"'.format(
-            name=replica_set)
-        )
+        self.CHEF_ATTRIBUTES['mongodb']['replicaset_name'] = self.replica_set
 
 
     def configure(self):
         super(MongoReplicaSetMember, self).configure()
-        self.set_chef_attributes()
 
-        if self.replica_set is None:
-            self.log.warn('No replica set provided')
-            self.replica_set = 1
+        try:
+            self.replica_set = REPLICA_SET_MODS[self.group][self.CHEF_MONGODB_TYPE](self)
+        except KeyError:
+            self.replica_set = self.REPLICA_SET_TEMPLATE.format(
+                group=self.group, set_=self.replica_set
+            )
 
         self.log.info('Using replica set {set}'.format(set=self.replica_set))
+
+        self.set_chef_attributes()
+
 
     @property
     def tags(self):
 
         tags = super(MongoReplicaSetMember, self).tags
-
-        tags['ReplicaSet'] = self.REPLICA_SET_TEMPLATE.format(
-            group=self.group, set_=self.replica_set
-        )
+        tags['ReplicaSet'] = self.replica_set
 
         return tags
