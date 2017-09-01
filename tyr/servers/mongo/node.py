@@ -36,6 +36,10 @@ class MongoNode(Server):
                                         classic_link, chef_server_url)
 
         self.mongodb_version = mongodb_version or '3.2.9'
+        self.zuun_deployment = '{env}-{group}'.format(
+            env=self.environment[0],
+            group=self.group
+        )
 
 
     def set_chef_attributes(self):
