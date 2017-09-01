@@ -1,5 +1,4 @@
 from node import MongoNode
-from zuun import ZuunConfig
 from chef.exceptions import ChefServerError
 
 class MongoReplicaSetMember(MongoNode):
@@ -42,14 +41,6 @@ class MongoReplicaSetMember(MongoNode):
             name=replica_set)
         )
 
-        try:
-            self.log.warning('Creating ' + 'deployment_{}-{}'.format(self.environment[0], self.group) + " data bag.")
-            ZuunConfig.write_databag(self.chef_path, self.environment[0],
-                                     self.group, replica_set,
-                                     self.mongodb_version)
-        except Exception as e:
-            self.log.error("Failed to create zuun databag config!")
-            raise e
 
     def configure(self):
         super(MongoReplicaSetMember, self).configure()
