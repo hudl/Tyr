@@ -29,9 +29,6 @@ class IISNode(Server):
         if server_type is None:
             server_type = self.SERVER_TYPE
 
-        self.mongos_service = mongos_service
-        self.mongo_servers = mongo_servers
-
         super(IISNode, self).__init__(group=group, server_type=server_type,
                                       instance_type=instance_type,
                                       environment=environment,
@@ -46,36 +43,30 @@ class IISNode(Server):
                                       platform=platform,
                                       use_latest_ami=use_latest_ami)                                      
 
-        self.security_groups = [
-            "management",            
-            "chef-nodes",
-            "{envcl}",
-            "{env}-hudl-{group}",            
-            "{env}-mv-web"
-        ]
+        self.mongos_service = mongos_service
+        self.mongo_servers = mongo_servers
 
-        self.classic_link_vpc_security_groups = [
-        ]
 
+    def configure(self):        
+        super(IISNode, self).configure()
+
+        self.security_groups.extend(['{env}-hudl-{group}', '{env}-mv-web'])
+        self.IAM_MANAGED_POLICIES.append('hudl-webserver-{environment}-multiverse')
+        self.ports_to_authorize.extend([9000, 9001, 8095, 8096])
+        
         self.ingress_groups_to_add = [
             "{env}-web".format(env=env_prefix),
             "{env}-nginx".format(env=env_prefix),
             "{env}-queueproc-jobs".format(env=env_prefix)
         ]
 
-        if self.mongos_service:
-            mongo_ops = ("mongos_host", "no_mongos", "mongos_service")
-            if self.mongos_service not in mongo_ops:
-                raise ValueError(
-                    "Mongo service name must be one of: {0}".format(
-                        mongo_ops))
+        self.classic_link_vpc_security_groups = []
 
-        self.ports_to_authorize = [9000, 9001, 8095, 8096]
-        self.IAM_MANAGED_POLICIES.append('hudl-webserver-{environment}-multiverse')
-
-    def configure(self):
-        super(IISNode, self).establish_logger()
-        super(IISNode, self).configure()
+        mongos_options = ("mongos_host", "no_mongos", "mongos_service")
+        if self.mongos_service and self.mongos_service not in mongos_options:
+            raise ValueError('mongos_service value {} not in options {}'.format(
+                self.mongos_service, mongos_options
+            ))
 
     @property
     def user_data(self):
