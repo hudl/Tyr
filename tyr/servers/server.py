@@ -256,7 +256,10 @@ class Server(object):
 
         if self.security_groups is None:
             self.log.warn('No EC2 security groups provided')
-            self.security_groups = ['management', 'chef-nodes', '{envcl}']            
+            self.security_groups = ['management',
+                                    '{env}-{server_type}-management',
+                                    '{envcl}',
+                                    'chef-nodes']
 
         self.log.info('Using security groups {groups}'.format(
                       groups=', '.join(self.security_groups)))

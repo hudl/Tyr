@@ -84,17 +84,6 @@ class CacheServer(Server):
             else:
                 self.bucket_name = 'hudl-stage'
 
-        # This is just a temporary fix to override the default security
-        # groups for Cache servers until the security_groups argument is
-        # removed.
-
-        self.security_groups = [
-            'management',
-            'chef-nodes',
-            '{envcl}',
-            '{env}-cache-management'
-        ]
-
 
     def bake(self):
         super(CacheServer, self).bake()

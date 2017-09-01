@@ -65,7 +65,6 @@ class MongoNode(Server):
         )
 
 
-
     def configure(self):
         super(MongoNode, self).configure()
         self.set_chef_attributes()
@@ -79,16 +78,6 @@ class MongoNode(Server):
             self.IAM_ROLE_POLICIES.append('allow-mongo-snapshot-cleanup')
             self.IAM_MANAGED_POLICIES.append('allow-mongo-backup-restore')
 
-        # This is just a temporary fix to override the default security
-        # groups for MongoDB nodes until the security_groups argument
-        # is removed.
-
-        self.security_groups = [
-            'management',
-            'chef-nodes',
-            '{envcl}',
-            '{env}-mongo-management'
-        ]
 
     def run_mongo(self, command):
 

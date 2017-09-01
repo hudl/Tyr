@@ -83,10 +83,3 @@ class SolrSlaveNode(Server):
         if self.master is None:
             self.log.critical('The solr master is not defined')
             sys.exit(1)
-
-        self.security_groups = [
-            'management',
-            'chef-nodes',
-            '{envcl}',
-            '{env}-solr-management'
-        ]

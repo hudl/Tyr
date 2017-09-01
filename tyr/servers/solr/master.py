@@ -49,10 +49,3 @@ class SolrMasterNode(Server):
     def configure(self):
         super(SolrMasterNode, self).configure()
         self.set_chef_attributes()
-
-        self.security_groups = [
-            'management',
-            'chef-nodes',
-            '{envcl}',
-            '{env}-solr-management'
-        ]
