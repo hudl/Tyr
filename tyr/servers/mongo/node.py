@@ -57,11 +57,23 @@ class MongoNode(Server):
             type_=self.CHEF_MONGODB_TYPE)
         )
 
-        node = zuun.configure_chef_attributes(node)
+        self.CHEF_ATTRIBUTES['zuun'] = {
+            'deployment': self.zuun_deployment,
+            'role': self.CHEF_MONGODB_TYPE,
+
+        }
+
+        try:
+            if self.replica_set:
+                self.CHEF_ATTRIBUTES['zuun']['replica_set'] = self.replica_set
+        except AttributeError:
+            pass
+
 
 
     def configure(self):
         super(MongoNode, self).configure()
+
         self.set_chef_attributes()
 
         if self.environment == 'prod':
