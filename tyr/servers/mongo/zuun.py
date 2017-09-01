@@ -3,6 +3,34 @@ import sys
 import chef
 import base64
 
+
+def configure_chef_attributes(node):
+  zuun_deployment = '{env}-{group}'.format(
+    env=node.environment[0],
+    group=node.group
+  )
+
+  node.CHEF_ATTRIBUTES['zuun'] = {}
+
+  node.CHEF_ATTRIBUTES['zuun']['deployment'] = zuun_deployment
+
+  node.log.info('Set the Zuun deployment to {deployment}'.format(
+    deployment=zuun_deployment
+  ))
+
+  node.CHEF_ATTRIBUTES['zuun']['role'] = node.CHEF_MONGODB_TYPE
+  node.log.info('Set the Zuun role to "{type_}"'.format(
+    type_=node.CHEF_MONGODB_TYPE)
+  )
+
+  if node.CHEF_MONGODB_TYPE == 'data':
+    node.CHEF_ATTRIBUTES['zuun']['replica_set'] = node.replica_set
+  elif node.CHEF_MONGODB_TYPE == 'config' and node.replica_set is not None:
+    node.CHEF_ATTRIBUTES['zuun']['replica_set'] = node.replica_set
+
+  return node
+
+
 class ZuunConfig():
 
   @staticmethod
