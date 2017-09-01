@@ -99,7 +99,9 @@ class IISCluster():
 
     def provision(self):
         self.log.info('Provisioning IISCluster')
+        self.node.establish_logger()
         self.node.configure()
+        self.node.resolve_dependencies()
 
         self.log.info('Creating autoscaler')
         self.autoscaler.autorun()

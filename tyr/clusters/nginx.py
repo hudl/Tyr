@@ -91,6 +91,7 @@ class NginxCluster():
 
         node.establish_logger()
         node.configure()
+        node.resolve_dependencies()
 
         self.log.info('Creating autoscaler')
         auto = AutoScaler(launch_configuration=self.launch_configuration,

@@ -257,7 +257,7 @@ class Server(object):
         if self.security_groups is None:
             self.log.warn('No EC2 security groups provided')
             self.security_groups = ['management',
-                                    '{env}-{server_type}-management',
+                                    '{env}-{type}-management',
                                     '{envcl}',
                                     'chef-nodes']
 
@@ -872,6 +872,8 @@ named {name}""".format(path=d['path'], name=d['name']))
 
 
     def resolve_dependencies(self):
+        self.log.info('Resolving instance dependencies')
+
         params = {
             'environment': self.environment,
             'env': self.environment[0],
@@ -1078,6 +1080,7 @@ named {name}""".format(path=d['path'], name=d['name']))
 
         self.establish_logger()
         self.configure()
+        self.resolve_dependencies()
         self.launch(wait=True)
         self.tag()
         self.bake()
