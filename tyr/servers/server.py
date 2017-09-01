@@ -289,9 +289,6 @@ class Server(object):
         self.log.info('Using Chef path "{path}"'.format(
                       path=self.chef_path))
 
-        if self.ingress_groups_to_add:
-            self.ingress_rules()
-
         self.set_chef_attributes()
 
 
@@ -886,9 +883,11 @@ named {name}""".format(path=d['path'], name=d['name']))
         self.IAM_MANAGED_POLICIES = [p.format(**params) for p in self.IAM_MANAGED_POLICIES]
         self.IAM_ROLE_POLICIES = [p.format(**params) for p in self.IAM_ROLE_POLICIES]
         self.security_groups = [g.format(**params) for g in self.security_groups]
+        self.ingress_groups_to_add = [g.format(**params) for g in self.ingress_groups_to_add]
 
         self.resolve_iam_role()
         self.resolve_security_groups()
+        self.ingress_rules()
 
 
     @property

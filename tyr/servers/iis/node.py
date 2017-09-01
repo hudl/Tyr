@@ -50,16 +50,10 @@ class IISNode(Server):
     def configure(self):        
         super(IISNode, self).configure()
 
-        self.security_groups.extend(['{env}-hudl-{group}', '{env}-mv-web'])
         self.IAM_MANAGED_POLICIES.append('hudl-webserver-{environment}-multiverse')
-        self.ports_to_authorize.extend([9000, 9001, 8095, 8096])
-        
-        self.ingress_groups_to_add = [
-            "{env}-web".format(env=env_prefix),
-            "{env}-nginx".format(env=env_prefix),
-            "{env}-queueproc-jobs".format(env=env_prefix)
-        ]
-
+        self.security_groups.extend(['{env}-hudl-{group}', '{env}-mv-web'])        
+        self.ports_to_authorize.extend([9000, 9001, 8095, 8096])        
+        self.ingress_groups_to_add.extend(['{env}-web','{env}-nginx','{env}-queueproc-jobs'])
         self.classic_link_vpc_security_groups = []
 
         mongos_options = ("mongos_host", "no_mongos", "mongos_service")
