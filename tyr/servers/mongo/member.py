@@ -13,7 +13,7 @@ class MongoReplicaSetMember(MongoNode):
                  chef_path=None, subnet_id=None,
                  ingress_groups_to_add=None, ports_to_authorize=None,
                  classic_link=False, chef_server_url=None,
-                 replica_set=None, mongodb_version=None):
+                 mongodb_version=None, replica_set=None):
 
         super(MongoReplicaSetMember, self).__init__(group, server_type,
                                                     instance_type,
@@ -26,13 +26,10 @@ class MongoReplicaSetMember(MongoNode):
                                                     ingress_groups_to_add,
                                                     ports_to_authorize,
                                                     classic_link,
-                                                    chef_server_url)
-        if replica_set is None:
-            replica_set = "1"
-        if mongodb_version is None:
-            mongodb_version="3.2.9"
-        self.replica_set = replica_set
-        self.mongodb_version = mongodb_version
+                                                    chef_server_url,
+                                                    mongodb_version)
+
+        self.replica_set = replica_set or '1'
 
     def set_chef_attributes(self):
         super(MongoReplicaSetMember, self).set_chef_attributes()

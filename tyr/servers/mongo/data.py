@@ -16,8 +16,8 @@ class MongoDataNode(MongoReplicaSetMember):
                  security_groups=None, block_devices=None,
                  chef_path=None, subnet_id=None,
                  ingress_groups_to_add=None, ports_to_authorize=None,
-                 classic_link=False, chef_server_url=None, replica_set=None,
-                 mongodb_version=None, data_volume_size=None,
+                 classic_link=False, chef_server_url=None, mongodb_version=None,
+                 replica_set=None, data_volume_size=None,
                  data_volume_iops=None, data_volume_snapshot_id=None,
                  journal_volume_size=None, journal_volume_iops=None,
                  log_volume_size=None, log_volume_iops=None):
@@ -29,8 +29,8 @@ class MongoDataNode(MongoReplicaSetMember):
                                             chef_path, subnet_id,
                                             ingress_groups_to_add,
                                             ports_to_authorize, classic_link,
-                                            chef_server_url, replica_set,
-                                            mongodb_version)
+                                            chef_server_url, mongodb_version,
+                                            replica_set)
 
         self.data_volume_size = data_volume_size
         self.data_volume_iops = data_volume_iops

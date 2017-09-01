@@ -20,7 +20,8 @@ class MongoNode(Server):
                  chef_path=None, subnet_id=None,
                  platform=None, use_latest_ami=False,
                  ingress_groups_to_add=None, ports_to_authorize=None,
-                 classic_link=False, chef_server_url=None):
+                 classic_link=False, chef_server_url=None,
+                 mongodb_version=None):
 
         if server_type is None:
             server_type = self.SERVER_TYPE
@@ -33,6 +34,9 @@ class MongoNode(Server):
                                         platform, use_latest_ami,
                                         ingress_groups_to_add, ports_to_authorize,
                                         classic_link, chef_server_url)
+
+        self.mongodb_version = mongodb_version or '3.2.9'
+
 
     def set_chef_attributes(self):
         super(MongoNode, self).set_chef_attributes()
