@@ -15,7 +15,7 @@ REPLICA_SET_MODS = {
         'data': lambda n: 'FEED-RS{}'.format(n.replica_set)
     },
     'highlights': {
-        'data': lambda n: {1: 'highlights_0-backup', 2: 'highlights_1-backup', 3: 'highlights-rs3-backup'}[n.replica_set],
+        'data': lambda n: {1: 'highlights_0', 2: 'highlights_1', 3: 'highlights-rs3'}[n.replica_set],
         'config': lambda n: 'configHighlights'
     },
     'hudlrd': {
