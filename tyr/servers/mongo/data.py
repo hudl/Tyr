@@ -3,8 +3,8 @@ import sys
 
 class MongoDataNode(MongoReplicaSetMember):
 
-    NAME_TEMPLATE = '{envcl}-rs{replica_set}-{location}-{index}'
-    NAME_SEARCH_PREFIX = '{envcl}-rs{replica_set}-{location}-'
+    NAME_TEMPLATE = '{envcl}-rs{replica_set_index}-{location}-{index}'
+    NAME_SEARCH_PREFIX = '{envcl}-rs{replica_set_index}-{location}-'
     NAME_AUTO_INDEX = True
 
     CHEF_RUNLIST = ['role[rolemongo]', 'recipe[zuun::configure]']
@@ -16,11 +16,13 @@ class MongoDataNode(MongoReplicaSetMember):
                  security_groups=None, block_devices=None,
                  chef_path=None, subnet_id=None,
                  ingress_groups_to_add=None, ports_to_authorize=None,
-                 classic_link=False, chef_server_url=None, replica_set=None,
-                 mongodb_version=None, data_volume_size=None,
+                 classic_link=False, chef_server_url=None, mongodb_version=None,
+                 replica_set=None, data_volume_size=None,
                  data_volume_iops=None, data_volume_snapshot_id=None,
                  journal_volume_size=None, journal_volume_iops=None,
                  log_volume_size=None, log_volume_iops=None):
+
+        self.replica_set = replica_set or '1'        
 
         super(MongoDataNode, self).__init__(group, server_type, instance_type,
                                             environment, ami, region, role,
@@ -29,8 +31,8 @@ class MongoDataNode(MongoReplicaSetMember):
                                             chef_path, subnet_id,
                                             ingress_groups_to_add,
                                             ports_to_authorize, classic_link,
-                                            chef_server_url, replica_set,
-                                            mongodb_version)
+                                            chef_server_url, mongodb_version,
+                                            replica_set)
 
         self.data_volume_size = data_volume_size
         self.data_volume_iops = data_volume_iops
@@ -39,6 +41,7 @@ class MongoDataNode(MongoReplicaSetMember):
         self.journal_volume_iops = journal_volume_iops
         self.log_volume_size = log_volume_size
         self.log_volume_iops = log_volume_iops
+        self.replica_set_index = int(self.replica_set)
 
 
     def set_chef_attributes(self):

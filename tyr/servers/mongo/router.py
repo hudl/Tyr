@@ -16,7 +16,8 @@ class MongoRouterNode(MongoNode):
                  security_groups=None, block_devices=None,
                  chef_path=None, subnet_id=None,
                  ingress_groups_to_add=None, ports_to_authorize=None,
-                 classic_link=False, chef_server_url=None):
+                 classic_link=False, chef_server_url=None,
+                 mongodb_version=None, mongodb_configDB=None):
 
         super(MongoRouterNode, self).__init__(group, server_type,
                                               instance_type,
@@ -27,7 +28,11 @@ class MongoRouterNode(MongoNode):
                                               subnet_id,
                                               ingress_groups_to_add,
                                               ports_to_authorize, classic_link,
-                                              chef_server_url)
+                                              chef_server_url,
+                                              mongodb_version)
+
+        self.mongodb_configDB = mongodb_configDB
+
 
 def set_chef_attributes(self):
     super(MongoConfigNode, self).set_chef_attributes()

@@ -1,6 +1,43 @@
 from node import MongoNode
-from zuun import ZuunConfig
 from chef.exceptions import ChefServerError
+
+REPLICA_SET_MODS = {
+    'monolith': {
+        'data': lambda n: 'RS{}'.format(n.replica_set)
+    },        
+    'exchanges': {
+        'data': lambda n: 'RS{}'.format(n.replica_set)
+    },
+    'clips': {
+        'data': lambda n: 'CLIPS'
+    },
+    'feed': {
+        'data': lambda n: 'FEED-RS{}'.format(n.replica_set)
+    },
+    'highlights': {
+        'data': lambda n: {1: 'highlights_0-backup', 2: 'highlights_1-backup', 3: 'highlights-rs3-backup'}[n.replica_set],
+        'config': lambda n: 'configHighlights'
+    },
+    'hudlrd': {
+        'data': lambda n: 'predator-rs{}'.format(n.replica_set)
+    },
+    'leroy': {
+        'data': lambda n: 'LEROY'
+    },
+    'overwatch': {
+        'data': lambda n: '{}-overwatch'.format(n.environment[0])
+    },
+    'push': {
+        'data': lambda n: 'PUSH'
+    },
+    'recruit': {
+        'data': lambda n: 'REC'
+    },
+    'statistics': {
+        'data': lambda n: 'STATS'
+    }
+}
+
 
 class MongoReplicaSetMember(MongoNode):
 
@@ -13,7 +50,7 @@ class MongoReplicaSetMember(MongoNode):
                  chef_path=None, subnet_id=None,
                  ingress_groups_to_add=None, ports_to_authorize=None,
                  classic_link=False, chef_server_url=None,
-                 replica_set=None, mongodb_version=None):
+                 mongodb_version=None, replica_set=None):
 
         super(MongoReplicaSetMember, self).__init__(group, server_type,
                                                     instance_type,
@@ -26,56 +63,36 @@ class MongoReplicaSetMember(MongoNode):
                                                     ingress_groups_to_add,
                                                     ports_to_authorize,
                                                     classic_link,
-                                                    chef_server_url)
-        if replica_set is None:
-            replica_set = "1"
-        if mongodb_version is None:
-            mongodb_version="3.2.9"
+                                                    chef_server_url,
+                                                    mongodb_version)
+
         self.replica_set = replica_set
-        self.mongodb_version = mongodb_version
+
 
     def set_chef_attributes(self):
         super(MongoReplicaSetMember, self).set_chef_attributes()
-
-        replica_set = self.REPLICA_SET_TEMPLATE.format(
-            group=self.group, set_=self.replica_set)
-
-        self.CHEF_ATTRIBUTES['mongodb']['replicaset_name'] = replica_set
-        self.log.info('Set the replica set name to "{name}"'.format(
-            name=replica_set)
-        )
-
-        self.CHEF_ATTRIBUTES['zuun']['replica_set'] = replica_set
-        self.log.info('Set the Zuun replica set to "{name}"'.format(
-            name=replica_set
-        ))
-        try:
-            self.log.warning('Creating ' + 'deployment_{}-{}'.format(self.environment[0], self.group) + " data bag.")
-            ZuunConfig.write_databag(self.chef_path, self.environment[0],
-                                     self.group, replica_set,
-                                     self.mongodb_version)
-        except Exception as e:
-            self.log.error("Failed to create zuun databag config!")
-            raise e
+        self.CHEF_ATTRIBUTES['mongodb']['replicaset_name'] = self.replica_set
 
 
     def configure(self):
         super(MongoReplicaSetMember, self).configure()
-        self.set_chef_attributes()
 
-        if self.replica_set is None:
-            self.log.warn('No replica set provided')
-            self.replica_set = 1
+        try:
+            self.replica_set = REPLICA_SET_MODS[self.group][self.CHEF_MONGODB_TYPE](self)
+        except KeyError:
+            self.replica_set = self.REPLICA_SET_TEMPLATE.format(
+                group=self.group, set_=self.replica_set
+            )
 
         self.log.info('Using replica set {set}'.format(set=self.replica_set))
+
+        self.set_chef_attributes()
+
 
     @property
     def tags(self):
 
         tags = super(MongoReplicaSetMember, self).tags
-
-        tags['ReplicaSet'] = self.REPLICA_SET_TEMPLATE.format(
-            group=self.group, set_=self.replica_set
-        )
+        tags['ReplicaSet'] = self.replica_set
 
         return tags

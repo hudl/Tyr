@@ -1,11 +1,11 @@
-from node import MongoNode
+from member import MongoReplicaSetMember
 
 
-class MongoConfigNode(MongoNode):
+class MongoConfigNode(MongoReplicaSetMember):
 
     NAME_TEMPLATE = '{envcl}-cfg-{location}'
-    NAME_SEARCH_PREFIX = '{envcl}-cfg-'
-    NAME_AUTO_INDEX = False
+    NAME_SEARCH_PREFIX = '{envcl}-cfg-{location}-'
+    NAME_AUTO_INDEX = True
 
     CHEF_RUNLIST = ['role[RoleMongo]']
     CHEF_MONGODB_TYPE = 'config'
@@ -16,8 +16,8 @@ class MongoConfigNode(MongoNode):
                  security_groups=None, block_devices=None,
                  chef_path=None, subnet_id=None,
                  ingress_groups_to_add=None, ports_to_authorize=None,
-                 classic_link=False, chef_server_url=None,
-                 data_volume_snapshot_id=None):
+                 classic_link=False, chef_server_url=None, mongodb_version=None,
+                 replica_set=None, data_volume_snapshot_id=None):
 
         super(MongoConfigNode, self).__init__(group, server_type,
                                               instance_type,
@@ -28,7 +28,8 @@ class MongoConfigNode(MongoNode):
                                               subnet_id,
                                               ingress_groups_to_add,
                                               ports_to_authorize, classic_link,
-                                              chef_server_url)
+                                              chef_server_url, mongodb_version,
+                                              replica_set)
 
         self.data_volume_snapshot_id = data_volume_snapshot_id
                                               
