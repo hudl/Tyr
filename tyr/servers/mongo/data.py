@@ -23,8 +23,6 @@ class MongoDataNode(MongoReplicaSetMember):
                  journal_volume_size=None, journal_volume_iops=None,
                  log_volume_size=None, log_volume_iops=None):
 
-        self.replica_set = replica_set or '1'        
-
         super(MongoDataNode, self).__init__(group, server_type, instance_type,
                                             environment, ami, region, role,
                                             keypair, availability_zone,
@@ -43,6 +41,7 @@ class MongoDataNode(MongoReplicaSetMember):
         self.journal_volume_iops = journal_volume_iops
         self.log_volume_size = log_volume_size
         self.log_volume_iops = log_volume_iops
+        self.replica_set = self.replica_set or '1'
         self.replica_set_index = int(self.replica_set)
 
 
