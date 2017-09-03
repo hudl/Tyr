@@ -15,6 +15,7 @@ class MongoArbiterNode(MongoReplicaSetMember):
                  keypair=None, availability_zone=None,
                  security_groups=None, block_devices=None,
                  chef_path=None, subnet_id=None,
+                 platform=None, use_latest_ami=False,
                  ingress_groups_to_add=None, ports_to_authorize=None,
                  classic_link=False, chef_server_url=None,
                  replica_set=None):
@@ -25,6 +26,7 @@ class MongoArbiterNode(MongoReplicaSetMember):
                                                keypair, availability_zone,
                                                security_groups, block_devices,
                                                chef_path, subnet_id,
+                                               platform, use_latest_ami,
                                                ingress_groups_to_add,
                                                ports_to_authorize, classic_link,
                                                chef_server_url, replica_set)
