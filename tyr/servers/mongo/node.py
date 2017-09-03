@@ -1,4 +1,5 @@
 from tyr.servers.server import Server
+import zuun
 import json
 
 
@@ -19,7 +20,8 @@ class MongoNode(Server):
                  chef_path=None, subnet_id=None,
                  platform=None, use_latest_ami=False,
                  ingress_groups_to_add=None, ports_to_authorize=None,
-                 classic_link=False, chef_server_url=None):
+                 classic_link=False, chef_server_url=None,
+                 mongodb_version=None):
 
         if server_type is None:
             server_type = self.SERVER_TYPE
@@ -32,6 +34,13 @@ class MongoNode(Server):
                                         platform, use_latest_ami,
                                         ingress_groups_to_add, ports_to_authorize,
                                         classic_link, chef_server_url)
+
+        self.mongodb_version = mongodb_version or '3.2.9'
+        self.zuun_deployment = '{env}-{group}'.format(
+            env=self.environment[0],
+            group=self.group
+        )
+
 
     def set_chef_attributes(self):
         super(MongoNode, self).set_chef_attributes()
@@ -48,21 +57,17 @@ class MongoNode(Server):
             type_=self.CHEF_MONGODB_TYPE)
         )
 
-        self.CHEF_ATTRIBUTES['zuun'] = {}
+        self.CHEF_ATTRIBUTES['zuun'] = {
+            'deployment': self.zuun_deployment,
+            'role': self.CHEF_MONGODB_TYPE,
 
-        self.CHEF_ATTRIBUTES['zuun']['deployment'] = '{env}-{group}'.format(
-            env=self.environment[0],
-            group=self.group
-        )
-        self.log.info('Set the Zuun deployment to "{env}-{group}"'.format(
-            env=self.environment[0],
-            group=self.group
-        ))
+        }
 
-        self.CHEF_ATTRIBUTES['zuun']['role'] = self.CHEF_MONGODB_TYPE
-        self.log.info('Set the Zuun role to "{type_}"'.format(
-            type_=self.CHEF_MONGODB_TYPE)
-        )
+        try:
+            if self.replica_set:
+                self.CHEF_ATTRIBUTES['zuun']['replica_set'] = self.replica_set
+        except AttributeError:
+            pass
 
 
     def configure(self):

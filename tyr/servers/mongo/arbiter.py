@@ -18,7 +18,7 @@ class MongoArbiterNode(MongoReplicaSetMember):
                  platform=None, use_latest_ami=False,
                  ingress_groups_to_add=None, ports_to_authorize=None,
                  classic_link=False, chef_server_url=None,
-                 replica_set=None):
+                 mongodb_version=None, replica_set=None):
 
         super(MongoArbiterNode, self).__init__(group, server_type,
                                                instance_type,
@@ -29,7 +29,8 @@ class MongoArbiterNode(MongoReplicaSetMember):
                                                platform, use_latest_ami,
                                                ingress_groups_to_add,
                                                ports_to_authorize, classic_link,
-                                               chef_server_url, replica_set)
+                                               chef_server_url, mongodb_version,
+                                               replica_set)
 
     def set_chef_attributes(self):
         super(MongoArbiterNode, self).set_chef_attributes()
