@@ -75,7 +75,6 @@ class RabbitMQServer(Server):
         Make sure the IOPS to Size ratio is not greater than 30 for an EBS
         """
         super(RabbitMQServer, self).configure()
-        self.set_chef_attributes()
 
         iops_size_ratio = self.vol_iops / self.vol_size
         iops_log_template = 'The IOPS to Size ratio is "{ratio}"'

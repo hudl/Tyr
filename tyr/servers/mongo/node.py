@@ -67,7 +67,6 @@ class MongoNode(Server):
 
     def configure(self):
         super(MongoNode, self).configure()
-        self.set_chef_attributes()
 
         if self.environment == 'prod':
             self.ebs_optimized = True

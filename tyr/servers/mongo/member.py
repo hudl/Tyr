@@ -63,7 +63,6 @@ class MongoReplicaSetMember(MongoNode):
 
     def configure(self):
         super(MongoReplicaSetMember, self).configure()
-        self.set_chef_attributes()
 
         if self.replica_set is None:
             self.log.warn('No replica set provided')

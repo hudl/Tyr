@@ -55,7 +55,6 @@ class PostfixMaster(Server):
 
     def configure(self):
         super(PostfixMaster, self).configure()
-        self.set_chef_attributes()
 
         if self.mail_name:
             self.ELASTIC_IP = self.check_mail_server()

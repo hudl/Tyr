@@ -71,7 +71,6 @@ class CacheServer(Server):
 
     def configure(self):
         super(CacheServer, self).configure()
-        self.set_chef_attributes()
 
         if self.environment == 'prod':
             self.instance_type = 'r3.large'

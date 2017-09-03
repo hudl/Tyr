@@ -296,8 +296,6 @@ class Server(object):
         self.log.info('Using Chef path "{path}"'.format(
                       path=self.chef_path))
 
-        self.set_chef_attributes()
-
 
     @property
     def location(self):
@@ -897,6 +895,7 @@ named {name}""".format(path=d['path'], name=d['name']))
         self.resolve_iam_role()
         self.resolve_security_groups()
         self.ingress_rules()
+        self.set_chef_attributes()
 
 
     @property

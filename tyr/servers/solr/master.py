@@ -48,4 +48,3 @@ class SolrMasterNode(Server):
 
     def configure(self):
         super(SolrMasterNode, self).configure()
-        self.set_chef_attributes()

@@ -74,7 +74,6 @@ class SolrSlaveNode(Server):
 
     def configure(self):
         super(SolrSlaveNode, self).configure()
-        self.set_chef_attributes()
 
         if self.data_volume_size is None:
             self.log.info("No data volume set, defaulting to 200")
