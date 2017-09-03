@@ -264,6 +264,13 @@ class Server(object):
         self.log.info('Using security groups {groups}'.format(
                       groups=', '.join(self.security_groups)))
 
+        if self.ingress_groups_to_add is None:
+            self.log.warn('No ingress groups provided')
+            self.ingress_groups_to_add = []
+
+        self.log.info('Using ingress groups {groups}'.format(
+                      groups=', '.join(self.ingress_groups_to_add)))
+
         if self.block_devices is None:
             self.log.warn('No block devices provided')
 
