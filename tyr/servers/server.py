@@ -819,10 +819,13 @@ named {name}""".format(path=d['path'], name=d['name']))
                 filters={'subnet_id': self.subnet_id}
             )[0]
 
+            mapPublicIpOnLaunch = {'false': False,
+                                   'true': True}[subnet.mapPublicIpOnLaunch]
+
             interface = NetworkInterfaceSpecification(
                 subnet_id=self.subnet_id,
                 groups=self.security_group_ids,
-                associate_public_ip_address=subnet.mapPublicIpOnLaunch)
+                associate_public_ip_address=mapPublicIpOnLaunch)
             interfaces = NetworkInterfaceCollection(
                 interface)
             parameters.update({
