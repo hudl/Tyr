@@ -114,22 +114,28 @@ def update_data_bag_item(node):
   
     with chef.autoconfigure(node.chef_path):
         data_bag = chef.DataBag('zuun')
-  
+        data_bag_item_exists = False
+
         if data_bag_item_name in data_bag.keys():
             node.log.info('Data bag item {} already exists; updating (but not overwriting) if required'.format(data_bag_item_name))
             data_bag_item = chef.DataBagItem(data_bag, data_bag_item_name)
-
-            source = data_bag_item['replica-sets'] if node.replica_set else data_bag_item
-
-            if search_key not in source:
-                source[key] = data_bag_item_node_data
-                data_bag_item.save()
+            data_bag_item_exists = True
         else:
             node.log.info('Data bag item {} does not exist; creating'.format(data_bag_item_name))
 
-            source = data_bag_item['replica-sets'] if node.replica_set else data_bag_item      
+        if node.CHEF_MONGODB_TYPE == 'data':
+            source = data_bag_item['replica-sets']
+            source[search_key] = {'data': data_bag_item_node_data}
+        elif node.CHEF_MONGODB_TYPE == 'config' and search_key != 'config':
+            source = data_bag_item['replica-sets']
+            source[search_key] = {'config': data_bag_item_node_data}
+        else:
+            source = data_bag_item
             source[search_key] = data_bag_item_node_data
 
+        if data_bag_item_exists:
+            data_bag_item.save()
+        else:
             chef.DataBagItem.create('zuun', data_bag_item_name, **data_bag_item)
 
 
