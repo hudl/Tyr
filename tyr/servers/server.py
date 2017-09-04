@@ -815,10 +815,14 @@ named {name}""".format(path=d['path'], name=d['name']))
                 'security_group_ids': self.security_group_ids,
             })
         else:
+            subnet = VPCConnection().get_all_subnets(
+                filters={'subnet_id': self.subnet_id}
+            )[0]
+
             interface = NetworkInterfaceSpecification(
                 subnet_id=self.subnet_id,
                 groups=self.security_group_ids,
-                associate_public_ip_address=True)
+                associate_public_ip_address=subnet.mapPublicIpOnLaunch)
             interfaces = NetworkInterfaceCollection(
                 interface)
             parameters.update({
