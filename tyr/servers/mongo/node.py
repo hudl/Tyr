@@ -83,6 +83,11 @@ class MongoNode(Server):
             self.IAM_MANAGED_POLICIES.append('allow-mongo-backup-restore')
 
 
+    def resolve_dependencies(self):
+        super(MongoNode, self).resolve_dependencies()
+        zuun.update_data_bag_item(self)
+
+
     def run_mongo(self, command):
 
         template = 'mongo --port 27018 --eval "JSON.stringify({command})"'
