@@ -91,11 +91,23 @@ class MongoReplicaSetMember(MongoNode):
     def configure(self):
         super(MongoReplicaSetMember, self).configure()
 
+    @property
+    def expanded_replica_set(self):
+        try:
+            return REPLICA_SET_MODS[self.group][self.CHEF_MONGODB_TYPE](self)
+        except KeyError:
+            if self.CHEF_MONGODB_TYPE == 'data':
+                return self.REPLICA_SET_TEMPLATE.format(
+                    group=self.group, set_=self.replica_set
+                )        
+            else:
+                return None
 
     @property
     def tags(self):
-
         tags = super(MongoReplicaSetMember, self).tags
-        tags['ReplicaSet'] = self.replica_set
+
+        if self.expanded_replica_set:
+            tags['ReplicaSet'] = self.expanded_replica_set        
 
         return tags

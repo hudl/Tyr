@@ -64,8 +64,8 @@ class MongoNode(Server):
         }
 
         try:
-            if self.replica_set:
-                self.CHEF_ATTRIBUTES['zuun']['replica_set'] = self.replica_set
+            if self.expanded_replica_set:
+                self.CHEF_ATTRIBUTES['zuun']['replica_set'] = self.expanded_replica_set
         except AttributeError:
             pass
 

@@ -65,8 +65,8 @@ systemLog:
 def generate_mongo_conf(node):
     replication = ''
     try:
-        if node.replica_set is not None:
-            replication = 'replication:\n  replSetName: {}'.format(node.replica_set)
+        if node.expanded_replica_set:
+            replication = 'replication:\n  replSetName: {}'.format(node.expanded_replica_set)
     except AttributeError:
         pass
 
@@ -99,12 +99,17 @@ def generate_mongo_conf(node):
 def update_data_bag_item(node):
     data_bag_item_name = 'deployment_{}'.format(
         node.CHEF_ATTRIBUTES['zuun']['deployment'])
-    search_key = node.replica_set or node.CHEF_MONGODB_TYPE
     data_bag_item_node_data = {
         'version': node.mongodb_version,
         'conf': base64.b64encode(generate_mongo_conf(node))
     }
 
+    try:
+        search_key = node.expanded_replica_set
+    except AttributeError:
+        search_key = None
+
+    if search_key is None: search_key = node.CHEF_MONGODB_TYPE
     data_bag_item = {'replica-sets': {}}
   
     with chef.autoconfigure(node.chef_path):
