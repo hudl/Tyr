@@ -19,10 +19,10 @@ processManagement:
 storage:
   dbPath: /volr/
   engine: wiredTiger
-  systemLog:
-    destination: file
-    logAppend: true
-    path: /mongologs/mongodb.log"""
+systemLog:
+  destination: file
+  logAppend: true
+  path: /mongologs/mongodb.log"""
 
 
 MONGO_CFG_CONF = """net:
@@ -31,7 +31,7 @@ MONGO_CFG_CONF = """net:
     RESTInterfaceEnabled: true
     enabled: true
   port: 27019
-operationProfiling: {}
+operationProfiling: {{}}
 processManagement:
   fork: "true"
   pidFilePath: /var/run/mongodb/mongodb.pid
@@ -50,7 +50,7 @@ systemLog:
 MONGO_ROUTER_CONF = """net:
   bindIp: 0.0.0.0
   port: 27017
-operationProfiling: {}
+operationProfiling: {{}}
 processManagement:
   fork: "true"
   pidFilePath: /var/run/mongodb/mongodb.pid
@@ -90,7 +90,7 @@ def generate_mongo_conf(node):
     template = None
 
     template = {'data': MONGO_DATA_CONF,
-                'conf': MONGO_CFG_CONF,
+                'config': MONGO_CFG_CONF,
                 'router': MONGO_ROUTER_CONF}[node.CHEF_MONGODB_TYPE]
 
     return template.format(replication=replication, sharding=sharding, parameters=parameters)
