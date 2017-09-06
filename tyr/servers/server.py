@@ -271,6 +271,13 @@ class Server(object):
         self.log.info('Using ingress groups {groups}'.format(
                       groups=', '.join(self.ingress_groups_to_add)))
 
+        if self.ports_to_authorize is None:
+            self.log.warn('No ports to authorize provided')
+            self.ports_to_authorize = []
+
+        self.log.info('Authorizing ports {ports}'.format(
+                      ports=', '.join(self.ports_to_authorize)))
+
         if self.block_devices is None:
             self.log.warn('No block devices provided')
 
