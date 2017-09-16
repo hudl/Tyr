@@ -73,9 +73,6 @@ class MongoNode(Server):
     def configure(self):
         super(MongoNode, self).configure()
 
-        if self.environment == 'prod':
-            self.ebs_optimized = True
-
         if self.environment == "prod":
             self.IAM_ROLE_POLICIES.append('allow-mongo-backup-snapshot')
         elif self.environment == "stage":
