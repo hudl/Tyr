@@ -3,7 +3,7 @@ from member import MongoReplicaSetMember
 
 class MongoConfigNode(MongoReplicaSetMember):
 
-    NAME_TEMPLATE = '{envcl}-cfg-{location}'
+    NAME_TEMPLATE = '{envcl}-cfg-{location}-{index}'
     NAME_SEARCH_PREFIX = '{envcl}-cfg-{location}-'
     NAME_AUTO_INDEX = True
 
