@@ -496,7 +496,7 @@ chef-client -r '{run_list}' -L {logfile} -j /etc/chef/attributes.json
                                name=self.name,
                                attributes=json.dumps(self.CHEF_ATTRIBUTES)
                                .replace('"', '\\"'),
-                               run_list=','.join(CHEF_RUNLIST),
+                               run_list=','.join(self.CHEF_RUNLIST),
                                logfile='/var/log/chef-client.log')
 
     @property
