@@ -906,10 +906,17 @@ named {name}""".format(path=d['path'], name=d['name']))
         self.security_groups = [g.format(**params) for g in self.security_groups]
         self.ingress_groups_to_add = [g.format(**params) for g in self.ingress_groups_to_add]
 
-        self.resolve_iam_role()
-        self.resolve_security_groups()
-        self.ingress_rules()
-        self.set_chef_attributes()
+        for method in ['resolve_iam_role', 'resolve_security_groups',
+                       'ingress_rules', 'set_chef_attributes']:
+            timer = 0
+
+            try:
+                getattr(self, method)()
+            except Exception as ex:
+                if 'Rate exceeded' in str(ex):
+                    if timer > 45: timer = 0
+                    timer += rand(0, 7)
+                    time.sleep(timer)
 
 
     @property
