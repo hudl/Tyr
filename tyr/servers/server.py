@@ -653,10 +653,10 @@ named {name}""".format(path=d['path'], name=d['name']))
         if (len(self.IAM_MANAGED_POLICIES) > 0):
             self.log.info("Adding managed policies [" + str(self.IAM_MANAGED_POLICIES).format(environment=self.environment) + "] to role [" + self.role + "]")
 
+            account_id = boto3.client('sts').get_caller_identity()['Account']
+
             for m_policy in self.IAM_MANAGED_POLICIES:
                 m_policy_id = m_policy.format(environment=self.environment)
-                arn = self.iam.get_user().user.arn
-                account_id = arn[arn.find('::')+2:arn.rfind(':')]
                 m_policy_arn = self.iam.get_policy("arn:aws:iam::{account_id}:policy/{policy}".format(account_id=account_id, policy=m_policy_id))
                 self.iam.attach_role_policy("arn:aws:iam::{account_id}:policy/{policy}".format(account_id=account_id, policy=m_policy_id), self.role)
 
