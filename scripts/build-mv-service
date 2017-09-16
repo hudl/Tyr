@@ -2,7 +2,6 @@
 
 from tyr.servers.mongo import MongoDataNode
 from tyr.clusters.iis import IISCluster
-from tyr.servers.mongo import ZuunConfig
 import logging
 import sys
 import click
