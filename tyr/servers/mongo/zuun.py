@@ -18,7 +18,6 @@ processManagement:
 {replication}
 storage:
   dbPath: /volr/
-  engine: wiredTiger
 systemLog:
   destination: file
   logAppend: true
@@ -40,7 +39,6 @@ processManagement:
 {replication}
 storage:
   dbPath: /volr
-  engine: wiredTiger
 systemLog:
   destination: file
   logAppend: true
