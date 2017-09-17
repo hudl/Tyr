@@ -20,6 +20,7 @@ import cloudspecs.aws.ec2
 import re
 import boto3
 import subprocess
+import random
 from operator import attrgetter
 
 
@@ -915,7 +916,7 @@ named {name}""".format(path=d['path'], name=d['name']))
             except Exception as ex:
                 if 'Rate exceeded' in str(ex):
                     if timer > 45: timer = 0
-                    timer += rand(0, 7)
+                    timer += random.randint(1, 8)
                     time.sleep(timer)
 
 
