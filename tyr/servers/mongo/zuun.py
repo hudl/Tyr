@@ -64,7 +64,8 @@ def generate_mongo_conf(node):
     replication = ''
     try:
         if node.expanded_replica_set:
-            replication = 'replication:\n  replSetName: {}'.format(node.expanded_replica_set)
+            replication = 'replication:\n  replSetName: {}'.format(
+                node.expanded_replica_set)
     except AttributeError:
         pass
 
@@ -73,25 +74,36 @@ def generate_mongo_conf(node):
     if node.CHEF_MONGODB_TYPE == 'config' and node.environment != 'prod':
         parameters.append('recoverShardingState: false')
 
-    parameters = 'setParameter:{params}'.format(params='\n  '.join(parameters)) if parameters else ''
-    
+    if parameters:
+        parameters_exp = 'setParameter:\n'
+        for param in parameters:
+            parameters_exp += '  {}\n'.format(param)
+    else:
+        parameters_exp = ''
 
     sharding = []
 
     if node.CHEF_MONGODB_TYPE == 'config':
         sharding.append('clusterRole: configsvr')
     elif node.CHEF_MONGODB_TYPE == 'router':
-        sharding.append('configDB: {configDB}'.format(configDB=node.mongodb_configDB))      
-    
-    sharding = 'sharding:{params}'.format(params='\n  '.join(sharding)) if sharding else ''
-    
+        sharding.append(
+            'configDB: {configDB}'.format(configDB=node.mongodb_configDB))
+
+    if sharding:
+        sharding_exp = 'sharding:\n'
+        for param in sharding:
+            sharding_exp += '  {}\n'.format(param)
+    else:
+        sharding_exp = ''
+
     template = None
 
     template = {'data': MONGO_DATA_CONF,
                 'config': MONGO_CFG_CONF,
                 'router': MONGO_ROUTER_CONF}[node.CHEF_MONGODB_TYPE]
 
-    return template.format(replication=replication, sharding=sharding, parameters=parameters)
+    return template.format(replication=replication, sharding=sharding_exp,
+                           parameters=parameters_exp)
 
 
 def update_data_bag_item(node):
