@@ -1017,10 +1017,17 @@ named {name}""".format(path=d['path'], name=d['name']))
             self.log.info('Failed to terminate {instance}'.format(
                 instance=instance_id))
 
+    def chef_client(self):
+        return chef.ChefAPI(
+            'https://chef12-vpc.app.hudl.com/organizations/hudl',
+            '{}/mihirsingh.pem'.format(self.chef_path),
+            'mihirsingh',
+            ssl_verify=False)
+
     def bake(self):
         if self.CHEF_RUNLIST:
-            chef_path = os.path.expanduser(self.chef_path)
-            self.chef_api = chef.autoconfigure(chef_path)
+            #chef_path = os.path.expanduser(self.chef_path)
+            self.chef_api = self.chef_client()
 
             with self.chef_api:
                 try:

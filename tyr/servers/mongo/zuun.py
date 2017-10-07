@@ -121,8 +121,8 @@ def update_data_bag_item(node):
 
     if search_key is None: search_key = node.CHEF_MONGODB_TYPE
     data_bag_item = {'replica-sets': {}}
-  
-    with chef.autoconfigure(node.chef_path):
+
+    with node.chef_client():
         data_bag = chef.DataBag('zuun')
         data_bag_item_exists = False
 
