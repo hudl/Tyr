@@ -95,14 +95,37 @@ function Get-HudlRoleAttributes {
     $role = Get-MyRole
 
     #reset values
+    $treatMonolithAsMultiverse = $false
     $environment = $environmentPrefix = $serverRole = $group = ""
 
     $roleSplit = $role -Split '-'
-    if ($roleSplit.Length -eq 3) {
+    if ($roleSplit.Length -eq 2) {
+        # [0] - Environment Letter, [1] - server role
+        $environmentPrefix = $roleSplit[0]
+        $serverRole = $roleSplit[1]
+        $group = "monolith"
+        # special case for queuedservices and admin here
+        if ($serverRole -eq "queues" -or $serverRole -eq "admin") {
+            $serverRole = "Web"
+            $treatMonolithAsMultiverse = $true
+        }
+
+    } elseif ($roleSplit.Length -eq 3) {
         # [0] - Environment Letter, [1] - mvgroupmvgroup, [2] - server role
         $environmentPrefix = $roleSplit[0]
         $group = $roleSplit[1]
         $serverRole = $roleSplit[2]
+
+        # this block is needed until the old monolith is phased out completely,
+        # to make this compatible with old monolith ASG, add TreatAsNonMultiverseMonolith tag
+        # to the ASG and set the value to yes
+        if ($group -eq "monolith"){
+            # check the TreatAsNonMultiverseMonolith tag
+            $isNonMultiverseMonolith = Get-TreatAsNonMultiverseMonolith
+            if (-not $isNonMultiverseMonolith) {
+                $treatMonolithAsMultiverse = $true
+            }
+        }
     } 
     # Thors should be treated as multiverse servers now
     elseif ($role -eq "thor") {
@@ -110,6 +133,12 @@ function Get-HudlRoleAttributes {
         $environmentPrefix = "t"
         $group = "thor"
         $serverRole = "thor"
+        $treatMonolithAsMultiverse = $true
+    }
+    # Special case for monolith web servers, they have a different format role name
+    if ($serverRole -eq "role" -and $group -eq "web") {
+        $serverRole = "Web"
+        $group = "monolith"
     }
 
     switch ($environmentPrefix) 
@@ -125,9 +154,11 @@ function Get-HudlRoleAttributes {
         ServerRole = $serverRole
         Group = $group
         IamRole = $role
+        TreatMonolithAsMultiverse = $treatMonolithAsMultiverse
     }
     return $result
 }
+
 
 function New-ServerName {
     $serverId=GetNewId
@@ -207,6 +238,15 @@ function Get-Apps {
     $instanceId = (New-Object System.Net.WebClient).DownloadString("http://169.254.169.254/latest/meta-data/instance-id")
     $appsTag =  Get-EC2Tag | Where-Object {$_.ResourceId -eq $instanceId -and $_.Key -eq 'Apps'}
     return $appsTag.Value
+}
+
+function Get-TreatAsNonMultiverseMonolith {
+    $instanceId = (New-Object System.Net.WebClient).DownloadString("http://169.254.169.254/latest/meta-data/instance-id")
+    $tag =  Get-EC2Tag | Where-Object {$_.ResourceId -eq $instanceId -and $_.Key -eq 'TreatAsNonMultiverseMonolith'}
+    if ($tag -and $tag.Value.ToLower() -eq "yes"){
+        return $true
+    }
+    return $false
 }
 
 $timeout = new-timespan -Minutes 5
@@ -321,8 +361,7 @@ if( -not (Test-Path $hintsFile)) {
 $eurekaSet = Get-Random -minimum 1 -maximum 3
 
 # Install Chef
-$windows_version = "2012r2"
-$chef_version = "chef-client-12.6.0-1-x86.msi"
+$chef_version = "12.21.4"
 $server_name = $servername.Trim()
 $chef_env = $chef_environment.ToLower().Trim()
 
@@ -356,12 +395,8 @@ try { New-Item c:\temp -type directory } catch {}
 # It doesn't appear the windows version matters as there is only one
 # msi installer and it is listed for all types of Windows Server
 try {
-    $chefDownloadSource = "https://opscode-omnibus-packages.s3.amazonaws.com/windows/$windows_version/i386/$chef_version"
-    $chefDownloadDestination = "c:\temp\chef-client.msi"
-    Download-File $chefDownloadSource $chefDownloadDestination
-    Write-Output "Chef Dowloaded, running installer."
-    #Invoke-WebRequest $chefDownloadSource -OutFile $chefDownloadDestination 
-    Start-Process -FilePath "msiexec.exe" -ArgumentList "/qn /i c:\temp\chef-client.msi ADDLOCAL=`"ChefClientFeature,ChefServiceFeature,ChefPSModuleFeature`"" -Wait -NoNewWindow
+    Write-Output "Installing Chef via Omnitruck."
+    . { iwr -useb https://omnitruck.chef.io/install.ps1 } | iex; install -channel stable -version $chef_version
     Write-Output "Chef Installed, downloading chef client config."
     Read-S3Object -BucketName "hudl-chef-artifacts" -KeyPrefix "chef-client" -Folder "c:\chef"
 }
@@ -385,6 +420,7 @@ try {
       "seven_zip": {
          "syspath":""
       },
+
       "hudl": {
         "environment": "$($roleAttributes.Environment)",
         "environmentPrefix": "$($roleAttributes.EnvironmentPrefix)",
@@ -393,6 +429,7 @@ try {
         "group": "$($roleAttributes.Group)",
         "service": "$($roleAttributes.Group)",
         "eureka_set": "$($eurekaSet)",
+        "treat_monolith_as_multiverse": $($roleAttributes.TreatMonolithAsMultiverse | ConvertTo-Json),
         "apps": "$($apps)" 
 "@
 
