@@ -1,0 +1,37 @@
+#!/bin/bash
+
+ProgName=$(basename $0)
+  
+sub_help(){    
+    echo "Subcommands:"    
+    echo "    repl"
+    echo "    shell"    
+    echo ""    
+}
+  
+subcommand=$1
+case $subcommand in
+    "" | "-h" | "--help")
+        sub_help
+        ;;
+    "shell")
+        docker run -it \
+            -e PS1='infrakit> ' \
+            -v ~/.aws:/root/.aws \
+            -v ~/.ssh/hudl:/root/.ssh \
+            -v ~/.chefvm/configurations/hudl12:/root/.chef \
+            hudl/infrakit \
+            /bin/sh
+        ;;
+    "repl")
+        docker run -it \
+            -v ~/.aws:/root/.aws \
+            -v ~/.ssh/hudl:/root/.ssh \
+            -v ~/.chefvm/configurations/hudl12:/root/.chef \
+            hudl/infrakit \
+            bpython
+        ;;
+    *)
+        sub_help
+        ;;
+esac
