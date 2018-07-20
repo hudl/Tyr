@@ -24,7 +24,10 @@ case $subcommand in
             /bin/sh
         ;;
     "repl")
+        touch ~/.infrakit/repl_history
+
         docker run -it \
+            -v ~/.infrakit/repl_history:/root/.pythonhist \
             -v ~/.aws:/root/.aws \
             -v ~/.infrakit/ssh:/root/.ssh \
             -v ~/.infrakit/chef:/root/.chef \
