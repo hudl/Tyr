@@ -18,16 +18,16 @@ case $subcommand in
         docker run -it \
             -e PS1='infrakit> ' \
             -v ~/.aws:/root/.aws \
-            -v ~/.ssh/hudl:/root/.ssh \
-            -v ~/.chefvm/configurations/hudl12:/root/.chef \
+            -v ~/.infrakit/ssh:/root/.ssh \
+            -v ~/.infrakit/chef:/root/.chef \
             hudl/infrakit \
             /bin/sh
         ;;
     "repl")
         docker run -it \
             -v ~/.aws:/root/.aws \
-            -v ~/.ssh/hudl:/root/.ssh \
-            -v ~/.chefvm/configurations/hudl12:/root/.chef \
+            -v ~/.infrakit/ssh:/root/.ssh \
+            -v ~/.infrakit/chef:/root/.chef \
             hudl/infrakit \
             bpython
         ;;
