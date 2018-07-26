@@ -235,8 +235,8 @@ chef-client -r '{run_list}' -L /var/log/chef-client.log -j /etc/chef/attributes.
             instance_type=self.instance_type,
             keyname=self.keypair,
             iam_profile=self.role,
-            placement=_input.get('SubnetId', _input['Placement']['AvailabilityZone']),
-            security_groups=_input.get('SecurityGroupIds', _input['SecurityGroups'])
+            placement=_input.get('SubnetId', _input.get('Placement', {}).get('AvailabilityZone')),
+            security_groups=_input.get('SecurityGroupIds', _input.get('SecurityGroups'))
         )
 
         r = self.ec2.run_instances(**_input)
