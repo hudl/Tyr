@@ -35,8 +35,7 @@ class Instance(object):
     }
     DEFAULT_FALLBACK_KEYPAIR = 'stage-key'
     
-    @kwarg('environment', default='thor',
-           choices=['thor', 'stage', 'prod'])
+    @kwarg('environment', default='thor', choices=['thor', 'stage', 'prod'])
     @kwarg('group', required=True)
     @kwarg('server_type', required=True)
     @kwarg('role', default=lambda kw: f'{kw["environment"][0]}-{kw["group"]}-{kw["server_type"]}')
@@ -52,7 +51,6 @@ class Instance(object):
     @kwarg('chef_server', default=lambda kw: Instance.DEFAULT_CHEF_SERVER_BY_ENV.get(kw['environment'], Instance.DEFAULT_FALLBACK_CHEF_SERVER))
     @kwarg('keypair', default=lambda kw: Instance.DEFAULT_KEYPAIR_BY_ENV.get(kw['environment'], Instance.DEFAULT_FALLBACK_KEYPAIR))
     @kwarg('security_groups', default=lambda kw: ['management', 'chef-nodes', kw['role'], f'{kw["environment"][0]}-{kw["group"]}-management'])
-    @kwarg('auto_index_name', default=True)
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
         self.ec2 = aws_client('ec2', region_name=self.region)
