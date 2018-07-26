@@ -10,6 +10,6 @@ def logger(name):
     log.drop_handlers()
     log.level = peche.logging.levels.Level.Debug
     log.add_handler(StdoutColour)
-    log.inspection = True
+    log.inspection = False
 
     return log
