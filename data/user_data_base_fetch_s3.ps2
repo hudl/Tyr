@@ -3,7 +3,7 @@
 
 $HUDL_DIRECTORY = "c:\\hudl"
 $USER_DATA_S3_BUCKET = "hudl-chef-artifacts"
-$USER_DATA_S3_KEY = "windows/user_data_base.ps2"
+$USER_DATA_S3_KEY = "windows/user_data_base_no_wrapper.ps2"
 $USER_DATA_FILE_PATH = "c:\\hudl\\user_data_base.ps1"
 
 if(!(Test-Path -Path $HUDL_DIRECTORY )){
