@@ -6,6 +6,7 @@ chardet==3.0.4
 cloudspecs==0.1.1
 docutils==0.14
 falcon==1.4.1
+gunicorn==19.9.0
 idna==2.7
 isort==4.3.4
 jmespath==0.9.3
