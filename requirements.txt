@@ -5,6 +5,7 @@ certifi==2018.4.16
 chardet==3.0.4
 cloudspecs==0.1.1
 docutils==0.14
+falcon==1.4.1
 idna==2.7
 isort==4.3.4
 jmespath==0.9.3
@@ -15,6 +16,7 @@ PyChef==0.3.0
 pylint==2.0.0
 pymongo==3.7.0
 python-dateutil==2.7.3
+python-mimeparse==1.6.0
 requests==2.19.1
 s3transfer==0.1.13
 six==1.11.0
