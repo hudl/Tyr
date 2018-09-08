@@ -1,7 +1,16 @@
 FROM alpine:3.8
 
 RUN apk update
-RUN apk add gcc musl-dev python3=3.6.6-r0 python3-dev=3.6.6-r0
+
+RUN apk add gcc build-base musl-dev zlib zlib-dev \
+    python3=3.6.6-r0 python3-dev=3.6.6-r0 \
+    ruby=2.5.1-r2 ruby-dev=2.5.1-r2
+
+RUN echo 'gem: --no-document' > /etc/gemrc
+
+RUN gem install io io-console etc json \
+    nokogiri berkshelf chef chef-dk \
+    bigdecimal knife-windows
 
 COPY requirements.txt /tmp/requirements.txt
 
