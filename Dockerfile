@@ -15,6 +15,7 @@ RUN gem install io io-console etc json \
 
 COPY requirements.txt /tmp/requirements.txt
 
+RUN pip3 install --upgrade pip
 RUN pip3 install -r /tmp/requirements.txt
 RUN pip3 install bpython
 
