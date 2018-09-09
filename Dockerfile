@@ -3,6 +3,7 @@ FROM alpine:3.8
 RUN apk update
 
 RUN apk add gcc build-base musl-dev zlib zlib-dev \
+    openssh-client mongodb=3.6.7-r0 mongodb-tools=3.6.4-r0 \
     python3=3.6.6-r0 python3-dev=3.6.6-r0 \
     ruby=2.5.1-r2 ruby-dev=2.5.1-r2
 
