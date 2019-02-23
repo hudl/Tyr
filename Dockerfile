@@ -2,10 +2,10 @@ FROM alpine:3.8
 
 RUN apk update
 
-RUN apk add gcc build-base musl-dev zlib zlib-dev \
+RUN apk add gcc build-base musl-dev zlib zlib-dev vim \
     openssh-client mongodb=3.6.7-r0 mongodb-tools=3.6.4-r0 \
     python3=3.6.6-r0 python3-dev=3.6.6-r0 \
-    ruby=2.5.1-r2 ruby-dev=2.5.1-r2
+    ruby=2.5.2-r0 ruby-dev=2.5.2-r0 py3-paramiko==2.4.1-r0
 
 RUN echo 'gem: --no-document' > /etc/gemrc
 
