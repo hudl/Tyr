@@ -47,6 +47,7 @@ class Instance(object):
     @kwarg('ami_id', default='ami-6869aa05')
     @kwarg('region', default='us-east-1')
     @kwarg('chef_runlist', default=['role[rolebase]'])
+    @kwarg('chef_run_attempts', default=1)
     @kwarg('chef_attrs', default={})
     @kwarg('chef_server', default=lambda kw: Instance.DEFAULT_CHEF_SERVER_BY_ENV.get(kw['environment'], Instance.DEFAULT_FALLBACK_CHEF_SERVER))
     @kwarg('keypair', default=lambda kw: Instance.DEFAULT_KEYPAIR_BY_ENV.get(kw['environment'], Instance.DEFAULT_FALLBACK_KEYPAIR))
@@ -94,7 +95,20 @@ curl -L https://omnitruck.chef.io/install.sh | sudo bash -s -- -v 12.13.37
 yum install -y gcc
 printf "%s" "{attributes}" > /etc/chef/attributes.json
 cp /var/tmp/attributes.json /etc/chef/attributes.json
-chef-client -r '{run_list}' -L /var/log/chef-client.log -j /etc/chef/attributes.json
+
+chef_client_runs=0
+until [ $chef_client_runs -ge {chef_run_attempts} ]
+do
+
+    if [ $chef_client_runs -ge 1 ]; then
+        chef-client -L /var/log/chef-client.log && break
+    else
+        chef-client -r '{run_list}' -L /var/log/chef-client.log -j /etc/chef/attributes.json \
+            && break
+    fi
+    chef_client_runs=$[$chef_client_runs+1]
+    sleep 60
+done
 --===============0035287898381899620==--
 """
         chef_attributes = self.chef_node_attributes
@@ -107,7 +121,8 @@ chef-client -r '{run_list}' -L /var/log/chef-client.log -j /etc/chef/attributes.
             chef_env=self.environment,                               
             chef_server_url=self.chef_server,
             attributes=json.dumps(chef_attributes).replace('"', '\\"'),
-            run_list=','.join(self.chef_runlist)
+            run_list=','.join(self.chef_runlist),
+            chef_run_attempts=self.chef_run_attemps
         )
 
     @property
