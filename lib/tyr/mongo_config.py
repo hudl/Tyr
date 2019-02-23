@@ -50,7 +50,7 @@ class MongoConfigNode(MongoNode):
             a.update({
                 'zuun': {
                     'deployment': self.zuun_deployment,
-                    'role': 'conf'
+                    'role': 'config'
                 }
             })
 
