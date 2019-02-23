@@ -15,6 +15,7 @@ class MongoNode(Instance):
     @kwarg('zuun_deployment', default=None)
     @kwarg('data_volume_size', default=1)
     @kwarg('data_volume_iops', default=None)
+    @kwarg('data_volume_snapshot_id', default=None)
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -44,7 +45,8 @@ class MongoNode(Instance):
                     'path': '/dev/xvdf',
                     'size': self.data_volume_size,
                     'iops': self.data_volume_iops,
-                    'name': 'mongodb-data'                    
+                    'name': 'mongodb-data',
+                    'snapshot_id': self.data_volume_snapshot_id
                 },
                 'mount': {
                     'path': '/volr',
