@@ -1,15 +1,29 @@
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
 
+import os
 import hashlib
 import boto3
+import requests
 
 clients = {}
 resources = {}
 
+def profile(name):
+    if name is not None: return name
 
-def client(service_name, profile_name='hudl', region_name='us-east-1',
+    try:
+        requests.get('http://169.254.169.254/latest/meta-data/', timeout=1)
+    except Exception:
+        name = os.getenv('AWS_DEFAULT_PROFILE', 'hudl')
+
+    return name
+
+
+def client(service_name, profile_name=None, region_name='us-east-1',
            aws_access_key_id=None, aws_secret_access_key=None):
+    profile_name = profile(profile_name)
+
     params = {
         'profile_name': profile_name,        
         'service_name': service_name,
@@ -33,8 +47,10 @@ def client(service_name, profile_name='hudl', region_name='us-east-1',
         return clients[key]
 
 
-def resource(service_name, profile_name='hudl', region_name='us-east-1',
+def resource(service_name, profile_name=None, region_name='us-east-1',
              aws_access_key_id=None, aws_secret_access_key=None):
+    profile_name = profile(profile_name)
+
     params = {
         'profile_name': profile_name,        
         'service_name': service_name,
