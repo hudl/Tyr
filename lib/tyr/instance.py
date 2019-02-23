@@ -51,6 +51,7 @@ class Instance(object):
     @kwarg('chef_server', default=lambda kw: Instance.DEFAULT_CHEF_SERVER_BY_ENV.get(kw['environment'], Instance.DEFAULT_FALLBACK_CHEF_SERVER))
     @kwarg('keypair', default=lambda kw: Instance.DEFAULT_KEYPAIR_BY_ENV.get(kw['environment'], Instance.DEFAULT_FALLBACK_KEYPAIR))
     @kwarg('security_groups', default=lambda kw: ['management', 'chef-nodes', kw['role'],  f'{kw["environment"][0]}-{kw["server_type"]}-management', f'{kw["environment"][0]}-{kw["group"]}-management'])
+    @kwarg('ec2_tags', default={})
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
         self.ec2 = aws_client('ec2', region_name=self.region)
@@ -111,12 +112,16 @@ chef-client -r '{run_list}' -L /var/log/chef-client.log -j /etc/chef/attributes.
 
     @property
     def tags(self):
-        return {
+        t = {
             'Role': f'Role{self.server_type.capitalize()}',
             'Group': self.group,
             'Environment': self.environment,
             'Name': self.name
         }
+
+        t.update(self.ec2_tags)
+
+        return t
 
     @property
     def location(self):
