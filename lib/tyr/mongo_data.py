@@ -9,6 +9,7 @@ from infrakit.tyr.mongo_node import MongoNode
 
 class MongoDataNode(MongoNode):
     
+    @kwarg('group', required=True)
     @kwarg('replica_set', default=lambda kw: 0 if kw['group'] == 'reports' else 1)
     @kwarg('subrole', default=lambda kw: 'rs' + str(kw['replica_set']))
     @kwarg('data_volume_size', default=100)
