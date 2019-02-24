@@ -122,7 +122,7 @@ done
             chef_server_url=self.chef_server,
             attributes=json.dumps(chef_attributes).replace('"', '\\"'),
             run_list=','.join(self.chef_runlist),
-            chef_run_attempts=self.chef_run_attemps
+            chef_run_attempts=self.chef_run_attempts
         )
 
     @property
