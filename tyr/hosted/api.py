@@ -47,7 +47,18 @@ class ProvisionResource(object):
 
         body['ec2_tags']['hostedtyr-ticket'] = ticket
 
-        instance = SERVER_CLASS_MAP[type_.lower()](**body)
+        try:
+            instance = SERVER_CLASS_MAP[type_.lower()](**body)
+        except KeyError:
+            resp.status = '404 Not Found'
+            resp.media = {
+                'error': {
+                    'message': 'Unknown instance specification',
+                    'type': ''
+                }
+            }
+
+            return
 
         try:
             run_input = instance.run_instance_input
