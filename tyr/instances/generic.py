@@ -39,6 +39,7 @@ class Instance(object):
     @kwarg('group', required=True)
     @kwarg('server_type', required=True)
     @kwarg('role', default=lambda kw: f'{kw["environment"][0]}-{kw["group"]}-{kw["server_type"]}')
+    @kwarg('instance_profile', default=lambda kw: kw['role'])
     @kwarg('subrole', default=None)
     @kwarg('availibility_zone', default='c') 
     @kwarg('subnet_id', default=lambda kw: Instance.DEFAULT_SUBNET_ID_BY_ENV.get(kw['environment']))
@@ -209,7 +210,7 @@ done
             'InstanceType': self.instance_type,
             'KeyName': self.keypair,
             'IamInstanceProfile': {
-                'Name': self.role
+                'Name': self.instance_profile
             },
             'UserData': self.user_data,
             'TagSpecifications': [
@@ -252,7 +253,7 @@ done
             image_id=self.ami_id,
             instance_type=self.instance_type,
             keyname=self.keypair,
-            iam_profile=self.role,
+            iam_profile=self.instance_profile,
             placement=_input.get('SubnetId', _input.get('Placement', {}).get('AvailabilityZone')),
             security_groups=_input.get('SecurityGroupIds', _input.get('SecurityGroups'))
         )
