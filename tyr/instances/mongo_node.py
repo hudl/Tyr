@@ -15,6 +15,7 @@ class MongoNode(Instance):
     @kwarg('zuun_deployment', default=None)
     @kwarg('data_volume_size', default=1)
     @kwarg('data_volume_iops', default=None)
+    @kwarg('data_volume_type', default=None)
     @kwarg('data_volume_snapshot_id', default=None)
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -82,5 +83,8 @@ class MongoNode(Instance):
                 }
             }        
         ])
+
+        if self.data_volume_type is not None:
+            v[-3]['device']['volume_type'] = self.data_volume_type
 
         return v
