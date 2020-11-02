@@ -12,9 +12,10 @@ from infrakit.tyr.mongo_config import MongoConfigNode
 from infrakit.tyr.mongo_router import MongoRouterNode
 from infrakit.tyr.mongo_data import MongoDataNode
 from infrakit.tyr.rabbitmq import RabbitMQNode
+from infrakit.tyr.couchbase import CouchbaseNode
 
 SERVER_CLASS_MAP = {n.__name__.lower(): n for n in [Instance, MongoDataNode, MongoConfigNode, MongoRouterNode,
-                                                    RabbitMQNode]}
+                                                    RabbitMQNode, CouchbaseNode]}
 
 S3 = aws_client('s3')
 SQS = aws_client('sqs')
