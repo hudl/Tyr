@@ -161,7 +161,7 @@ function Get-HudlRoleAttributes {
 
 
 function New-ServerName {
-    $serverId=GetNewId
+    $serverId=$instanceId.substring(2)
     $zone = Get-MyAvailabilityZone
     $region = Get-MyRegion
     $zoneLetter = $zone -replace $region, ""
@@ -178,15 +178,6 @@ function Check-AnyTagExists {
     } else {
         return $false
     }
-}
-
-
-function GetNewId
-{
-    $ticks = [System.DateTime]::Now.Ticks;
-    $ticks = $ticks -shr 16;
-    $ticks = $ticks -band 0x3fffffff;
-    return ZBase32Encode($ticks);
 }
 
 try{
