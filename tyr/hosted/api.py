@@ -5,14 +5,14 @@ import json
 import uuid
 import falcon
 import toml
-from infrakit.logging import logger
-from infrakit.conn.aws import client as aws_client
-from infrakit.tyr import Instance
-from infrakit.tyr.mongo_config import MongoConfigNode
-from infrakit.tyr.mongo_router import MongoRouterNode
-from infrakit.tyr.mongo_data import MongoDataNode
-from infrakit.tyr.rabbitmq import RabbitMQNode
-from infrakit.tyr.couchbase import CouchbaseNode
+from libh.logging import logger
+from libh.conn.aws import client as aws_client
+from tyr.instances.generic import Instance
+from tyr.instances.mongo_config import MongoConfigNode
+from tyr.instances.mongo_router import MongoRouterNode
+from tyr.instances.mongo_data import MongoDataNode
+from tyr.instances.rabbitmq import RabbitMQNode
+from tyr.instances.couchbase import CouchbaseNode
 
 SERVER_CLASS_MAP = {n.__name__.lower(): n for n in [Instance, MongoDataNode, MongoConfigNode, MongoRouterNode,
                                                     RabbitMQNode, CouchbaseNode]}

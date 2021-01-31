@@ -6,9 +6,9 @@ import random
 import string
 from chef import Node as ChefNode
 from superkwargs import superkwarg, kwarg, exceptions, typing
-from infrakit.conn.aws import client as aws_client
-from infrakit.conn.chef import client as chef_client
-from infrakit.logging import logger
+from libh.conn.aws import client as aws_client
+from libh.conn.chef import client as chef_client
+from libh.logging import logger
 
 
 class Instance(object):

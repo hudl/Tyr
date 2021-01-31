@@ -3,8 +3,8 @@
 
 import json
 from superkwargs import superkwarg, kwarg, exceptions, typing
-from infrakit.logging import logger
-from infrakit.tyr.instance import Instance
+from libh.logging import logger
+from tyr.instances.generic import Instance
 
 
 class MongoNode(Instance):

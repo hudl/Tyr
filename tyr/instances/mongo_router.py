@@ -3,8 +3,8 @@
 
 import json
 from superkwargs import superkwarg, kwarg, exceptions, typing
-from infrakit.mongodb.rs_mods import REPLICA_SET_MODS
-from infrakit.tyr.mongo_node import MongoNode
+from libh.mongodb.rs_mods import REPLICA_SET_MODS
+from tyr.instances.mongo_node import MongoNode
 
 
 class MongoRouterNode(MongoNode):

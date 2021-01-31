@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from superkwargs import kwarg
-from infrakit.tyr.instance import Instance
+from tyr.instances.generic import Instance
 
 
 class RabbitMQNode(Instance):
