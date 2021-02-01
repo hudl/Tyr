@@ -11,7 +11,7 @@ class MongoConfigNode(MongoNode):
     
     @kwarg('group', required=True)
     @kwarg('subrole', default='conf')
-    @kwarg('replicated', default=lambda kw: True if kw['group'] == 'highlights' else False)
+    @kwarg('replicated', default=lambda kw: True if kw['group'] in ['highlights', 'record'] else False)
     @kwarg('data_volume_size', default=15)
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
