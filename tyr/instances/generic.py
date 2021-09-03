@@ -34,16 +34,16 @@ class Instance(object):
         'prod': 'bkaiserkey'
     }
     DEFAULT_FALLBACK_KEYPAIR = 'stage-key'
-    
+
     @kwarg('environment', default='thor', choices=['thor', 'stage', 'prod'])
     @kwarg('group', required=True)
     @kwarg('server_type', required=True)
     @kwarg('role', default=lambda kw: f'{kw["environment"][0]}-{kw["group"]}-{kw["server_type"]}')
     @kwarg('instance_profile', default=lambda kw: kw['role'])
     @kwarg('subrole', default=None)
-    @kwarg('availibility_zone', default='c') 
+    @kwarg('availibility_zone', default='c')
     @kwarg('subnet_id', default=lambda kw: Instance.DEFAULT_SUBNET_ID_BY_ENV.get(kw['environment']))
-    @kwarg('dns_zone', default=lambda kw: Instance.DEFAULT_DNS_ZONE_BY_ENV.get(kw['environment']))    
+    @kwarg('dns_zone', default=lambda kw: Instance.DEFAULT_DNS_ZONE_BY_ENV.get(kw['environment']))
     @kwarg('instance_type', default=lambda kw: 't2.medium' if kw.get('subnet_id') else 'm3.medium')
     @kwarg('ami_id', default='ami-6869aa05')
     @kwarg('region', default='us-east-1')
@@ -54,13 +54,14 @@ class Instance(object):
     @kwarg('keypair', default=lambda kw: Instance.DEFAULT_KEYPAIR_BY_ENV.get(kw['environment'], Instance.DEFAULT_FALLBACK_KEYPAIR))
     @kwarg('security_groups', default=lambda kw: ['management', 'chef-nodes', kw['role'],  f'{kw["environment"][0]}-{kw["server_type"]}-management', f'{kw["environment"][0]}-{kw["group"]}-management'])
     @kwarg('ec2_tags', default={})
+    @kwarg('chef_version', default='12.13.37')
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
         self.ec2 = aws_client('ec2', region_name=self.region)
         self.log = logger('tyr')
 
     @property
-    def user_data(self):        
+    def user_data(self):
         template = """Content-Type: multipart/mixed; boundary="===============0035287898381899620=="
 MIME-Version: 1.0
 --===============0035287898381899620==
@@ -92,7 +93,7 @@ environment "{chef_env}"
 validation_client_name "hudl-validator"
 ssl_verify_mode :verify_none' > /etc/chef/client.rb
 /usr/bin/aws s3 cp s3://hudl-chef-artifacts/chef-client/encrypted_data_bag_secret /etc/chef/encrypted_data_bag_secret
-curl -L https://omnitruck.chef.io/install.sh | sudo bash -s -- -v 12.13.37
+curl -L https://omnitruck.chef.io/install.sh | sudo bash -s -- -v {chef_version}
 yum install -y gcc
 printf "%s" "{attributes}" > /etc/chef/attributes.json
 cp /var/tmp/attributes.json /etc/chef/attributes.json
@@ -119,11 +120,12 @@ done
         return template.format(
             hostname=self.hostname,
             name=self.name,
-            chef_env=self.environment,                               
+            chef_env=self.environment,
             chef_server_url=self.chef_server,
             attributes=json.dumps(chef_attributes).replace('"', '\\"'),
             run_list=','.join(self.chef_runlist),
-            chef_run_attempts=self.chef_run_attempts
+            chef_run_attempts=self.chef_run_attempts,
+            chef_version=self.chef_version
         )
 
     @property
@@ -165,7 +167,7 @@ done
             return self.resolved_name
         except AttributeError:
             chef = chef_client()
-        
+
             while True:
                 rand = ''.join(
                     random.choices(string.ascii_lowercase + string.digits, k=6)
@@ -174,17 +176,18 @@ done
                 name = f'{self.name_template}-{rand}'
 
                 if name not in ChefNode.list(api=chef).names and \
-                len(self.ec2.describe_instances(
-                    Filters=[
-                        {
-                            'Name': 'tag:Name',
-                            'Values': [name]
-                        }
-                    ]
-                )['Reservations']) == 0:
+                        len(self.ec2.describe_instances(
+                            Filters=[
+                                {
+                                    'Name': 'tag:Name',
+                                    'Values': [name]
+                                }
+                            ]
+                        )['Reservations']) == 0:
                     break
 
-            self.log.info('Resolved instance name', name=name, hostname=f'{name}.{self.dns_zone}')
+            self.log.info('Resolved instance name', name=name,
+                          hostname=f'{name}.{self.dns_zone}')
 
             self.resolved_name = name
             return name
@@ -195,7 +198,7 @@ done
 
     @property
     def volumes(self):
-        return []        
+        return []
 
     @property
     def chef_node_attributes(self):
@@ -216,7 +219,7 @@ done
             'TagSpecifications': [
                 {
                     'ResourceType': 'instance',
-                    'Tags': [{'Key': k, 'Value': v} for k,v in self.tags.items()]
+                    'Tags': [{'Key': k, 'Value': v} for k, v in self.tags.items()]
                 }
             ]
         }
@@ -244,7 +247,7 @@ done
 
         return _input
 
-    def provision(self):    
+    def provision(self):
         _input = self.run_instance_input
 
         self.log.info(
@@ -254,12 +257,14 @@ done
             instance_type=self.instance_type,
             keyname=self.keypair,
             iam_profile=self.instance_profile,
-            placement=_input.get('SubnetId', _input.get('Placement', {}).get('AvailabilityZone')),
-            security_groups=_input.get('SecurityGroupIds', _input.get('SecurityGroups'))
+            placement=_input.get('SubnetId', _input.get(
+                'Placement', {}).get('AvailabilityZone')),
+            security_groups=_input.get(
+                'SecurityGroupIds', _input.get('SecurityGroups'))
         )
 
         r = self.ec2.run_instances(**_input)
-        
+
         self.log.info('EC2 instance provisioned',
                       instance_id=r['Instances'][0]['InstanceId'])
 
