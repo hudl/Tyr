@@ -54,7 +54,7 @@ class Instance(object):
     @kwarg('keypair', default=lambda kw: Instance.DEFAULT_KEYPAIR_BY_ENV.get(kw['environment'], Instance.DEFAULT_FALLBACK_KEYPAIR))
     @kwarg('security_groups', default=lambda kw: ['management', 'chef-nodes', kw['role'],  f'{kw["environment"][0]}-{kw["server_type"]}-management', f'{kw["environment"][0]}-{kw["group"]}-management'])
     @kwarg('ec2_tags', default={})
-    @kwarg('chef_version', default='12.13.37')
+    @kwarg('chef_version', default='12.14')
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
         self.ec2 = aws_client('ec2', region_name=self.region)
