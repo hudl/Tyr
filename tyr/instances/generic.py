@@ -98,6 +98,10 @@ yum install -y gcc
 printf "%s" "{attributes}" > /etc/chef/attributes.json
 cp /var/tmp/attributes.json /etc/chef/attributes.json
 
+# See CHANGELOG.md for version 2.3.0 for more details about the following two lines
+/opt/chef/embedded/bin/gem install bundler -v '= 1.17.3'
+/opt/chef/embedded/bin/gem uninstall bundler --version 1.12.5
+
 chef_client_runs=0
 until [ $chef_client_runs -ge {chef_run_attempts} ]
 do
