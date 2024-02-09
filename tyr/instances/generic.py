@@ -93,7 +93,11 @@ environment "{chef_env}"
 validation_client_name "hudl-validator"
 ssl_verify_mode :verify_none' > /etc/chef/client.rb
 /usr/bin/aws s3 cp s3://hudl-chef-artifacts/chef-client/encrypted_data_bag_secret /etc/chef/encrypted_data_bag_secret
-curl -L https://omnitruck.chef.io/install.sh | sudo bash -s -- -v {chef_version}
+# This is our own copy of the Chef OmniTruck installation script, see
+# this README for details on why - https://github.com/hudl/hudl-chef-omnitruck-installer/blob/master/README.md
+/usr/bin/aws s3 cp s3://hudl-chef-artifacts/chef-client/install.sh install.sh
+chmod u+x install.sh
+sudo ./install.sh -v {chef_version}
 yum install -y gcc
 printf "%s" "{attributes}" > /etc/chef/attributes.json
 cp /var/tmp/attributes.json /etc/chef/attributes.json
