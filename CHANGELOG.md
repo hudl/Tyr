@@ -3,7 +3,7 @@
 <https://keepachangelog.com/en/1.0.0/>
 
 ## [2.4.0]
-- Update the Chef Installation script location to point ot a file we store in S3
+- Update the Chef Installation script location to point at a file we store in S3
     - Full details about why in [this PR](https://github.com/hudl/hudl-chef-omnitruck-installer/pull/2)
 
 ## [2.3.0]
