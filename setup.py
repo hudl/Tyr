@@ -3,7 +3,7 @@ import os
 
 setup(
     name='tyr',
-    version='2.3.0',
+    version='2.4.0',
     author='Mihir Singh (@citruspi)',
     author_email='mihir.singh@hudl.com',
     packages=find_packages(),

@@ -2,6 +2,10 @@
 
 <https://keepachangelog.com/en/1.0.0/>
 
+## [2.4.0]
+- Update the Chef Installation script location to point ot a file we store in S3
+    - Full details about why in [this PR](https://github.com/hudl/hudl-chef-omnitruck-installer/pull/2)
+
 ## [2.3.0]
 
 - Update the bundler version embedded in chef to `1.17.3`.
@@ -9,7 +13,7 @@
       dependencies that are used in the MongoDB provision process and in other
       places as well. You can read more about the prod incident in
       https://sync.hudlnet.com/x/BiT6FQ
-    - Vandelay investigated how to fix this for our role_mongo Cookbook in 
+    - Vandelay investigated how to fix this for our role_mongo Cookbook in
       https://docs.google.com/document/d/11EJwHkUYwzol3HaqnAD8O1YX5lRYI1MTa8AblFPBVs8/edit?usp=sharing
     - The TLDR is we need to update the version of bundler before running chef.
     - To centralise the change in a single place, we are updating Tyr to place
