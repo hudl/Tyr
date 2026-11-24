@@ -2,6 +2,10 @@
 
 <https://keepachangelog.com/en/1.0.0/>
 
+## [2.5.0]
+- Update the default `ami_id` from `ami-6869aa05` (no longer available) to `ami-03cb0e88bb04a0704`
+    - Callers that pass `ami_id` explicitly are unaffected.
+
 ## [2.4.0]
 - Update the Chef Installation script location to point at a file we store in S3
     - Full details about why in [this PR](https://github.com/hudl/hudl-chef-omnitruck-installer/pull/2)
