@@ -2,6 +2,10 @@
 
 <https://keepachangelog.com/en/1.0.0/>
 
+## [2.6.0]
+- Update the default `ami_id` from `ami-03cb0e88bb04a0704` to `ami-092c6993129a88854`
+    - Callers that pass `ami_id` explicitly are unaffected.
+
 ## [2.5.0]
 - Update the default `ami_id` from `ami-6869aa05` (no longer available) to `ami-03cb0e88bb04a0704`
     - Callers that pass `ami_id` explicitly are unaffected.
