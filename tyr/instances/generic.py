@@ -45,7 +45,7 @@ class Instance(object):
     @kwarg('subnet_id', default=lambda kw: Instance.DEFAULT_SUBNET_ID_BY_ENV.get(kw['environment']))
     @kwarg('dns_zone', default=lambda kw: Instance.DEFAULT_DNS_ZONE_BY_ENV.get(kw['environment']))
     @kwarg('instance_type', default=lambda kw: 't2.medium' if kw.get('subnet_id') else 'm3.medium')
-    @kwarg('ami_id', default='ami-03cb0e88bb04a0704')
+    @kwarg('ami_id', default='ami-092c6993129a88854')
     @kwarg('region', default='us-east-1')
     @kwarg('chef_runlist', default=['role[rolebase]'])
     @kwarg('chef_run_attempts', default=1)
